@@ -455,11 +455,17 @@ impl<S: Clone + PartialEq> DeadBird<S> {
 #[derive(Clone, Debug)]
 pub struct BushOptions {
     pub index: usize,
+    pub background: u8,
+    pub color: u8,
 }
 
 impl Default for BushOptions {
     fn default() -> Self {
-        Self { index: 0 }
+        Self {
+            index: 0,
+            background: 157,
+            color: 40,
+        }
     }
 }
 
@@ -478,6 +484,8 @@ impl<S: Clone + PartialEq> Bush<S> {
         let height = rng().random_range(1..=2);
 
         el.look(Look::from((2, height, bush_fill(el.options.index))))
+            .background(Some(Color::Ansi(el.options.background)))
+            .color(Some(Color::Ansi(el.options.color)))
             .handle("bush");
 
         el.decorate();
@@ -686,7 +694,12 @@ mod tests {
         assert_eq!(bush_fill(3), '`');
         assert_eq!(bush_fill(0), '^');
         for index in 0..12 {
-            let bush = Bush::<State>::new(BushOptions { index });
+            let bush = Bush::<State>::new(BushOptions {
+                index,
+                ..Default::default()
+            });
+            assert_eq!(bush.get_background(), Some(Color::Ansi(157)));
+            assert_eq!(bush.get_color(), Some(Color::Ansi(40)));
             assert_eq!(bush.visual.look.width(), 2);
             let h = bush.visual.look.height();
             assert!((1..=2).contains(&h), "bush height {}", h);

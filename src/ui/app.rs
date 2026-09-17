@@ -117,7 +117,10 @@ pub fn build() -> App<State> {
     dead_bird.x(48).y(6);
     game.add(dead_bird);
 
-    let bush = elements::Bush::<State>::new(elements::BushOptions { index: 1 });
+    let bush = elements::Bush::<State>::new(elements::BushOptions {
+        index: 1,
+        ..Default::default()
+    });
     bush.x(55).y(8);
     game.add(bush);
 
