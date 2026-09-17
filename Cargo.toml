@@ -63,11 +63,14 @@ incredible_helpers_layout = { git = "https://github.com/ronilan/incredible-alpha
 incredible_helpers_styling = { git = "https://github.com/ronilan/incredible-alpha" }
 incredible_helpers_effects = { git = "https://github.com/ronilan/incredible-alpha" }
 incredible_elements_text_fonts = { git = "https://github.com/ronilan/incredible-alpha" }
+incredible_macros_decl = { git = "https://github.com/ronilan/incredible-alpha" }
+rand = "0.9.2"
 serde_json = "1"
 resvg = "0.43"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
+getrandom = { version = "0.3", features = ["wasm_js"] }
 console_error_panic_hook = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]

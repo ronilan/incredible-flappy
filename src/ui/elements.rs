@@ -1,17 +1,20 @@
 use incredible::*;
-use incredible_elements::{Rectangle, Text};
+use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
+use incredible_macros_decl::element;
+use rand::rng;
+use rand::Rng;
 
-use crate::ui::app::State;
+// -----------------------------
+// Shared spec constants
+// -----------------------------
 
 pub const PIPE_WIDTH: usize = 6;
 pub const PIPE_HEIGHT: usize = 10;
-pub const PIPE_BACKGROUND: u8 = 34;
 pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [38, 44, 44, 50, 56, 62];
 
 pub const BUSHING_WIDTH: usize = 8;
 pub const BUSHING_HEIGHT: usize = 1;
-pub const BUSHING_BACKGROUND: u8 = 34;
 pub const BUSHING_SEGMENT_BACKGROUNDS: [u8; 8] = [38, 44, 44, 50, 50, 50, 56, 62];
 
 pub const PAVEMENT_WIDTH: usize = 80;
@@ -26,6 +29,8 @@ pub const FLYING_BIRD_HEIGHT: usize = 2;
 pub const DEAD_BIRD_WIDTH: usize = 2;
 pub const DEAD_BIRD_HEIGHT: usize = 4;
 
+/// Fill character for a bush by column index:
+/// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
     if index % 3 != 0 {
         '.'
@@ -36,162 +41,356 @@ pub fn bush_fill(index: usize) -> char {
     }
 }
 
-pub fn bush_height() -> usize {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.subsec_nanos() as usize)
-        .unwrap_or(1);
-    // 1 or 2.
-    nanos % 2 + 1
+// -----------------------------
+// Pipe
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct PipeOptions {
+    pub background: u8,
 }
 
-fn hand_drawn<S: Clone + PartialEq>(el: &impl ElementTrait<S>) {
-    el.decoratable(false);
-}
-
-pub fn build_pipe(x: isize, y: isize) -> Rectangle<State> {
-    let pipe = Rectangle::<State>::new();
-    pipe.width(PIPE_WIDTH)
-        .height(PIPE_HEIGHT)
-        .fill(Some(' '))
-        .background(Some(Color::ansi(PIPE_BACKGROUND)))
-        .handle("pipe")
-        .x(x)
-        .y(y);
-    for (i, bg) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
-        let seg = Rectangle::<State>::new();
-        seg.width(1)
-            .height(PIPE_HEIGHT)
-            .fill(Some(' '))
-            .background(Some(Color::ansi(*bg)))
-            .x(x + i as isize)
-            .y(y);
-        seg.decoratable(false);
-        pipe.add(seg);
+impl Default for PipeOptions {
+    fn default() -> Self {
+        Self { background: 34 }
     }
-    hand_drawn(&pipe);
-    pipe
 }
 
-pub fn build_bushing(x: isize, y: isize) -> Rectangle<State> {
-    let bushing = Rectangle::<State>::new();
-    bushing
-        .width(BUSHING_WIDTH)
-        .height(BUSHING_HEIGHT)
-        .fill(Some(' '))
-        .background(Some(Color::ansi(BUSHING_BACKGROUND)))
-        .handle("bushing")
-        .x(x)
-        .y(y);
-    for (i, bg) in BUSHING_SEGMENT_BACKGROUNDS.iter().enumerate() {
-        let seg = Rectangle::<State>::new();
-        seg.width(1)
-            .height(1)
-            .fill(Some(' '))
-            .background(Some(Color::ansi(*bg)))
-            .x(x + i as isize)
-            .y(y);
-        seg.decoratable(false);
-        bushing.add(seg);
+element! {
+  pub struct Pipe<S> {
+      options: PipeOptions = PipeOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Pipe<S> {
+    pub fn new(options: PipeOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((PIPE_WIDTH, PIPE_HEIGHT, ' ')))
+            .background(Some(Color::Ansi(el.options.background)))
+            .handle("pipe");
+
+        for (i, bg) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
+            let seg = Rectangle::<S>::new();
+            seg.width(1)
+                .height(PIPE_HEIGHT)
+                .fill(Some(' '))
+                .background(Some(Color::Ansi(*bg)))
+                .x(i as isize)
+                .y(0);
+            seg.decorate();
+            el.add(seg);
+        }
+
+        el.decorate();
+
+        el
     }
-    hand_drawn(&bushing);
-    bushing
 }
 
-pub fn build_pavement(x: isize, y: isize) -> Text<State> {
-    let pavement = Text::<State>::default();
-    pavement
-        .text(&" ".repeat(PAVEMENT_WIDTH))
-        .wrap_at(PAVEMENT_WIDTH)
-        .background(Some(Color::ansi(34)))
-        .handle("pavement")
-        .x(x)
-        .y(y);
-    // Look manipulation: alternate background every block between 34 and 40.
-    {
-        let blocks = pavement.visual.look.blocks();
-        if let Some(row) = blocks.first() {
-            for (i, block) in row.iter().enumerate().take(PAVEMENT_WIDTH) {
-                let bg = if i % 2 == 0 { 34 } else { 40 };
-                block.decor.background.set(Some(Color::ansi(bg)));
-            }
+impl<S: Clone + PartialEq> Default for Pipe<S> {
+    fn default() -> Self {
+        Self::new(PipeOptions::default())
+    }
+}
+
+// -----------------------------
+// Bushing
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct BushingOptions {
+    pub background: u8,
+}
+
+impl Default for BushingOptions {
+    fn default() -> Self {
+        Self { background: 34 }
+    }
+}
+
+element! {
+  pub struct Bushing<S> {
+      options: BushingOptions = BushingOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Bushing<S> {
+    pub fn new(options: BushingOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((BUSHING_WIDTH, BUSHING_HEIGHT, ' ')))
+            .background(Some(Color::Ansi(el.options.background)))
+            .handle("bushing");
+
+        for (i, bg) in BUSHING_SEGMENT_BACKGROUNDS.iter().enumerate() {
+            let seg = Rectangle::<S>::new();
+            seg.width(1)
+                .height(1)
+                .fill(Some(' '))
+                .background(Some(Color::Ansi(*bg)))
+                .x(i as isize)
+                .y(0);
+            seg.decorate();
+            el.add(seg);
+        }
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for Bushing<S> {
+    fn default() -> Self {
+        Self::new(BushingOptions::default())
+    }
+}
+
+// -----------------------------
+// Pavement
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct PavementOptions {
+    pub background: u8,
+}
+
+impl Default for PavementOptions {
+    fn default() -> Self {
+        Self { background: 34 }
+    }
+}
+
+element! {
+  pub struct Pavement<S> {
+      options: PavementOptions = PavementOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Pavement<S> {
+    pub fn new(options: PavementOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((PAVEMENT_WIDTH, PAVEMENT_HEIGHT, ' ')))
+            .background(Some(Color::Ansi(el.options.background)))
+            .handle("pavement");
+
+        for i in 0..PAVEMENT_WIDTH {
+            let bg = if i % 2 == 0 {
+                el.options.background
+            } else {
+                el.options.background + 6
+            };
+            let block = Rectangle::<S>::new();
+            block
+                .width(1)
+                .height(1)
+                .fill(Some(' '))
+                .background(Some(Color::Ansi(bg)))
+                .x(i as isize)
+                .y(0);
+            block.decorate();
+            el.add(block);
+        }
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for Pavement<S> {
+    fn default() -> Self {
+        Self::new(PavementOptions::default())
+    }
+}
+
+// -----------------------------
+// Buildings
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct BuildingsOptions {
+    pub color: u8,
+}
+
+impl Default for BuildingsOptions {
+    fn default() -> Self {
+        Self {
+            color: BUILDINGS_COLOR,
         }
     }
-    hand_drawn(&pavement);
-    debug_assert_eq!(pavement.visual.look.height(), PAVEMENT_HEIGHT);
-    pavement
 }
 
-pub fn build_buildings(x: isize, y: isize) -> Text<State> {
-    let buildings = Text::<State>::default();
-    buildings
-        .text(BUILDINGS_STR)
-        .color(Some(Color::ansi(BUILDINGS_COLOR)))
-        .handle("buildings")
-        .x(x)
-        .y(y);
-    // Hand-drawn per-block color so the look carries 244 even when not decoratable.
-    {
-        let blocks = buildings.visual.look.blocks();
-        for row in blocks.iter() {
-            for block in row.iter() {
-                block.decor.color.set(Some(Color::ansi(BUILDINGS_COLOR)));
-            }
-        }
+element! {
+  pub struct Buildings<S> {
+      options: BuildingsOptions = BuildingsOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Buildings<S> {
+    pub fn new(options: BuildingsOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from(BUILDINGS_STR))
+            .color(Some(Color::Ansi(el.options.color)))
+            .handle("buildings");
+
+        el.decorate();
+
+        el
     }
-    hand_drawn(&buildings);
-    buildings
 }
 
-pub fn build_flying_bird(x: isize, y: isize) -> Rectangle<State> {
-    let bird = Rectangle::<State>::new();
-    bird.width(FLYING_BIRD_WIDTH)
-        .height(FLYING_BIRD_HEIGHT)
-        .fill(Some(' '))
-        .handle("flying_bird")
-        .x(x)
-        .y(y);
-    hand_drawn(&bird);
-    bird
+impl<S: Clone + PartialEq> Default for Buildings<S> {
+    fn default() -> Self {
+        Self::new(BuildingsOptions::default())
+    }
 }
 
-pub fn build_dead_bird(x: isize, y: isize) -> Rectangle<State> {
-    let bird = Rectangle::<State>::new();
-    bird.width(DEAD_BIRD_WIDTH)
-        .height(DEAD_BIRD_HEIGHT)
-        .fill(Some(' '))
-        .handle("dead_bird")
-        .x(x)
-        .y(y);
-    hand_drawn(&bird);
-    bird
+// -----------------------------
+// FlyingBird
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct FlyingBirdOptions {
+    pub background: Option<u8>,
 }
 
-pub fn build_bush(x: isize, y: isize, index: usize) -> Rectangle<State> {
-    let bush = Rectangle::<State>::new();
-    bush.width(2)
-        .height(bush_height())
-        .fill(Some(bush_fill(index)))
-        .handle("bush")
-        .x(x)
-        .y(y);
-    hand_drawn(&bush);
-    bush
+impl Default for FlyingBirdOptions {
+    fn default() -> Self {
+        Self { background: None }
+    }
+}
+
+element! {
+  pub struct FlyingBird<S> {
+      options: FlyingBirdOptions = FlyingBirdOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> FlyingBird<S> {
+    pub fn new(options: FlyingBirdOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((FLYING_BIRD_WIDTH, FLYING_BIRD_HEIGHT, ' ')))
+            .handle("flying_bird");
+        if let Some(bg) = el.options.background {
+            el.background(Some(Color::Ansi(bg)));
+        }
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for FlyingBird<S> {
+    fn default() -> Self {
+        Self::new(FlyingBirdOptions::default())
+    }
+}
+
+// -----------------------------
+// DeadBird
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct DeadBirdOptions {
+    pub background: Option<u8>,
+}
+
+impl Default for DeadBirdOptions {
+    fn default() -> Self {
+        Self { background: None }
+    }
+}
+
+element! {
+  pub struct DeadBird<S> {
+      options: DeadBirdOptions = DeadBirdOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Default for DeadBird<S> {
+    fn default() -> Self {
+        Self::new(DeadBirdOptions::default())
+    }
+}
+
+impl<S: Clone + PartialEq> DeadBird<S> {
+    pub fn new(options: DeadBirdOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((DEAD_BIRD_WIDTH, DEAD_BIRD_HEIGHT, ' ')))
+            .handle("dead_bird");
+        if let Some(bg) = el.options.background {
+            el.background(Some(Color::Ansi(bg)));
+        }
+
+        el.decorate();
+
+        el
+    }
+}
+
+// -----------------------------
+// Bush
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct BushOptions {
+    pub index: usize,
+}
+
+impl Default for BushOptions {
+    fn default() -> Self {
+        Self { index: 0 }
+    }
+}
+
+element! {
+  pub struct Bush<S> {
+      options: BushOptions = BushOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Bush<S> {
+    pub fn new(options: BushOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        // Height setter: Math.floor(Math.random() * 2) + 1.
+        let height = rng().random_range(1..=2);
+
+        el.look(Look::from((2, height, bush_fill(el.options.index))))
+            .handle("bush");
+
+        el.decorate();
+
+        el
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ui::app::State;
 
     #[test]
     fn pipe_spec() {
         Globals::draw_enabled(false);
-        let pipe = build_pipe(0, 0);
-        assert_eq!(pipe.get_width(), PIPE_WIDTH);
-        assert_eq!(pipe.get_height(), PIPE_HEIGHT);
-        assert_eq!(pipe.get_background(), Some(Color::ansi(PIPE_BACKGROUND)));
-        assert!(!pipe.get_decoratable());
+        let pipe = Pipe::<State>::new(PipeOptions::default());
+        assert_eq!(pipe.visual.look.width(), PIPE_WIDTH);
+        assert_eq!(pipe.visual.look.height(), PIPE_HEIGHT);
+        assert_eq!(pipe.get_background(), Some(Color::Ansi(34)));
         let segs = pipe.elements.cot::<Rectangle<State>>();
         assert_eq!(segs.len(), 6);
         for (i, seg) in segs.iter().enumerate() {
@@ -199,23 +398,18 @@ mod tests {
             assert_eq!(seg.get_height(), PIPE_HEIGHT);
             assert_eq!(
                 seg.get_background(),
-                Some(Color::ansi(PIPE_SEGMENT_BACKGROUNDS[i]))
+                Some(Color::Ansi(PIPE_SEGMENT_BACKGROUNDS[i]))
             );
-            assert!(!seg.get_decoratable());
         }
     }
 
     #[test]
     fn bushing_spec() {
         Globals::draw_enabled(false);
-        let bushing = build_bushing(0, 0);
-        assert_eq!(bushing.get_width(), BUSHING_WIDTH);
-        assert_eq!(bushing.get_height(), BUSHING_HEIGHT);
-        assert_eq!(
-            bushing.get_background(),
-            Some(Color::ansi(BUSHING_BACKGROUND))
-        );
-        assert!(!bushing.get_decoratable());
+        let bushing = Bushing::<State>::new(BushingOptions::default());
+        assert_eq!(bushing.visual.look.width(), BUSHING_WIDTH);
+        assert_eq!(bushing.visual.look.height(), BUSHING_HEIGHT);
+        assert_eq!(bushing.get_background(), Some(Color::Ansi(34)));
         let segs = bushing.elements.cot::<Rectangle<State>>();
         assert_eq!(segs.len(), 8);
         for (i, seg) in segs.iter().enumerate() {
@@ -223,28 +417,24 @@ mod tests {
             assert_eq!(seg.get_height(), 1);
             assert_eq!(
                 seg.get_background(),
-                Some(Color::ansi(BUSHING_SEGMENT_BACKGROUNDS[i]))
+                Some(Color::Ansi(BUSHING_SEGMENT_BACKGROUNDS[i]))
             );
-            assert!(!seg.get_decoratable());
         }
     }
 
     #[test]
     fn pavement_spec() {
         Globals::draw_enabled(false);
-        let pavement = build_pavement(0, 0);
+        let pavement = Pavement::<State>::new(PavementOptions::default());
         assert_eq!(pavement.visual.look.width(), PAVEMENT_WIDTH);
-        assert_eq!(pavement.visual.look.height(), 1);
-        assert_eq!(PAVEMENT_HEIGHT, 1);
-        assert!(!pavement.get_decoratable());
-        let blocks = pavement.visual.look.blocks();
-        let row = &blocks[0];
-        assert!(row.len() >= PAVEMENT_WIDTH);
-        for (i, block) in row.iter().enumerate().take(PAVEMENT_WIDTH) {
+        assert_eq!(pavement.visual.look.height(), PAVEMENT_HEIGHT);
+        let blocks = pavement.elements.cot::<Rectangle<State>>();
+        assert_eq!(blocks.len(), PAVEMENT_WIDTH);
+        for (i, block) in blocks.iter().enumerate() {
             let expected = if i % 2 == 0 { 34 } else { 40 };
             assert_eq!(
-                block.decor.background.get(),
-                Some(Color::ansi(expected)),
+                block.get_background(),
+                Some(Color::Ansi(expected)),
                 "pavement block {}",
                 i
             );
@@ -254,9 +444,8 @@ mod tests {
     #[test]
     fn buildings_spec() {
         Globals::draw_enabled(false);
-        let buildings = build_buildings(0, 0);
-        assert_eq!(buildings.get_color(), Some(Color::ansi(BUILDINGS_COLOR)));
-        assert!(!buildings.get_decoratable());
+        let buildings = Buildings::<State>::new(BuildingsOptions::default());
+        assert_eq!(buildings.get_color(), Some(Color::Ansi(BUILDINGS_COLOR)));
         let blocks = buildings.visual.look.blocks();
         assert_eq!(blocks.len(), 5);
         let text: String = blocks
@@ -270,44 +459,75 @@ mod tests {
             .join("\n");
         assert!(text.contains("|^^^|"));
         assert!(text.contains("___"));
-        for row in blocks.iter() {
-            for block in row.iter() {
-                if block.content.get().is_some() {
-                    assert_eq!(
-                        block.decor.color.get(),
-                        Some(Color::ansi(BUILDINGS_COLOR))
-                    );
-                }
-            }
-        }
     }
 
     #[test]
     fn birds_spec() {
         Globals::draw_enabled(false);
-        let flying = build_flying_bird(0, 0);
-        assert_eq!(flying.get_width(), FLYING_BIRD_WIDTH);
-        assert_eq!(flying.get_height(), FLYING_BIRD_HEIGHT);
-        assert!(!flying.get_decoratable());
-        let dead = build_dead_bird(0, 0);
-        assert_eq!(dead.get_width(), DEAD_BIRD_WIDTH);
-        assert_eq!(dead.get_height(), DEAD_BIRD_HEIGHT);
-        assert!(!dead.get_decoratable());
+        let flying = FlyingBird::<State>::new(FlyingBirdOptions::default());
+        assert_eq!(flying.visual.look.width(), FLYING_BIRD_WIDTH);
+        assert_eq!(flying.visual.look.height(), FLYING_BIRD_HEIGHT);
+        let dead = DeadBird::<State>::new(DeadBirdOptions::default());
+        assert_eq!(dead.visual.look.width(), DEAD_BIRD_WIDTH);
+        assert_eq!(dead.visual.look.height(), DEAD_BIRD_HEIGHT);
     }
 
     #[test]
-    fn bush_spec() {
+    fn pipe_renders_segments_with_backgrounds() {
         Globals::draw_enabled(false);
-        for index in 0..12 {
-            let bush = build_bush(0, 0, index);
-            assert_eq!(bush.get_width(), 2);
-            let h = bush.get_height();
-            assert!((1..=2).contains(&h), "bush height {}", h);
-            assert_eq!(bush.get_fill(), Some(bush_fill(index)));
-            assert!(!bush.get_decoratable());
+        let pipe = Pipe::<State>::new(PipeOptions::default());
+        let flat = flatten(&pipe as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (PIPE_WIDTH, PIPE_HEIGHT));
+        let blocks = flat.blocks();
+        for (x, expected) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
+            for row in blocks.iter() {
+                assert_eq!(
+                    row[x].decor.background.get(),
+                    Some(Color::Ansi(*expected)),
+                    "pipe column {}",
+                    x
+                );
+            }
         }
+    }
+
+    #[test]
+    fn pavement_renders_alternating_backgrounds() {
+        Globals::draw_enabled(false);
+        let pavement = Pavement::<State>::new(PavementOptions::default());
+        let flat = flatten(&pavement as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (PAVEMENT_WIDTH, 1));
+        let blocks = flat.blocks();
+        for (i, block) in blocks[0].iter().enumerate() {
+            let expected = if i % 2 == 0 { 34 } else { 40 };
+            assert_eq!(
+                block.decor.background.get(),
+                Some(Color::Ansi(expected)),
+                "pavement block {}",
+                i
+            );
+        }
+    }
+
+    #[test]
+    fn bush_spec() {        Globals::draw_enabled(false);
         assert_eq!(bush_fill(1), '.');
         assert_eq!(bush_fill(3), '`');
         assert_eq!(bush_fill(0), '^');
+        for index in 0..12 {
+            let bush = Bush::<State>::new(BushOptions { index });
+            assert_eq!(bush.visual.look.width(), 2);
+            let h = bush.visual.look.height();
+            assert!((1..=2).contains(&h), "bush height {}", h);
+            let first: String = bush.visual.look.blocks()[0]
+                .iter()
+                .map(|b| b.content.get().map(|c| c.as_str()).unwrap_or_default())
+                .collect();
+            assert!(
+                first.chars().all(|c| c == bush_fill(index)),
+                "bush fill {:?}",
+                first
+            );
+        }
     }
 }

@@ -104,14 +104,34 @@ pub fn build() -> App<State> {
     game.add(title);
     game.add(hint);
 
-    // Static game elements (hand-drawn, not decoratable).
-    game.add(elements::build_buildings(2, 6));
-    game.add(elements::build_flying_bird(40, 6));
-    game.add(elements::build_dead_bird(48, 6));
-    game.add(elements::build_bush(55, 8, 1));
-    game.add(elements::build_pipe(2, 12));
-    game.add(elements::build_bushing(12, 12));
-    game.add(elements::build_pavement(0, 22));
+    // Static game elements (hand-drawn reusable elements).
+    let buildings = elements::Buildings::<State>::default();
+    buildings.x(2).y(6);
+    game.add(buildings);
+
+    let flying_bird = elements::FlyingBird::<State>::default();
+    flying_bird.x(40).y(6);
+    game.add(flying_bird);
+
+    let dead_bird = elements::DeadBird::<State>::default();
+    dead_bird.x(48).y(6);
+    game.add(dead_bird);
+
+    let bush = elements::Bush::<State>::new(elements::BushOptions { index: 1 });
+    bush.x(55).y(8);
+    game.add(bush);
+
+    let pipe = elements::Pipe::<State>::default();
+    pipe.x(2).y(12);
+    game.add(pipe);
+
+    let bushing = elements::Bushing::<State>::default();
+    bushing.x(12).y(12);
+    game.add(bushing);
+
+    let pavement = elements::Pavement::<State>::default();
+    pavement.x(0).y(22);
+    game.add(pavement);
 
     // Initial visibility: start on Splash.
     splash.showed(true);
@@ -227,43 +247,45 @@ mod tests {
         let inside = &game[0].elements;
         assert_eq!(
             inside
-                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "pipe")
+                .dcot_w::<elements::Pipe<State>, _>(|e| e.get_handle() == "pipe")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "bushing")
+                .dcot_w::<elements::Bushing<State>, _>(|e| e.get_handle() == "bushing")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "flying_bird")
+                .dcot_w::<elements::FlyingBird<State>, _>(|e| e.get_handle()
+                    == "flying_bird")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "dead_bird")
+                .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "bush")
+                .dcot_w::<elements::Bush<State>, _>(|e| e.get_handle() == "bush")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Text<State>, _>(|e| e.get_handle() == "pavement")
+                .dcot_w::<elements::Pavement<State>, _>(|e| e.get_handle() == "pavement")
                 .len(),
             1
         );
         assert_eq!(
             inside
-                .dcot_w::<Text<State>, _>(|e| e.get_handle() == "buildings")
+                .dcot_w::<elements::Buildings<State>, _>(|e| e.get_handle()
+                    == "buildings")
                 .len(),
             1
         );
