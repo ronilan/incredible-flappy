@@ -1,19 +1,19 @@
 [package]
-name= "incredible_app_template"
+name= "incredible_flappy"
 version = "0.1.0"
 edition = "2024"
-default-run= "incredible_app_template"
+default-run= "incredible_flappy"
 
 [package.metadata.html]
-title= "Incredible App Template :: Build Modern Rust TUI & CLI Applications"
-description= "An Incredible app template to build terminal, wasm and native (Mac OS & Windows 11) TUI and CLI applications for a unified code base."
-keywords= "tui, cli, rust, incredible, app"
+title= "Incredible Flappy :: Flappy Bird TUI game built with Incredible"
+description= "A Flappy Bird clone TUI game built with the Incredible Rust framework for terminal, web and native targets."
+keywords= "game,flappy,tui,rust,incredible"
 mobile-min-width = 80
 mobile-min-height = 24
 
 [package.metadata.bundle]
-app_name= "Incredible App Template"
-binary_name= "incredible_app_template_macos"
+app_name= "Incredible Flappy"
+binary_name= "incredible_flappy_macos"
 icon_source = "web/favicon.svg"
 
 [workspace]
@@ -22,15 +22,15 @@ icon_source = "web/favicon.svg"
 crate-type = ["cdylib"]
 
 [[bin]]
-name= "incredible_app_template"
+name= "incredible_flappy"
 path = "src/main.rs"
 
 [[bin]]
-name= "incredible_app_template_macos"
+name= "incredible_flappy_macos"
 path = "src/macos.rs"
 
 [[bin]]
-name= "incredible_app_template_windows"
+name= "incredible_flappy_windows"
 path = "src/windows.rs"
 
 [[bin]]

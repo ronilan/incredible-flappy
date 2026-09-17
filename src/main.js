@@ -1,4 +1,4 @@
-import init, { main } from "./pkg/incredible_app_template.js";
+import init, { main } from "./pkg/incredible_flappy.js";
 
 /**
  * Dynamically adjusts the mobile viewport meta tag scale factor to force

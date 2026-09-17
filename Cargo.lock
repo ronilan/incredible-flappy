@@ -395,25 +395,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "incredible_app_template"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "incredible",
- "incredible_elements",
- "incredible_elements_text_fonts",
- "incredible_helpers_effects",
- "incredible_helpers_layout",
- "incredible_helpers_styling",
- "incredible_window_macos",
- "incredible_window_windows",
- "resvg",
- "serde_json",
- "wasm-bindgen",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "incredible_clipboard_browser"
 version = "0.1.0"
 source = "git+https://github.com/ronilan/incredible-alpha#fe9dce4ecd8eef96ea391b8d957a7ac1ada1cb1b"
@@ -548,6 +529,25 @@ dependencies = [
  "futures-core",
  "incredible",
  "windows",
+]
+
+[[package]]
+name = "incredible_flappy"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "incredible",
+ "incredible_elements",
+ "incredible_elements_text_fonts",
+ "incredible_helpers_effects",
+ "incredible_helpers_layout",
+ "incredible_helpers_styling",
+ "incredible_window_macos",
+ "incredible_window_windows",
+ "resvg",
+ "serde_json",
+ "wasm-bindgen",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
