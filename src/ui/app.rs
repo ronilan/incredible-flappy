@@ -117,13 +117,9 @@ pub fn build() -> App<State> {
     dead_bird.x(48).y(6);
     game.add(dead_bird);
 
-    let floor = elements::Floor::<State>::default();
-    floor.x(40).y(20);
-    game.add(floor);
-
-    let bush = elements::Bushes::<State>::default();
-    bush.x(40).y(20);
-    game.add(bush);
+    let scenery = elements::Scenery::<State>::default();
+    scenery.x(0).y(18);
+    game.add(scenery);
 
     let pipe = elements::Pipe::<State>::default();
     pipe.x(2).y(12);
@@ -132,10 +128,6 @@ pub fn build() -> App<State> {
     let bushing = elements::Bushing::<State>::default();
     bushing.x(12).y(12);
     game.add(bushing);
-
-    let pavement = elements::Pavement::<State>::default();
-    pavement.x(0).y(22);
-    game.add(pavement);
 
     // Initial visibility: start on Splash.
     splash.showed(true);
@@ -276,19 +268,7 @@ mod tests {
         );
         assert_eq!(
             inside
-                .dcot_w::<elements::Bushes<State>, _>(|e| e.get_handle() == "bushes")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Floor<State>, _>(|e| e.get_handle() == "floor")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Pavement<State>, _>(|e| e.get_handle() == "pavement")
+                .dcot_w::<elements::Scenery<State>, _>(|e| e.get_handle() == "scenery")
                 .len(),
             1
         );

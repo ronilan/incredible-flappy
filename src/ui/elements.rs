@@ -35,6 +35,9 @@ pub const BUSHES_HEIGHT: usize = 2;
 pub const FLOOR_WIDTH: usize = 40;
 pub const FLOOR_HEIGHT: usize = 2;
 
+pub const SCENERY_WIDTH: usize = 80;
+pub const SCENERY_HEIGHT: usize = 5;
+
 /// Fill character for a bush by column index:
 /// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
@@ -600,6 +603,52 @@ impl<S: Clone + PartialEq> Default for Floor<S> {
     }
 }
 
+// -----------------------------
+// Scenery
+// -----------------------------
+
+#[derive(Clone, Debug, Default)]
+pub struct SceneryOptions;
+
+element! {
+  pub struct Scenery<S> {
+      options: SceneryOptions = SceneryOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Scenery<S> {
+    pub fn new(options: SceneryOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((SCENERY_WIDTH, SCENERY_HEIGHT, ' ')))
+            .handle("scenery");
+
+        // Bottom to top: Floor, Pavement, Bushes.
+        let floor = Floor::<S>::default();
+        floor.x(40).y(2);
+        el.add(floor);
+
+        let pavement = Pavement::<S>::default();
+        pavement.x(0).y(4);
+        el.add(pavement);
+
+        let bushes = Bushes::<S>::default();
+        bushes.x(40).y(2);
+        el.add(bushes);
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for Scenery<S> {
+    fn default() -> Self {
+        Self::new(SceneryOptions::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {    use super::*;
     use crate::ui::app::State;
@@ -879,5 +928,22 @@ mod tests {    use super::*;
                 assert_eq!(block.decor.background.get(), Some(Color::Ansi(152)));
             }
         }
+    }
+
+    #[test]
+    fn scenery_spec() {
+        Globals::draw_enabled(false);
+        let scenery = Scenery::<State>::new(SceneryOptions::default());
+        assert_eq!(scenery.visual.look.width(), SCENERY_WIDTH);
+        assert_eq!(scenery.visual.look.height(), SCENERY_HEIGHT);
+        let floor = scenery.elements.cot::<Floor<State>>();
+        assert_eq!(floor.len(), 1);
+        assert_eq!((floor[0].get_x(), floor[0].get_y()), (40, 2));
+        let pavement = scenery.elements.cot::<Pavement<State>>();
+        assert_eq!(pavement.len(), 1);
+        assert_eq!((pavement[0].get_x(), pavement[0].get_y()), (0, 4));
+        let bushes = scenery.elements.cot::<Bushes<State>>();
+        assert_eq!(bushes.len(), 1);
+        assert_eq!((bushes[0].get_x(), bushes[0].get_y()), (40, 2));
     }
 }
