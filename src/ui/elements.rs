@@ -11,17 +11,17 @@ use rand::Rng;
 
 pub const PIPE_WIDTH: usize = 6;
 pub const PIPE_HEIGHT: usize = 10;
-pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [38, 44, 44, 50, 56, 62];
+pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [28, 34, 34, 40, 46, 40];
 
 pub const BUSHING_WIDTH: usize = 8;
 pub const BUSHING_HEIGHT: usize = 1;
-pub const BUSHING_SEGMENT_BACKGROUNDS: [u8; 8] = [38, 44, 44, 50, 50, 50, 56, 62];
+pub const BUSHING_SEGMENT_BACKGROUNDS: [u8; 8] = [28, 34, 34, 40, 40, 40, 46, 40];
 
 pub const PAVEMENT_WIDTH: usize = 80;
 pub const PAVEMENT_HEIGHT: usize = 1;
 
 pub const BUILDINGS_COLOR: u8 = 244;
-pub const BUILDINGS_STR: &str = "_     ___       |^^^|  \n __| |___|:::|    __|:::|  \n|oo|.|* *|:::|   |''|:::|  \n|oo|.|** |:::|   |''|:::|  \n|_o|_|[]_|_|_|   |_'|___| ";
+pub const BUILDINGS_STR: &str = "    _     ___       |^^^|  \n __| |___|:::|    __|:::|  \n|oo|.|* *|:::|   |''|:::|  \n|oo|.|** |:::|   |''|:::|  \n|_o|_|[]_|_|_|   |_'|___| ";
 
 pub const FLYING_BIRD_WIDTH: usize = 5;
 pub const FLYING_BIRD_HEIGHT: usize = 2;
@@ -285,6 +285,65 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             el.background(Some(Color::Ansi(bg)));
         }
 
+        // Eye.
+        let eye = Rectangle::<S>::new();
+        eye.width(1)
+            .height(1)
+            .fill(Some('.'))
+            .color(Some(Color::Ansi(16)))
+            .background(Some(Color::Ansi(231)))
+            .x(3)
+            .y(0);
+        eye.decorate();
+        el.add(eye);
+
+        // Wing.
+        let wing = Rectangle::<S>::new();
+        wing.width(2)
+            .height(1)
+            .fill(Some('─'))
+            .color(Some(Color::Ansi(16)))
+            .background(Some(Color::Ansi(160)))
+            .x(3)
+            .y(1);
+        wing.decorate();
+        el.add(wing);
+
+        // Body.
+        let body = Rectangle::<S>::new();
+        body.width(3)
+            .height(1)
+            .fill(Some(' '))
+            .background(Some(Color::Ansi(220)))
+            .x(0)
+            .y(0);
+        body.decorate();
+        el.add(body);
+
+        // Belly patch.
+        let belly = Rectangle::<S>::new();
+        belly
+            .width(1)
+            .height(1)
+            .fill(Some(' '))
+            .background(Some(Color::Ansi(214)))
+            .x(2)
+            .y(1);
+        belly.decorate();
+        el.add(belly);
+
+        // Beak.
+        let beak = Rectangle::<S>::new();
+        beak.width(2)
+            .height(1)
+            .fill(Some('>'))
+            .color(Some(Color::Ansi(231)))
+            .background(Some(Color::Ansi(214)))
+            .x(0)
+            .y(1);
+        beak.decorate();
+        el.add(beak);
+
         el.decorate();
 
         el
@@ -467,9 +526,43 @@ mod tests {
         let flying = FlyingBird::<State>::new(FlyingBirdOptions::default());
         assert_eq!(flying.visual.look.width(), FLYING_BIRD_WIDTH);
         assert_eq!(flying.visual.look.height(), FLYING_BIRD_HEIGHT);
+        assert_eq!(flying.elements.cot::<Rectangle<State>>().len(), 5);
         let dead = DeadBird::<State>::new(DeadBirdOptions::default());
         assert_eq!(dead.visual.look.width(), DEAD_BIRD_WIDTH);
         assert_eq!(dead.visual.look.height(), DEAD_BIRD_HEIGHT);
+    }
+
+    #[test]
+    fn flying_bird_renders() {
+        Globals::draw_enabled(false);
+        let bird = FlyingBird::<State>::new(FlyingBirdOptions::default());
+        let flat = flatten(&bird as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (5, 2));
+        let blocks = flat.blocks();
+        let cell = |x: usize, y: usize| {
+            blocks[y][x]
+                .content
+                .get()
+                .map(|c| c.as_str())
+                .unwrap_or_default()
+        };
+        let bg = |x: usize, y: usize| blocks[y][x].decor.background.get();
+        // Eye.
+        assert_eq!(cell(3, 0), ".");
+        assert_eq!(bg(3, 0), Some(Color::Ansi(231)));
+        // Body.
+        assert_eq!(bg(0, 0), Some(Color::Ansi(220)));
+        assert_eq!(bg(2, 0), Some(Color::Ansi(220)));
+        // Beak.
+        assert_eq!(cell(0, 1), ">");
+        assert_eq!(cell(1, 1), ">");
+        assert_eq!(bg(0, 1), Some(Color::Ansi(214)));
+        // Belly patch.
+        assert_eq!(bg(2, 1), Some(Color::Ansi(214)));
+        // Wing.
+        assert_eq!(cell(3, 1), "─");
+        assert_eq!(cell(4, 1), "─");
+        assert_eq!(bg(3, 1), Some(Color::Ansi(160)));
     }
 
     #[test]
