@@ -32,6 +32,9 @@ pub const DEAD_BIRD_HEIGHT: usize = 4;
 pub const BUSHES_WIDTH: usize = 40;
 pub const BUSHES_HEIGHT: usize = 2;
 
+pub const FLOOR_WIDTH: usize = 40;
+pub const FLOOR_HEIGHT: usize = 2;
+
 /// Fill character for a bush by column index:
 /// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
@@ -555,6 +558,48 @@ impl<S: Clone + PartialEq> Default for Bushes<S> {
     }
 }
 
+// -----------------------------
+// Floor
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct FloorOptions {
+    pub background: u8,
+}
+
+impl Default for FloorOptions {
+    fn default() -> Self {
+        Self { background: 152 }
+    }
+}
+
+element! {
+  pub struct Floor<S> {
+      options: FloorOptions = FloorOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Floor<S> {
+    pub fn new(options: FloorOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((FLOOR_WIDTH, FLOOR_HEIGHT, ' ')))
+            .background(Some(Color::Ansi(el.options.background)))
+            .handle("floor");
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for Floor<S> {
+    fn default() -> Self {
+        Self::new(FloorOptions::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {    use super::*;
     use crate::ui::app::State;
@@ -815,6 +860,24 @@ mod tests {    use super::*;
                 "bushes bottom cell {}",
                 i
             );
+        }
+    }
+
+    #[test]
+    fn floor_spec() {
+        Globals::draw_enabled(false);
+        let floor = Floor::<State>::new(FloorOptions::default());
+        assert_eq!(floor.visual.look.width(), FLOOR_WIDTH);
+        assert_eq!(floor.visual.look.height(), FLOOR_HEIGHT);
+        assert_eq!(FLOOR_WIDTH, 40);
+        assert_eq!(FLOOR_HEIGHT, 2);
+        assert_eq!(floor.get_background(), Some(Color::Ansi(152)));
+        let flat = flatten(&floor as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (40, 2));
+        for row in flat.blocks().iter() {
+            for block in row.iter() {
+                assert_eq!(block.decor.background.get(), Some(Color::Ansi(152)));
+            }
         }
     }
 }

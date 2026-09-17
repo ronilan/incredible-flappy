@@ -117,6 +117,10 @@ pub fn build() -> App<State> {
     dead_bird.x(48).y(6);
     game.add(dead_bird);
 
+    let floor = elements::Floor::<State>::default();
+    floor.x(40).y(20);
+    game.add(floor);
+
     let bush = elements::Bushes::<State>::default();
     bush.x(40).y(20);
     game.add(bush);
@@ -273,6 +277,12 @@ mod tests {
         assert_eq!(
             inside
                 .dcot_w::<elements::Bushes<State>, _>(|e| e.get_handle() == "bushes")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<elements::Floor<State>, _>(|e| e.get_handle() == "floor")
                 .len(),
             1
         );
