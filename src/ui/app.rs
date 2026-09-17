@@ -2,6 +2,8 @@ use incredible::*;
 use incredible_elements::{App, Rectangle, Text};
 use incredible_helpers_layout::*;
 
+use crate::ui::elements;
+
 pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
 
@@ -101,6 +103,15 @@ pub fn build() -> App<State> {
 
     game.add(title);
     game.add(hint);
+
+    // Static game elements (hand-drawn, not decoratable).
+    game.add(elements::build_buildings(2, 6));
+    game.add(elements::build_flying_bird(40, 6));
+    game.add(elements::build_dead_bird(48, 6));
+    game.add(elements::build_bush(55, 8, 1));
+    game.add(elements::build_pipe(2, 12));
+    game.add(elements::build_bushing(12, 12));
+    game.add(elements::build_pavement(0, 22));
 
     // Initial visibility: start on Splash.
     splash.showed(true);
@@ -203,5 +214,58 @@ mod tests {
         for s in [State::Splash, State::Ready, State::Flying, State::Dead] {
             assert_eq!(transition(&s, &Key::Escape), Some(State::Splash));
         }
+    }
+
+    #[test]
+    fn game_screen_presents_all_elements() {
+        Globals::draw_enabled(false);
+        let app = build();
+        let game = app
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game");
+        assert_eq!(game.len(), 1);
+        let inside = &game[0].elements;
+        assert_eq!(
+            inside
+                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "pipe")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "bushing")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "flying_bird")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "dead_bird")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "bush")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Text<State>, _>(|e| e.get_handle() == "pavement")
+                .len(),
+            1
+        );
+        assert_eq!(
+            inside
+                .dcot_w::<Text<State>, _>(|e| e.get_handle() == "buildings")
+                .len(),
+            1
+        );
     }
 }
