@@ -394,6 +394,54 @@ impl<S: Clone + PartialEq> DeadBird<S> {
             el.background(Some(Color::Ansi(bg)));
         }
 
+        // Eye.
+        let eye = Rectangle::<S>::new();
+        eye.width(1)
+            .height(1)
+            .fill(Some('x'))
+            .color(Some(Color::Ansi(16)))
+            .background(Some(Color::Ansi(231)))
+            .x(1)
+            .y(2);
+        eye.decorate();
+        el.add(eye);
+
+        // Tail.
+        let tail = Rectangle::<S>::new();
+        tail.width(1)
+            .height(2)
+            .fill(Some('|'))
+            .color(Some(Color::Ansi(16)))
+            .background(Some(Color::Ansi(160)))
+            .x(0)
+            .y(2);
+        tail.decorate();
+        el.add(tail);
+
+        // Body.
+        let body = Rectangle::<S>::new();
+        body.width(1)
+            .height(2)
+            .fill(Some(' '))
+            .color(Some(Color::Ansi(16)))
+            .background(Some(Color::Ansi(220)))
+            .x(1)
+            .y(0);
+        body.decorate();
+        el.add(body);
+
+        // Head.
+        let head = Rectangle::<S>::new();
+        head.width(1)
+            .height(2)
+            .fill(Some('v'))
+            .color(Some(Color::Ansi(231)))
+            .background(Some(Color::Ansi(214)))
+            .x(0)
+            .y(0);
+        head.decorate();
+        el.add(head);
+
         el.decorate();
 
         el
@@ -533,8 +581,7 @@ mod tests {
     }
 
     #[test]
-    fn flying_bird_renders() {
-        Globals::draw_enabled(false);
+    fn flying_bird_renders() {        Globals::draw_enabled(false);
         let bird = FlyingBird::<State>::new(FlyingBirdOptions::default());
         let flat = flatten(&bird as &dyn ElementTrait<State>);
         assert_eq!((flat.width(), flat.height()), (5, 2));
@@ -563,6 +610,37 @@ mod tests {
         assert_eq!(cell(3, 1), "─");
         assert_eq!(cell(4, 1), "─");
         assert_eq!(bg(3, 1), Some(Color::Ansi(160)));
+    }
+
+    #[test]
+    fn dead_bird_renders() {
+        Globals::draw_enabled(false);
+        let bird = DeadBird::<State>::new(DeadBirdOptions::default());
+        assert_eq!(bird.elements.cot::<Rectangle<State>>().len(), 4);
+        let flat = flatten(&bird as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (2, 4));
+        let blocks = flat.blocks();
+        let cell = |x: usize, y: usize| {
+            blocks[y][x]
+                .content
+                .get()
+                .map(|c| c.as_str())
+                .unwrap_or_default()
+        };
+        let bg = |x: usize, y: usize| blocks[y][x].decor.background.get();
+        // Head.
+        assert_eq!(cell(0, 0), "v");
+        assert_eq!(cell(0, 1), "v");
+        assert_eq!(bg(0, 0), Some(Color::Ansi(214)));
+        // Body.
+        assert_eq!(bg(1, 0), Some(Color::Ansi(220)));
+        assert_eq!(bg(1, 1), Some(Color::Ansi(220)));
+        // Tail + eye.
+        assert_eq!(cell(0, 2), "|");
+        assert_eq!(cell(0, 3), "|");
+        assert_eq!(bg(0, 2), Some(Color::Ansi(160)));
+        assert_eq!(cell(1, 2), "x");
+        assert_eq!(bg(1, 2), Some(Color::Ansi(231)));
     }
 
     #[test]
