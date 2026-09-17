@@ -1,33 +1,49 @@
 use incredible::*;
-use incredible_elements::{App, Link, Text};
-use incredible_elements_text_fonts::{BlockCharsStr, BlockKind};
-use incredible_helpers_effects::*;
+use incredible_elements::{App, Rectangle, Text};
 use incredible_helpers_layout::*;
-use incredible_helpers_styling::*;
+
+pub const SCREEN_WIDTH: usize = 80;
+pub const SCREEN_HEIGHT: usize = 24;
 
 #[derive(Clone, PartialEq, Debug, Default)]
-pub struct State {}
+pub enum State {
+    #[default]
+    Splash,
+    Ready,
+    Flying,
+    Dead,
+}
 
-pub fn build_theme() {
-    theme_rule::<Style>("Link", |s| {
-        s.base.decor.underline.set(Some(UnderlineKind::Dotted));
-        s.hovered.decor.background.set(Some(Color::from(9)));
-        s.hovered.pointer.set(Some(PointerShape::Pointer));
-    });
+fn game_title_for(state: &State) -> &'static str {
+    match state {
+        State::Splash => "GAME",
+        State::Ready => "GAME - READY",
+        State::Flying => "GAME - FLYING",
+        State::Dead => "GAME - DEAD",
+    }
+}
 
-    transform_rule("GradientLabel", |flattened, progress| {
-        gradient_color(
-            &[
-                Color::ansi(4),
-                Color::ansi(5),
-                Color::ansi(6),
-                Color::ansi(4),
-            ],
-            GradientDirection::Horizontal,
-            flattened,
-            progress,
-        )
-    });
+fn game_hint_for(state: &State) -> &'static str {
+    match state {
+        State::Splash => "",
+        State::Ready => "Space -> Flying | d -> Dead | Esc -> Splash",
+        State::Flying => "d -> Dead | Esc -> Splash",
+        State::Dead => "Enter -> Ready | Esc -> Splash",
+    }
+}
+
+pub fn transition(state: &State, key: &Key) -> Option<State> {
+    match (key, state) {
+        (Key::Escape, _) => Some(State::Splash),
+        (Key::Enter, State::Splash) => Some(State::Ready),
+        (Key::Enter, State::Dead) => Some(State::Ready),
+        (Key::Char(' '), State::Ready) => Some(State::Flying),
+        (Key::Char('d'), State::Ready) => Some(State::Dead),
+        (Key::Char('D'), State::Ready) => Some(State::Dead),
+        (Key::Char('d'), State::Flying) => Some(State::Dead),
+        (Key::Char('D'), State::Flying) => Some(State::Dead),
+        _ => None,
+    }
 }
 
 pub fn build() -> App<State> {
@@ -36,52 +52,156 @@ pub fn build() -> App<State> {
     app.on_window(|el, _state, _event| {
         el.elements_flow_down(1);
         el.elements_to_center();
-
-        if let Some(footer) = el
-            .elements
-            .cot_w::<Link<State>, _>(|e| e.get_handle() == "footer")
-            .first()
-        {
-            let el_inside = &el.get_inside();
-            footer.to_bottom_of(el_inside).to_center_x_of(el_inside);
-        };
     });
 
-    let logo = BlockCharsStr::default();
-    logo.text("Incredible")
-        .kind(BlockKind::Shadow)
-        .style_handle("GradientLabel")
-        .animation(Some(Animation::new(5000.0, 8.0, 1.0)));
+    // Splash screen: 80x24 rectangle.
+    let splash = Rectangle::<State>::new();
+    splash
+        .width(SCREEN_WIDTH)
+        .height(SCREEN_HEIGHT)
+        .fill(Some(' '))
+        .handle("splash");
 
-    logo.on_mouse(|el, _state, event| {
-        if let Mouse::Down = event.mouse {
-            if let Some(mut anim) = el.get_animation() {
-                anim.start_time = None;
-                el.animation(Some(anim));
+    let splash_title = Text::<State>::default();
+    splash_title
+        .text("SPLASH")
+        .handle("splash_title")
+        .x(2)
+        .y(2);
+
+    let splash_hint = Text::<State>::default();
+    splash_hint
+        .text("Enter -> Game-Ready | Esc -> Splash")
+        .handle("splash_hint")
+        .x(2)
+        .y(4);
+
+    splash.add(splash_title);
+    splash.add(splash_hint);
+
+    // Game screen: 80x24 rectangle.
+    let game = Rectangle::<State>::new();
+    game.width(SCREEN_WIDTH)
+        .height(SCREEN_HEIGHT)
+        .fill(Some(' '))
+        .handle("game");
+
+    let title = Text::<State>::default();
+    title
+        .text(game_title_for(&State::Ready))
+        .handle("game_title")
+        .x(2)
+        .y(2);
+
+    let hint = Text::<State>::default();
+    hint.text(game_hint_for(&State::Ready))
+        .handle("game_hint")
+        .x(2)
+        .y(4);
+
+    game.add(title);
+    game.add(hint);
+
+    // Initial visibility: start on Splash.
+    splash.showed(true);
+    game.showed(false);
+
+    app.on_state(|el, state, _event| {
+        let is_splash = *state == State::Splash;
+        for rect in el
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")
+        {
+            rect.showed(is_splash);
+        }
+        for rect in el
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game")
+        {
+            rect.showed(!is_splash);
+        }
+        for t in el
+            .elements
+            .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_title")
+        {
+            t.text(game_title_for(state));
+        }
+        for t in el
+            .elements
+            .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_hint")
+        {
+            t.text(game_hint_for(state));
+        }
+        el.draw();
+    });
+
+    app.on_key(|el, state, event| {
+        if let Some(next) = transition(state, &event.key) {
+            if next != *state {
+                *state = next;
+                el.draw();
             }
         }
     });
 
-    fn logo_effects(el: &BlockCharsStr<State>) {
-        decorate_rules::<State, BlockCharsStr<State>>(el, logo_effects);
-    }
-    effect(&logo, logo_effects);
+    app.add(splash);
+    app.add(game);
 
-    let text = Text::default();
-    text.faint(Some(true))
-        .text("A Rust TUI Framework for the 2nd Quarter of the 21st Century");
-
-    let footer = Link::default();
-    footer
-        .faint(Some(true))
-        .text("Fabriqué au Canada : Made in Canada 🇨🇦")
-        .handle("footer")
-        .url("https://www.incredible.rs");
-
-    app.add(logo);
-    app.add(text);
-    app.add(footer);
-
-    build_theme();
     app
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_state_is_splash() {
+        assert_eq!(State::default(), State::Splash);
+    }
+
+    #[test]
+    fn screens_are_80x24() {
+        Globals::draw_enabled(false);
+        let app = build();
+        let splash = app
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash");
+        let game = app
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game");
+        assert_eq!(splash.len(), 1);
+        assert_eq!(game.len(), 1);
+        assert_eq!(splash[0].get_width(), SCREEN_WIDTH);
+        assert_eq!(splash[0].get_height(), SCREEN_HEIGHT);
+        assert_eq!(game[0].get_width(), SCREEN_WIDTH);
+        assert_eq!(game[0].get_height(), SCREEN_HEIGHT);
+        assert_eq!(SCREEN_WIDTH, 80);
+        assert_eq!(SCREEN_HEIGHT, 24);
+    }
+
+    #[test]
+    fn transitions_match_spec() {
+        // Starts with Splash, Enter moves to Game-Ready.
+        assert_eq!(transition(&State::Splash, &Key::Enter), Some(State::Ready));
+        // Space moves to Flying.
+        assert_eq!(
+            transition(&State::Ready, &Key::Char(' ')),
+            Some(State::Flying)
+        );
+        // Dead wired to d.
+        assert_eq!(
+            transition(&State::Flying, &Key::Char('d')),
+            Some(State::Dead)
+        );
+        assert_eq!(
+            transition(&State::Ready, &Key::Char('d')),
+            Some(State::Dead)
+        );
+        // Enter moves to Ready (from Dead).
+        assert_eq!(transition(&State::Dead, &Key::Enter), Some(State::Ready));
+        // Esc in any state moves to Splash.
+        for s in [State::Splash, State::Ready, State::Flying, State::Dead] {
+            assert_eq!(transition(&s, &Key::Escape), Some(State::Splash));
+        }
+    }
 }
