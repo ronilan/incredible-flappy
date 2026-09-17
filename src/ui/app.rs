@@ -117,11 +117,8 @@ pub fn build() -> App<State> {
     dead_bird.x(48).y(6);
     game.add(dead_bird);
 
-    let bush = elements::Bush::<State>::new(elements::BushOptions {
-        index: 1,
-        ..Default::default()
-    });
-    bush.x(55).y(8);
+    let bush = elements::Bushes::<State>::default();
+    bush.x(40).y(20);
     game.add(bush);
 
     let pipe = elements::Pipe::<State>::default();
@@ -275,7 +272,7 @@ mod tests {
         );
         assert_eq!(
             inside
-                .dcot_w::<elements::Bush<State>, _>(|e| e.get_handle() == "bush")
+                .dcot_w::<elements::Bushes<State>, _>(|e| e.get_handle() == "bushes")
                 .len(),
             1
         );

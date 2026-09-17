@@ -29,6 +29,9 @@ pub const FLYING_BIRD_HEIGHT: usize = 2;
 pub const DEAD_BIRD_WIDTH: usize = 2;
 pub const DEAD_BIRD_HEIGHT: usize = 4;
 
+pub const BUSHES_WIDTH: usize = 40;
+pub const BUSHES_HEIGHT: usize = 2;
+
 /// Fill character for a bush by column index:
 /// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
@@ -494,9 +497,66 @@ impl<S: Clone + PartialEq> Bush<S> {
     }
 }
 
+// -----------------------------
+// Bushes
+// -----------------------------
+
+#[derive(Clone, Debug)]
+pub struct BushesOptions {
+    pub width: usize,
+}
+
+impl Default for BushesOptions {
+    fn default() -> Self {
+        Self {
+            width: BUSHES_WIDTH,
+        }
+    }
+}
+
+element! {
+  pub struct Bushes<S> {
+      options: BushesOptions = BushesOptions::default(),
+  }
+}
+
+impl<S: Clone + PartialEq> Bushes<S> {
+    pub fn new(options: BushesOptions) -> Self {
+        let mut el = Self::blank();
+        el.options = options;
+
+        el.look(Look::from((
+            el.options.width,
+            BUSHES_HEIGHT,
+            ' ',
+        )))
+        .handle("bushes");
+
+        for index in 0..el.options.width {
+            let bush = Bush::<S>::new(BushOptions {
+                index,
+                ..Default::default()
+            });
+            // Bottom-align within the 2-row strip.
+            let h = bush.visual.look.height();
+            bush.x(index as isize).y((BUSHES_HEIGHT - h) as isize);
+            el.add(bush);
+        }
+
+        el.decorate();
+
+        el
+    }
+}
+
+impl<S: Clone + PartialEq> Default for Bushes<S> {
+    fn default() -> Self {
+        Self::new(BushesOptions::default())
+    }
+}
+
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod tests {    use super::*;
     use crate::ui::app::State;
 
     #[test]
@@ -589,7 +649,8 @@ mod tests {
     }
 
     #[test]
-    fn flying_bird_renders() {        Globals::draw_enabled(false);
+    fn flying_bird_renders() {
+        Globals::draw_enabled(false);
         let bird = FlyingBird::<State>::new(FlyingBirdOptions::default());
         let flat = flatten(&bird as &dyn ElementTrait<State>);
         assert_eq!((flat.width(), flat.height()), (5, 2));
@@ -689,7 +750,8 @@ mod tests {
     }
 
     #[test]
-    fn bush_spec() {        Globals::draw_enabled(false);
+    fn bush_spec() {
+        Globals::draw_enabled(false);
         assert_eq!(bush_fill(1), '.');
         assert_eq!(bush_fill(3), '`');
         assert_eq!(bush_fill(0), '^');
@@ -711,6 +773,47 @@ mod tests {
                 first.chars().all(|c| c == bush_fill(index)),
                 "bush fill {:?}",
                 first
+            );
+        }
+    }
+
+    #[test]
+    fn bushes_spec() {
+        Globals::draw_enabled(false);
+        let bushes = Bushes::<State>::new(BushesOptions::default());
+        assert_eq!(bushes.visual.look.width(), BUSHES_WIDTH);
+        assert_eq!(bushes.visual.look.height(), BUSHES_HEIGHT);
+        assert_eq!(BUSHES_WIDTH, 40);
+        let kids = bushes.elements.cot::<Bush<State>>();
+        assert_eq!(kids.len(), BUSHES_WIDTH);
+        for (index, bush) in kids.iter().enumerate() {
+            assert_eq!(bush.visual.look.width(), 2);
+            let h = bush.visual.look.height();
+            assert!((1..=2).contains(&h), "bush {} height {}", index, h);
+            // Bottom-aligned within the 2-row strip.
+            assert_eq!(
+                bush.get_y() as usize + h,
+                BUSHES_HEIGHT,
+                "bush {} bottom-aligned",
+                index
+            );
+            assert_eq!(bush.get_x() as usize, index);
+        }
+    }
+
+    #[test]
+    fn bushes_render_bottom_row() {
+        Globals::draw_enabled(false);
+        let bushes = Bushes::<State>::new(BushesOptions::default());
+        let flat = flatten(&bushes as &dyn ElementTrait<State>);
+        assert_eq!((flat.width(), flat.height()), (BUSHES_WIDTH, 2));
+        // Every bottom-row cell is covered by a bush (bg 157).
+        for (i, block) in flat.blocks()[1].iter().enumerate() {
+            assert_eq!(
+                block.decor.background.get(),
+                Some(Color::Ansi(157)),
+                "bushes bottom cell {}",
+                i
             );
         }
     }
