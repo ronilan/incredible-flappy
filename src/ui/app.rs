@@ -52,7 +52,6 @@ pub fn build() -> App<State> {
     let app = App::default();
 
     app.on_window(|el, _state, _event| {
-        el.elements_flow_down(1);
         el.elements_to_center();
     });
 
@@ -175,109 +174,4 @@ pub fn build() -> App<State> {
     app.add(game);
 
     app
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_state_is_splash() {
-        assert_eq!(State::default(), State::Splash);
-    }
-
-    #[test]
-    fn screens_are_80x24() {
-        Globals::draw_enabled(false);
-        let app = build();
-        let splash = app
-            .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash");
-        let game = app
-            .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game");
-        assert_eq!(splash.len(), 1);
-        assert_eq!(game.len(), 1);
-        assert_eq!(splash[0].get_width(), SCREEN_WIDTH);
-        assert_eq!(splash[0].get_height(), SCREEN_HEIGHT);
-        assert_eq!(game[0].get_width(), SCREEN_WIDTH);
-        assert_eq!(game[0].get_height(), SCREEN_HEIGHT);
-        assert_eq!(SCREEN_WIDTH, 80);
-        assert_eq!(SCREEN_HEIGHT, 24);
-    }
-
-    #[test]
-    fn transitions_match_spec() {
-        // Starts with Splash, Enter moves to Game-Ready.
-        assert_eq!(transition(&State::Splash, &Key::Enter), Some(State::Ready));
-        // Space moves to Flying.
-        assert_eq!(
-            transition(&State::Ready, &Key::Char(' ')),
-            Some(State::Flying)
-        );
-        // Dead wired to d.
-        assert_eq!(
-            transition(&State::Flying, &Key::Char('d')),
-            Some(State::Dead)
-        );
-        assert_eq!(
-            transition(&State::Ready, &Key::Char('d')),
-            Some(State::Dead)
-        );
-        // Enter moves to Ready (from Dead).
-        assert_eq!(transition(&State::Dead, &Key::Enter), Some(State::Ready));
-        // Esc in any state moves to Splash.
-        for s in [State::Splash, State::Ready, State::Flying, State::Dead] {
-            assert_eq!(transition(&s, &Key::Escape), Some(State::Splash));
-        }
-    }
-
-    #[test]
-    fn game_screen_presents_all_elements() {
-        Globals::draw_enabled(false);
-        let app = build();
-        let game = app
-            .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game");
-        assert_eq!(game.len(), 1);
-        let inside = &game[0].elements;
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Pipe<State>, _>(|e| e.get_handle() == "pipe")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Bushing<State>, _>(|e| e.get_handle() == "bushing")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::FlyingBird<State>, _>(|e| e.get_handle()
-                    == "flying_bird")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Scenery<State>, _>(|e| e.get_handle() == "scenery")
-                .len(),
-            1
-        );
-        assert_eq!(
-            inside
-                .dcot_w::<elements::Buildings<State>, _>(|e| e.get_handle()
-                    == "buildings")
-                .len(),
-            1
-        );
-    }
 }

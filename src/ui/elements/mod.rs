@@ -1,0 +1,21 @@
+pub mod buildings;
+pub mod bush;
+pub mod bushes;
+pub mod bushing;
+pub mod dead_bird;
+pub mod floor;
+pub mod flying_bird;
+pub mod pavement;
+pub mod pipe;
+pub mod scenery;
+
+pub use buildings::*;
+pub use bush::*;
+pub use bushes::*;
+pub use bushing::*;
+pub use dead_bird::*;
+pub use floor::*;
+pub use flying_bird::*;
+pub use pavement::*;
+pub use pipe::*;
+pub use scenery::*;
