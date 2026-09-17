@@ -1,0 +1,113 @@
+use std::fs;
+
+fn extract_section(text: &str, header: &str) -> String {
+    let marker = format!("[{}]", header);
+    if let Some(idx) = text.find(&marker) {
+        let after = &text[idx + marker.len()..];
+        let end = after
+            .find('\n')
+            .map(|nl| {
+                let rest = &after[nl..];
+                rest.find("\n[").map(|i| nl + 1 + i).unwrap_or(after.len())
+            })
+            .unwrap_or(after.len());
+        after[..end].trim().to_string()
+    } else {
+        String::new()
+    }
+}
+
+fn get_field(section: &str, key: &str) -> String {
+    for line in section.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with(key) {
+            let rest = &trimmed[key.len()..].trim_start();
+            if rest.starts_with('=') {
+                let val = rest[1..].trim();
+                if val.starts_with('"') && val.ends_with('"') && val.len() >= 2 {
+                    return val[1..val.len() - 1].to_string();
+                }
+            }
+        }
+    }
+    String::new()
+}
+
+pub fn package_name() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let pkg_section = extract_section(&cargo_toml, "package");
+    let name = get_field(&pkg_section, "name");
+    if name.is_empty() {
+        "incredible_app".to_string()
+    } else {
+        name
+    }
+}
+
+pub fn bundle_app_name() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let bundle_section = extract_section(&cargo_toml, "package.metadata.bundle");
+    let name = get_field(&bundle_section, "app_name");
+    if name.is_empty() {
+        "An Incredible App".to_string()
+    } else {
+        name
+    }
+}
+
+pub fn bundle_binary_name() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let bundle_section = extract_section(&cargo_toml, "package.metadata.bundle");
+    let name = get_field(&bundle_section, "binary_name");
+    if name.is_empty() {
+        format!("{}_macos", package_name())
+    } else {
+        name
+    }
+}
+
+pub fn bundle_icon_source() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let bundle_section = extract_section(&cargo_toml, "package.metadata.bundle");
+    let name = get_field(&bundle_section, "icon_source");
+    if name.is_empty() {
+        "web/favicon.svg".to_string()
+    } else {
+        name
+    }
+}
+
+pub fn package_version() -> String {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let pkg_section = extract_section(&cargo_toml, "package");
+    let v = get_field(&pkg_section, "version");
+    if v.is_empty() {
+        "0.1.0".to_string()
+    } else {
+        v
+    }
+}
+
+pub fn html_metadata() -> HtmlMetadata {
+    let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
+    let html_section = extract_section(&cargo_toml, "package.metadata.html");
+    HtmlMetadata {
+        title: get_field(&html_section, "title"),
+        description: get_field(&html_section, "description"),
+        keywords: get_field(&html_section, "keywords"),
+        min_width: get_field(&html_section, "mobile-min-width"),
+        min_height: get_field(&html_section, "mobile-min-height"),
+        cname: get_field(&html_section, "cname"),
+        version: package_version(),
+    }
+}
+
+pub struct HtmlMetadata {
+    pub title: String,
+    pub description: String,
+    pub keywords: String,
+    pub min_width: String,
+    pub min_height: String,
+    pub cname: String,
+    pub version: String,
+}
