@@ -101,12 +101,14 @@ impl<S: Clone + PartialEq> Game<S> {
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
         dead_bird.showed(false);
-        el.add(dead_bird);
 
         el.bird_y.set(el.options.physics.start_y);
 
         // Always three ground tiles.
         el.add_ground();
+
+        // After the ground so it paints on top of it.
+        el.add(dead_bird);
 
         // Marquee method: step on animation progress each loop tick.
         el.internal_on_loop(|el, _, _event| {
