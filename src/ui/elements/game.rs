@@ -4,6 +4,7 @@ use std::rc::Rc;
 use incredible::*;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
+use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
@@ -99,6 +100,15 @@ impl<S: Clone + PartialEq> Game<S> {
             .x((GAME_WIDTH as isize - score.visual.look.width() as isize) / 2)
             .y(1);
         el.add(score);
+
+        let ready = BlockCharsStr::<S>::default();
+        ready.text("Ready").size(BlockSize::Small);
+        ready
+            .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
+            .y(6);
+        ready.handle("ready_title");
+        ready.showed(false);
+        el.add(ready);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);

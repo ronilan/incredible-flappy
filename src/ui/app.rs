@@ -1,5 +1,6 @@
 use incredible::*;
 use incredible_elements::{App, Rectangle};
+use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
 use crate::ui::elements;
@@ -116,6 +117,12 @@ pub fn build() -> App<State> {
             let dead = game
                 .elements
                 .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
+            let ready = game
+                .elements
+                .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
+            for r in ready {
+                r.showed(*state == State::Ready);
+            }
             match state {
                 State::Dead => {
                     for b in flying {
