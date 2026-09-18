@@ -160,7 +160,7 @@ impl<S: Clone + PartialEq> Game<S> {
         self.crashed.set(false);
         self.bird_y.set(self.options.physics.start_y);
         for bird in self.elements.cot::<FlyingBird<S>>() {
-            bird.y(self.options.physics.start_y as isize);
+            bird.y(self.get_y() + self.options.physics.start_y as isize);
         }
         self
     }
@@ -197,7 +197,7 @@ impl<S: Clone + PartialEq> Game<S> {
         }
         self.bird_y.set(y);
         for bird in self.elements.cot::<FlyingBird<S>>() {
-            bird.y(y.floor() as isize);
+            bird.y(self.get_y() + y.floor() as isize);
         }
     }
 
