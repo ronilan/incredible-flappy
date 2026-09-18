@@ -31,19 +31,21 @@ pub(crate) fn build() -> Rectangle<State> {
         .style_handle("FlappyGradient");
     title.x(0).y(6);
     effect(&title, title_effects);
-    splash.add(title);
 
     let bird = FlyingBird::<State>::default();
+    bird.x(20).y(6);
+
+    splash.add(title);
     splash.add(bird);
 
-    // Bird after the word, pair centered as a group.
+    // Bird first at game x, word after it.
     let mut pair: Vec<Rc<dyn ElementTrait<State>>> = splash
         .elements
-        .cot::<BlockCharsStr<State>>()
+        .cot::<FlyingBird<State>>()
         .into_iter()
         .map(|el| el as Rc<dyn ElementTrait<State>>)
         .collect();
-    for el in splash.elements.cot::<FlyingBird<State>>() {
+    for el in splash.elements.cot::<BlockCharsStr<State>>() {
         pair.push(el as Rc<dyn ElementTrait<State>>);
     }
     splash.elements_flow_filtered(
@@ -56,7 +58,6 @@ pub(crate) fn build() -> Rectangle<State> {
             wrap_space: 0,
         },
     );
-    splash.elements_to_center_x_filtered(&pair);
 
     let left = Scenery::<State>::default();
     left.x(0).y(16);
