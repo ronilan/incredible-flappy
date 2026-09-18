@@ -267,6 +267,11 @@ impl<S: Clone + PartialEq> Game<S> {
                 return true;
             }
         }
+        for pavement in self.elements.dcot_w::<Pavement<S>, _>(|_| true) {
+            if bird.intersects_element(pavement.as_ref()) {
+                return true;
+            }
+        }
         for floor in self.elements.dcot_w::<Floor<S>, _>(|_| true) {
             if bird.intersects_element(floor.as_ref()) {
                 return true;
