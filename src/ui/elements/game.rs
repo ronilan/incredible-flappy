@@ -104,12 +104,13 @@ impl<S: Clone + PartialEq> Game<S> {
         self
     }
 
-    /// Starts (or stops) scrolling. Starting spawns the first pipe pair.
+    /// Starts (or stops) scrolling. Starting spawns the first pipe duos.
     pub fn set_running(&self, running: bool) -> &Self {
         let was = self.running.get();
         self.running.set(running);
         if running && !was {
-            self.spawn_obstacle();
+            self.spawn_obstacle_at(GAME_SPAWN_X);
+            self.spawn_obstacle_at(GAME_SPAWN_X - self.options.spawn_gap as isize);
             self.distance.set(0);
         }
         self
@@ -134,9 +135,9 @@ impl<S: Clone + PartialEq> Game<S> {
         }
     }
 
-    /// Places a top + bottom pipe duo at x 80. Top pipe starts at row 0,
-    /// bottom pipe ends at row 21, 11-row gap between the bushings.
-    fn spawn_obstacle(&self) {
+    /// Places a top + bottom pipe duo at the given x. Top pipe starts
+    /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
+    fn spawn_obstacle_at(&self, x: isize) {
         use super::pipe::PipeOptions;
 
         let top_height = rng().random_range(2..=7) as isize;
@@ -192,7 +193,7 @@ impl<S: Clone + PartialEq> Game<S> {
         // Pipe (6) + gap (24) cadence.
         let distance = self.distance.get() + 1;
         if distance >= self.options.spawn_gap {
-            self.spawn_obstacle();
+            self.spawn_obstacle_at(GAME_SPAWN_X);
             self.distance.set(0);
         } else {
             self.distance.set(distance);
