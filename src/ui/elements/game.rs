@@ -1,28 +1,34 @@
 use std::cell::Cell;
 
 use incredible::*;
+use incredible_elements::Text;
+use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
 use super::bushing::{Bushing, BUSHING_WIDTH};
+use super::dead_bird::DeadBird;
+use super::flying_bird::FlyingBird;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
 
-pub const SCROLLER_WIDTH: usize = 80;
-pub const SCROLLER_HEIGHT: usize = 24;
-pub const SCROLLER_GROUND_Y: isize = 16;
-pub const SCROLLER_SPAWN_X: isize = 80;
-pub const SCROLLER_PIPE_Y: isize = 12;
-pub const SCROLLER_BUSHING_Y: isize = 11;
+pub const GAME_WIDTH: usize = 80;
+pub const GAME_HEIGHT: usize = 24;
+pub const GAME_GROUND_Y: isize = 16;
+pub const GAME_SPAWN_X: isize = 80;
+pub const GAME_PIPE_Y: isize = 12;
+pub const GAME_BUSHING_Y: isize = 11;
 
 #[derive(Clone, Debug)]
-pub struct ScrollerOptions {
+pub struct GameOptions {
+    pub background: u8,
     pub interval_ms: u128,
     pub spawn_gap: usize,
 }
 
-impl Default for ScrollerOptions {
+impl Default for GameOptions {
     fn default() -> Self {
         Self {
+            background: 152,
             interval_ms: 100,
             spawn_gap: 30,
         }
@@ -30,20 +36,37 @@ impl Default for ScrollerOptions {
 }
 
 element! {
-  pub struct Scroller<S> {
-      options: ScrollerOptions = ScrollerOptions::default(),
+  pub struct Game<S> {
+      options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
   }
 }
 
-impl<S: Clone + PartialEq> Scroller<S> {
-    pub fn new(options: ScrollerOptions) -> Self {
+impl<S: Clone + PartialEq> Game<S> {
+    pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
 
-        el.look(Look::from((SCROLLER_WIDTH, SCROLLER_HEIGHT, ' ')))
-            .handle("scroller");
+        el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
+            .background(Some(Color::Ansi(el.options.background)))
+            .handle("game");
+
+        let title = Text::<S>::default();
+        title.text("").handle("game_title").x(2).y(2);
+        el.add(title);
+
+        let hint = Text::<S>::default();
+        hint.text("").handle("game_hint").x(2).y(4);
+        el.add(hint);
+
+        let flying_bird = FlyingBird::<S>::default();
+        flying_bird.x(40).y(6);
+        el.add(flying_bird);
+
+        let dead_bird = DeadBird::<S>::default();
+        dead_bird.x(48).y(6);
+        el.add(dead_bird);
 
         // Always three ground tiles.
         el.add_ground();
@@ -103,7 +126,7 @@ impl<S: Clone + PartialEq> Scroller<S> {
     fn add_ground(&self) {
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::default();
-            tile.x(x).y(SCROLLER_GROUND_Y);
+            tile.x(x).y(GAME_GROUND_Y);
             self.add(tile);
         }
     }
@@ -111,25 +134,31 @@ impl<S: Clone + PartialEq> Scroller<S> {
     /// Places a pipe + bushing cap at x 80.
     fn spawn_obstacle(&self) {
         let pipe = Pipe::<S>::default();
-        pipe.x(SCROLLER_SPAWN_X).y(SCROLLER_PIPE_Y);
+        pipe.x(GAME_SPAWN_X).y(GAME_PIPE_Y);
         self.add(pipe);
 
         let bushing = Bushing::<S>::default();
-        bushing.x(SCROLLER_SPAWN_X - 1).y(SCROLLER_BUSHING_Y);
+        bushing.x(GAME_SPAWN_X - 1).y(GAME_BUSHING_Y);
         self.add(bushing);
     }
 
-    /// Moves everything one cell left, tiles ground, spawns and
-    /// removes pipes.
+    /// Moves the world one cell left, wraps ground, spawns and
+    /// removes pipes. Title, hint and birds stay put.
     pub fn step(&self) {
-        for child in self.elements.iter() {
-            child.x(child.get_x() - 1);
+        for tile in self.elements.cot::<Scenery<S>>() {
+            tile.x(tile.get_x() - 1);
+        }
+        for pipe in self.elements.cot::<Pipe<S>>() {
+            pipe.x(pipe.get_x() - 1);
+        }
+        for bushing in self.elements.cot::<Bushing<S>>() {
+            bushing.x(bushing.get_x() - 1);
         }
 
         // Leftmost at -40 wraps to 80.
         for tile in self.elements.cot::<Scenery<S>>() {
             if tile.get_x() <= -(SCENERY_WIDTH as isize) {
-                tile.x(SCROLLER_WIDTH as isize);
+                tile.x(GAME_WIDTH as isize);
             }
         }
 
@@ -156,8 +185,8 @@ impl<S: Clone + PartialEq> Scroller<S> {
     }
 }
 
-impl<S: Clone + PartialEq> Default for Scroller<S> {
+impl<S: Clone + PartialEq> Default for Game<S> {
     fn default() -> Self {
-        Self::new(ScrollerOptions::default())
+        Self::new(GameOptions::default())
     }
 }

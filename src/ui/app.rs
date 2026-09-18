@@ -81,42 +81,21 @@ pub fn build() -> App<State> {
     splash.add(splash_title);
     splash.add(splash_hint);
 
-    // Game screen: 80x24 rectangle.
-    let game = Rectangle::<State>::new();
-    game.width(SCREEN_WIDTH)
-        .height(SCREEN_HEIGHT)
-        .fill(Some(' '))
-        .background(Some(Color::from(152)))
-        .handle("game");
-
-    let title = Text::<State>::default();
-    title
-        .text(game_title_for(&State::Ready))
-        .handle("game_title")
-        .x(2)
-        .y(2);
-
-    let hint = Text::<State>::default();
-    hint.text(game_hint_for(&State::Ready))
-        .handle("game_hint")
-        .x(2)
-        .y(4);
-
-    game.add(title);
-    game.add(hint);
-
-    // Scroller background layer, then static foreground elements.
-    let scroller = elements::Scroller::<State>::default();
-    scroller.x(0).y(0);
-    game.add(scroller);
-
-    let flying_bird = elements::FlyingBird::<State>::default();
-    flying_bird.x(40).y(6);
-    game.add(flying_bird);
-
-    let dead_bird = elements::DeadBird::<State>::default();
-    dead_bird.x(48).y(6);
-    game.add(dead_bird);
+    // Game screen: the scroller.
+    let game = elements::Game::<State>::default();
+    game.x(0).y(0);
+    for t in game
+        .elements
+        .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_title")
+    {
+        t.text(game_title_for(&State::Ready));
+    }
+    for t in game
+        .elements
+        .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_hint")
+    {
+        t.text(game_hint_for(&State::Ready));
+    }
 
 
 
@@ -134,7 +113,7 @@ pub fn build() -> App<State> {
         }
         for rect in el
             .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "game")
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
             rect.showed(!is_splash);
         }
@@ -150,20 +129,20 @@ pub fn build() -> App<State> {
         {
             t.text(game_hint_for(state));
         }
-        for scroller in el
+        for game in el
             .elements
-            .dcot_w::<elements::Scroller<State>, _>(|e| e.get_handle() == "scroller")
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
             match state {
                 State::Ready => {
-                    scroller.reset();
-                    scroller.set_running(false);
+                    game.reset();
+                    game.set_running(false);
                 }
                 State::Flying => {
-                    scroller.set_running(true);
+                    game.set_running(true);
                 }
                 _ => {
-                    scroller.set_running(false);
+                    game.set_running(false);
                 }
             }
         }
