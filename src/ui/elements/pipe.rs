@@ -1,11 +1,11 @@
 use incredible::*;
-use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use super::pipe_slice::PipeSlice;
+
 pub const PIPE_WIDTH: usize = 6;
 pub const PIPE_HEIGHT: usize = 10;
-pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [28, 34, 34, 40, 46, 40];
 
 #[derive(Clone, Debug)]
 pub struct PipeOptions {
@@ -37,16 +37,10 @@ impl<S: Clone + PartialEq> Pipe<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("pipe");
 
-        for (i, bg) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
-            let seg = Rectangle::<S>::new();
-            seg.width(1)
-                .height(el.options.height)
-                .fill(Some(' '))
-                .background(Some(Color::Ansi(*bg)))
-                .x(i as isize)
-                .y(0);
-            seg.decorate();
-            el.add(seg);
+        for row in 0..el.options.height {
+            let slice = PipeSlice::<S>::default();
+            slice.x(el.get_x()).y(el.get_y() + row as isize);
+            el.add(slice);
         }
 
         el.decorate();
