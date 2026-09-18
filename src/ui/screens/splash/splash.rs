@@ -1,10 +1,15 @@
 use incredible::*;
 use incredible_elements::Rectangle;
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
+use incredible_helpers_effects::*;
 use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
 use crate::ui::elements::Scenery;
+
+fn title_effects(el: &BlockCharsStr<State>) {
+    decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);
+}
 
 /// Builds the whole splash screen.
 pub(crate) fn build() -> Rectangle<State> {
@@ -26,6 +31,7 @@ pub(crate) fn build() -> Rectangle<State> {
             (SCREEN_WIDTH as isize - title.visual.look.width() as isize) / 2,
         )
         .y((16 - title.visual.look.height() as isize) / 2);
+    effect(&title, title_effects);
     splash.add(title);
 
     let left = Scenery::<State>::default();

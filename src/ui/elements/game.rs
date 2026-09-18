@@ -5,6 +5,7 @@ use incredible::*;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
+use incredible_helpers_effects::*;
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
@@ -82,7 +83,11 @@ element! {
   }
 }
 
-impl<S: Clone + PartialEq> Game<S> {
+fn ready_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
+    decorate_rules::<S, BlockCharsStr<S>>(el, ready_effects);
+}
+
+impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
@@ -109,6 +114,7 @@ impl<S: Clone + PartialEq> Game<S> {
             .y(6);
         ready.handle("ready_title");
         ready.showed(false);
+        effect(&ready, ready_effects);
         el.add(ready);
 
         let dead_bird = DeadBird::<S>::default();
