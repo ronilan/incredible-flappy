@@ -218,6 +218,7 @@ pub fn build() -> App<State> {
         {
             if game.check_crash() {
                 *state = State::Dead;
+                el.draw();
             }
         }
     });
