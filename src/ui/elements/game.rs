@@ -209,6 +209,8 @@ impl<S: Clone + PartialEq> Game<S> {
             if self.flying_hits_obstacle() {
                 self.start_dying(y);
                 if self.dead_hits_ground() {
+                    self.bird_y.set(DEAD_REST_Y);
+                    self.place_dead(DEAD_REST_Y);
                     self.crashed.set(true);
                 }
             }
