@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::rc::Rc;
 
 use incredible::*;
 use incredible_helpers_layout::*;
@@ -367,18 +368,13 @@ impl<S: Clone + PartialEq> Game<S> {
     /// Sends all ground tiles behind everything else so the bird
     /// always stays in front of the scenery.
     fn send_scenery_to_back(&self) {
-        let mut inner = self.elements.inner.borrow_mut();
-        let mut back = Vec::new();
-        let mut front = Vec::new();
-        for el in inner.drain(..) {
-            if el.get_handle() == "scenery" {
-                back.push(el);
-            } else {
-                front.push(el);
-            }
+        let tiles: Vec<Rc<Scenery<S>>> = self.elements.cot::<Scenery<S>>();
+        for tile in tiles.iter().rev() {
+            let ptr = Rc::as_ptr(tile);
+            self.to_back_of_type_where::<Scenery<S>, _>(|t| {
+                std::ptr::eq(t as *const _, ptr)
+            });
         }
-        inner.extend(back);
-        inner.extend(front);
     }
 
     /// Moves the world one cell left, wraps ground, spawns and
