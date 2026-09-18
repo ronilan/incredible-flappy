@@ -12,6 +12,7 @@ use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
 use super::floor::Floor;
 use super::flying_bird::FlyingBird;
+use super::pavement::Pavement;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
 
@@ -73,6 +74,7 @@ element! {
       distance: Cell<usize> = Cell::new(0),
       bird_y: Cell<f32> = Cell::new(10.0),
       velocity: Cell<f32> = Cell::new(0.0),
+      dying: Cell<bool> = Cell::new(false),
       crashed: Cell<bool> = Cell::new(false),
   }
 }
@@ -159,6 +161,7 @@ impl<S: Clone + PartialEq> Game<S> {
         self.add_ground();
         self.distance.set(0);
         self.velocity.set(0.0);
+        self.dying.set(false);
         self.crashed.set(false);
         self.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
@@ -173,14 +176,16 @@ impl<S: Clone + PartialEq> Game<S> {
             None => return,
         };
         if let Some((_, dead)) = self.elements.sot::<DeadBird<S>>() {
-            dead.x(bx).y(self.get_y() + y.floor() as isize - 3);
+            dead.x(bx).y(self.get_y() + y.floor() as isize);
             self.elements.inner.borrow_mut().push(dead);
         }
     }
 
-    /// Upward push.
+    /// Upward push. Dead birds don't flap.
     pub fn flap(&self) -> &Self {
-        self.velocity.set(-self.options.physics.flap);
+        if !self.dying.get() {
+            self.velocity.set(-self.options.physics.flap);
+        }
         self
     }
 
@@ -201,13 +206,31 @@ impl<S: Clone + PartialEq> Game<S> {
         self.velocity.set(v);
         let y = self.bird_y.get() + v;
         self.bird_y.set(y);
-        self.place_bird(y);
-        if self.hits_obstacle() {
-            let rest = y.min(BIRD_REST_Y);
-            self.bird_y.set(rest);
-            self.place_bird(rest);
-            self.crashed.set(true);
-            self.lay_dead(rest);
+        if self.dying.get() {
+            self.place_dead(y);
+            if self.dead_hits_ground() {
+                self.crashed.set(true);
+            }
+        } else {
+            self.place_bird(y);
+            if self.flying_hits_obstacle() {
+                self.start_dying(y);
+                if self.dead_hits_ground() {
+                    self.crashed.set(true);
+                }
+            }
+        }
+    }
+
+    /// Hit: swap to the dead bird, boosting stops, it keeps dropping.
+    fn start_dying(&self, y: f32) {
+        self.dying.set(true);
+        for bird in self.elements.cot::<FlyingBird<S>>() {
+            bird.showed(false);
+        }
+        self.lay_dead(y);
+        for dead in self.elements.cot::<DeadBird<S>>() {
+            dead.showed(true);
         }
     }
 
@@ -218,8 +241,15 @@ impl<S: Clone + PartialEq> Game<S> {
         }
     }
 
-    /// True when the bird touches any pipe, bushing or floor.
-    fn hits_obstacle(&self) -> bool {
+    /// Positions the dead bird at the given game-relative y.
+    fn place_dead(&self, y: f32) {
+        for dead in self.elements.cot::<DeadBird<S>>() {
+            dead.y(self.get_y() + y.floor() as isize);
+        }
+    }
+
+    /// True when the flying bird touches any pipe, bushing or floor.
+    fn flying_hits_obstacle(&self) -> bool {
         let birds = self.elements.cot::<FlyingBird<S>>();
         let Some(bird) = birds.first() else {
             return false;
@@ -237,6 +267,26 @@ impl<S: Clone + PartialEq> Game<S> {
         }
         for floor in self.elements.dcot_w::<Floor<S>, _>(|_| true) {
             if bird.intersects_element(floor.as_ref()) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// True when the falling dead bird touches pavement or floor.
+    fn dead_hits_ground(&self) -> bool {
+        let deads = self.elements.cot::<DeadBird<S>>();
+        let Some(dead) = deads.first() else {
+            return false;
+        };
+        let dead = dead.as_ref();
+        for pavement in self.elements.dcot_w::<Pavement<S>, _>(|_| true) {
+            if dead.intersects_element(pavement.as_ref()) {
+                return true;
+            }
+        }
+        for floor in self.elements.dcot_w::<Floor<S>, _>(|_| true) {
+            if dead.intersects_element(floor.as_ref()) {
                 return true;
             }
         }
