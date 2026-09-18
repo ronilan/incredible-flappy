@@ -48,6 +48,14 @@ pub fn build() -> App<State> {
             progress,
         )
     });
+    transform_rule("ScoreGradient", |flattened, progress| {
+        gradient_color(
+            &[Color::ansi(15), Color::ansi(255)],
+            GradientDirection::Vertical,
+            flattened,
+            progress,
+        )
+    });
 
     app.on_key(|el, state, event| {
         if let Some(next) = transition(state, &event.key) {

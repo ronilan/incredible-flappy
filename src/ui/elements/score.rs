@@ -2,6 +2,7 @@ use std::cell::Cell;
 
 use incredible::*;
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
+use incredible_helpers_effects::*;
 use incredible_macros_decl::element;
 
 #[derive(Clone, Debug)]
@@ -22,7 +23,11 @@ element! {
   }
 }
 
-impl<S: Clone + PartialEq> Score<S> {
+fn score_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
+    decorate_rules::<S, BlockCharsStr<S>>(el, score_effects);
+}
+
+impl<S: Clone + PartialEq + 'static> Score<S> {
     pub fn new(options: ScoreOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
@@ -32,7 +37,9 @@ impl<S: Clone + PartialEq> Score<S> {
         display
             .text(el.current.get().to_string().as_str())
             .size(BlockSize::Small)
+            .style_handle("ScoreGradient")
             .handle("score_display");
+        effect(&display, score_effects);
 
         el.look(Look::from((
             display.visual.look.width(),
