@@ -4,6 +4,8 @@ use incredible::*;
 use incredible_elements::Text;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
+use rand::Rng;
+use rand::rng;
 
 use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
@@ -15,8 +17,8 @@ pub const GAME_WIDTH: usize = 80;
 pub const GAME_HEIGHT: usize = 24;
 pub const GAME_GROUND_Y: isize = 16;
 pub const GAME_SPAWN_X: isize = 80;
-pub const GAME_PIPE_Y: isize = 12;
-pub const GAME_BUSHING_Y: isize = 11;
+pub const GAME_GAP_ROWS: isize = 11;
+pub const GAME_TOP_PIPE_MIN_Y: isize = -7;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -61,11 +63,12 @@ impl<S: Clone + PartialEq> Game<S> {
         el.add(hint);
 
         let flying_bird = FlyingBird::<S>::default();
-        flying_bird.x(40).y(6);
+        flying_bird.x(20).y(10);
         el.add(flying_bird);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
+        dead_bird.showed(false);
         el.add(dead_bird);
 
         // Always three ground tiles.
@@ -131,17 +134,29 @@ impl<S: Clone + PartialEq> Game<S> {
         }
     }
 
-    /// Places a pipe + bushing cap at x 80.
+    /// Places a top + bottom pipe duo at x 80 with an 11-row gap
+    /// between the bushings. Top pipe y is random, never less than -7.
     fn spawn_obstacle(&self) {
-        let pipe = Pipe::<S>::default();
-        pipe.x(self.get_x() + GAME_SPAWN_X).y(GAME_PIPE_Y);
-        self.add(pipe);
+        let x = self.get_x() + GAME_SPAWN_X;
+        let top_y = rng().random_range(0..8) as isize + GAME_TOP_PIPE_MIN_Y;
 
-        let bushing = Bushing::<S>::default();
-        bushing
-            .x(self.get_x() + GAME_SPAWN_X - 1)
-            .y(GAME_BUSHING_Y);
-        self.add(bushing);
+        let top_pipe = Pipe::<S>::default();
+        top_pipe.x(x).y(top_y);
+        self.add(top_pipe);
+
+        let top_bushing = Bushing::<S>::default();
+        top_bushing.x(x - 1).y(top_y + 10);
+        self.add(top_bushing);
+
+        let bottom_bushing = Bushing::<S>::default();
+        bottom_bushing.x(x - 1).y(top_y + 10 + 1 + GAME_GAP_ROWS);
+        self.add(bottom_bushing);
+
+        let bottom_pipe = Pipe::<S>::default();
+        bottom_pipe
+            .x(x)
+            .y(top_y + 10 + 1 + GAME_GAP_ROWS + 1);
+        self.add(bottom_pipe);
     }
 
     /// Moves the world one cell left, wraps ground, spawns and

@@ -145,6 +145,32 @@ pub fn build() -> App<State> {
                     game.set_running(false);
                 }
             }
+            let flying = game
+                .elements
+                .dcot_w::<elements::FlyingBird<State>, _>(|e| {
+                    e.get_handle() == "flying_bird"
+                });
+            let dead = game
+                .elements
+                .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
+            match state {
+                State::Dead => {
+                    for b in flying {
+                        b.showed(false);
+                    }
+                    for b in dead {
+                        b.showed(true);
+                    }
+                }
+                _ => {
+                    for b in flying {
+                        b.showed(true);
+                    }
+                    for b in dead {
+                        b.showed(false);
+                    }
+                }
+            }
         }
         el.draw();
     });
