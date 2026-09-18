@@ -30,23 +30,55 @@ pub fn transition(state: &State, key: &Key) -> Option<State> {
 pub fn build() -> App<State> {
     let app = App::default();
 
-    app.on_window(|el, _state, _event| {
+    app.on_key(|el, state, event| {
+        if let Some(next) = transition(state, &event.key) {
+            if next != *state {
+                *state = next;
+                el.draw();
+            }
+        }
+        if *state == State::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
+            for game in el
+                .elements
+                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+            {
+                game.flap();
+            }
+        }
+    }).on_mouse(|el, state, event| {
+        if !matches!(event.mouse, Mouse::Down) {
+            return;
+        }
+        if let Some(next) = transition(state, &Key::Enter) {
+            if next != *state {
+                *state = next;
+                el.draw();
+            }
+        }
+        if *state == State::Flying {
+            for game in el
+                .elements
+                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+            {
+                game.flap();
+            }
+        }
+    }).on_window(|el, _state, _event| {
         el.elements_to_center();
-    });
-
-    // Splash screen: 80x24 rectangle.
-    let splash = screens::splash::splash::build();
-
-    // Game screen: the scroller.
-    let game = screens::game::game::build();
-
-
-
-    // Initial visibility: start on Splash.
-    splash.showed(true);
-    game.showed(false);
-
-    app.on_state(|el, state, _event| {
+    }).on_loop(|el, state, _event| {
+        if *state != State::Flying {
+            return;
+        }
+        for game in el
+            .elements
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+        {
+            if game.check_crash() {
+                *state = State::Dead;
+                el.draw();
+            }
+        }
+    }).on_state(|el, state, _event| {
         let is_splash = *state == State::Splash;
         for rect in el
             .elements
@@ -106,59 +138,13 @@ pub fn build() -> App<State> {
         el.draw();
     });
 
-    app.on_key(|el, state, event| {
-        if let Some(next) = transition(state, &event.key) {
-            if next != *state {
-                *state = next;
-                el.draw();
-            }
-        }
-        if *state == State::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
-            for game in el
-                .elements
-                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-            {
-                game.flap();
-            }
-        }
-    });
 
-    app.on_mouse(|el, state, event| {
-        if !matches!(event.mouse, Mouse::Down) {
-            return;
-        }
-        if let Some(next) = transition(state, &Key::Enter) {
-            if next != *state {
-                *state = next;
-                el.draw();
-            }
-        }
-        if *state == State::Flying {
-            for game in el
-                .elements
-                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-            {
-                game.flap();
-            }
-        }
-    });
-
-    app.on_loop(|el, state, _event| {
-        if *state != State::Flying {
-            return;
-        }
-        for game in el
-            .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-        {
-            if game.check_crash() {
-                *state = State::Dead;
-                el.draw();
-            }
-        }
-    });
-
+    // Splash screen: 80x24 rectangle.
+    let splash = screens::splash::splash::build();
     app.add(splash);
+
+    // Game screen: the scroller.
+    let game = screens::game::game::build();
     app.add(game);
 
     app
