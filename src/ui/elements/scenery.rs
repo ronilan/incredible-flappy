@@ -43,7 +43,7 @@ impl<S: Clone + PartialEq> Scenery<S> {
         bushes.x(0).y(3);
         el.add(bushes);
 
-
+        
 
         el
     }
