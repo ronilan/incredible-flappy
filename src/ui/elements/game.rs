@@ -147,16 +147,16 @@ impl<S: Clone + PartialEq> Game<S> {
             height: top_height as usize,
             ..Default::default()
         });
-        top_pipe.x(GAME_SPAWN_X).y(0);
+        top_pipe.x(x).y(0);
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::default();
-        top_bushing.x(GAME_SPAWN_X - 1).y(top_height);
+        top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::default();
         bottom_bushing
-            .x(GAME_SPAWN_X - 1)
+            .x(x - 1)
             .y(top_height + 1 + GAME_GAP_ROWS);
         self.add(bottom_bushing);
 
@@ -165,7 +165,7 @@ impl<S: Clone + PartialEq> Game<S> {
             ..Default::default()
         });
         bottom_pipe
-            .x(GAME_SPAWN_X)
+            .x(x)
             .y(top_height + 1 + GAME_GAP_ROWS + 1);
         self.add(bottom_pipe);
     }
