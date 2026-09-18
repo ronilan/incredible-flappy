@@ -34,16 +34,16 @@ pub fn build() -> App<State> {
 
     transform_rule("FlappyGradient", |flattened, progress| {
         gradient_color(
-            &[Color::ansi(22), Color::ansi(46)],
-            GradientDirection::Horizontal,
+            &[Color::ansi(157), Color::ansi(28)],
+            GradientDirection::Vertical,
             flattened,
             progress,
         )
     });
     transform_rule("ReadyGradient", |flattened, progress| {
         gradient_color(
-            &[Color::ansi(124), Color::ansi(196)],
-            GradientDirection::Horizontal,
+            &[Color::ansi(214), Color::ansi(216)],
+            GradientDirection::Vertical,
             flattened,
             progress,
         )
