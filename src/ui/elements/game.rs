@@ -18,7 +18,7 @@ pub const GAME_HEIGHT: usize = 24;
 pub const GAME_GROUND_Y: isize = 16;
 pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
-pub const GAME_GROUND_TOP_ROW: isize = 21;
+pub const GAME_GROUND_TOP_ROW: isize = 20;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
