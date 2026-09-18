@@ -134,7 +134,7 @@ pub fn build() -> App<State> {
                 .elements
                 .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
             {
-                score.showed(*state == State::Flying);
+                score.showed(*state == State::Flying || *state == State::Dead);
             }
             let flying = game
                 .elements
