@@ -118,14 +118,23 @@ pub fn build() -> App<State> {
             match state {
                 State::Ready => {
                     game.reset();
-                    game.set_running(false);
+                    game.set_running(true);
+                    game.set_spawning(false);
                 }
                 State::Flying => {
                     game.set_running(true);
+                    game.set_spawning(true);
                 }
                 _ => {
                     game.set_running(false);
+                    game.set_spawning(false);
                 }
+            }
+            for score in game
+                .elements
+                .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
+            {
+                score.showed(*state == State::Flying);
             }
             let flying = game
                 .elements

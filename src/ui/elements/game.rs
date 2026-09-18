@@ -75,6 +75,7 @@ element! {
   pub struct Game<S> {
       options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
+      spawning: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
       bird_y: Cell<f32> = Cell::new(10.0),
       velocity: Cell<f32> = Cell::new(0.0),
@@ -159,11 +160,17 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self
     }
 
-    /// Starts (or stops) scrolling. Starting spawns the first pipe duo.
+    /// Starts (or stops) scrolling.
     pub fn set_running(&self, running: bool) -> &Self {
-        let was = self.running.get();
         self.running.set(running);
-        if running && !was {
+        self
+    }
+
+    /// Starts (or stops) pipe spawning. Starting spawns the first duo.
+    pub fn set_spawning(&self, spawning: bool) -> &Self {
+        let was = self.spawning.get();
+        self.spawning.set(spawning);
+        if spawning && !was {
             self.spawn_obstacle_at(GAME_SPAWN_X);
             self.distance.set(0);
         }
@@ -180,6 +187,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.velocity.set(0.0);
         self.dying.set(false);
         self.crashed.set(false);
+        self.spawning.set(false);
         self.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
         for score in self.elements.cot::<Score<S>>() {
@@ -397,7 +405,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Moves the world one cell left, wraps ground, spawns and
     /// removes pipes. Title, hint and birds stay put.
     pub fn step(&self) {
-        self.fall();
+        if self.spawning.get() || self.dying.get() {
+            self.fall();
+        }
         if self.dying.get() {
             return;
         }
@@ -419,12 +429,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
 
         // Pipe (6) + gap (24) cadence.
-        let distance = self.distance.get() + 1;
-        if distance >= self.options.spawn_gap {
-            self.spawn_obstacle_at(GAME_SPAWN_X);
-            self.distance.set(0);
-        } else {
-            self.distance.set(distance);
+        if self.spawning.get() {
+            let distance = self.distance.get() + 1;
+            if distance >= self.options.spawn_gap {
+                self.spawn_obstacle_at(GAME_SPAWN_X);
+                self.distance.set(0);
+            } else {
+                self.distance.set(distance);
+            }
         }
 
         // Gap passed: top pipe right edge reaches the bird.
