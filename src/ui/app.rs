@@ -1,8 +1,9 @@
 use incredible::*;
-use incredible_elements::{App, Rectangle, Text};
+use incredible_elements::{App, Rectangle};
 use incredible_helpers_layout::*;
 
 use crate::ui::elements;
+use crate::ui::screens;
 
 pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
@@ -34,26 +35,11 @@ pub fn build() -> App<State> {
     });
 
     // Splash screen: 80x24 rectangle.
-    let splash = Rectangle::<State>::new();
-    splash
-        .width(SCREEN_WIDTH)
-        .height(SCREEN_HEIGHT)
-        .fill(Some(' '))
-        .handle("splash");
+    let splash = screens::splash::ui::screen::build();
 
-    let splash_title = Text::<State>::default();
-    splash_title
-        .text("SPLASH")
-        .handle("splash_title")
-        .x(2)
-        .y(2);
+    let splash_title = screens::splash::ui::title::build();
 
-    let splash_hint = Text::<State>::default();
-    splash_hint
-        .text("Enter -> Game-Ready | Esc -> Splash")
-        .handle("splash_hint")
-        .x(2)
-        .y(4);
+    let splash_hint = screens::splash::ui::hint::build();
 
     splash.add(splash_title);
     splash.add(splash_hint);
