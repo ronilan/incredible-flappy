@@ -8,7 +8,6 @@ pub mod flying_bird;
 pub mod game;
 pub mod pavement;
 pub mod pipe;
-pub mod pipe_slice;
 pub mod scenery;
 
 pub use buildings::*;
@@ -21,5 +20,4 @@ pub use flying_bird::*;
 pub use game::*;
 pub use pavement::*;
 pub use pipe::*;
-pub use pipe_slice::*;
 pub use scenery::*;
