@@ -360,6 +360,25 @@ impl<S: Clone + PartialEq> Game<S> {
             .x(x)
             .y(top_height + 1 + GAME_GAP_ROWS + 1);
         self.add(bottom_pipe);
+
+        self.send_scenery_to_back();
+    }
+
+    /// Sends all ground tiles behind everything else so the bird
+    /// always stays in front of the scenery.
+    fn send_scenery_to_back(&self) {
+        let mut inner = self.elements.inner.borrow_mut();
+        let mut back = Vec::new();
+        let mut front = Vec::new();
+        for el in inner.drain(..) {
+            if el.get_handle() == "scenery" {
+                back.push(el);
+            } else {
+                front.push(el);
+            }
+        }
+        inner.extend(back);
+        inner.extend(front);
     }
 
     /// Moves the world one cell left, wraps ground, spawns and
