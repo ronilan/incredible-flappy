@@ -168,13 +168,14 @@ impl<S: Clone + PartialEq> Game<S> {
     }
 
     /// Lays the dead bird where the flight ended, on top of the scenery.
+    /// Rests 3 rows above the crash row, on the pavement.
     fn lay_dead(&self, y: f32) {
         let bx = match self.elements.cot::<FlyingBird<S>>().first() {
             Some(flying) => flying.get_x(),
             None => return,
         };
         if let Some((_, dead)) = self.elements.sot::<DeadBird<S>>() {
-            dead.x(bx).y(self.get_y() + y.floor() as isize);
+            dead.x(bx).y(self.get_y() + y.floor() as isize - 3);
             self.elements.inner.borrow_mut().push(dead);
         }
     }
