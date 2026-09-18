@@ -61,7 +61,7 @@ impl Default for BirdPhysics {
     fn default() -> Self {
         Self {
             gravity: 0.5,
-            flap: 1.5,
+            flap: 2.5,
             max_fall: 3.0,
             start_y: 10.0,
         }
