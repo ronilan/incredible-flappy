@@ -110,13 +110,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let ready = BlockCharsStr::<S>::default();
         ready.text("Ready").size(BlockSize::Small);
         ready.style_handle("ReadyGradient");
-        ready
-            .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
-            .y(6);
+        ready.y(6);
         ready.handle("ready_title");
         ready.showed(false);
         effect(&ready, ready_effects);
         el.add(ready);
+        el.elements_to_center_x_of_type::<BlockCharsStr<S>>();
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);

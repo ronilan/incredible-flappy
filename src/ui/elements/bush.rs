@@ -27,7 +27,7 @@ impl Default for BushOptions {
     fn default() -> Self {
         Self {
             index: 0,
-            background: 157,
+            background: 156,
             color: 40,
         }
     }
