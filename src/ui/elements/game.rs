@@ -1,7 +1,6 @@
 use std::cell::Cell;
 
 use incredible::*;
-use incredible_elements::Text;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
