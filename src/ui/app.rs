@@ -1,6 +1,7 @@
 use incredible::*;
 use incredible_elements::{App, Rectangle, Text};
 use incredible_helpers_layout::*;
+use incredible_helpers_styling::*;
 
 use crate::ui::elements;
 
@@ -85,6 +86,7 @@ pub fn build() -> App<State> {
     game.width(SCREEN_WIDTH)
         .height(SCREEN_HEIGHT)
         .fill(Some(' '))
+        .background(Some(Color::from(152)))
         .handle("game");
 
     let title = Text::<State>::default();
@@ -103,10 +105,10 @@ pub fn build() -> App<State> {
     game.add(title);
     game.add(hint);
 
-    // Static game elements (hand-drawn reusable elements).
-    let buildings = elements::Buildings::<State>::default();
-    buildings.x(2).y(6);
-    game.add(buildings);
+    // Scroller background layer, then static foreground elements.
+    let scroller = elements::Scroller::<State>::default();
+    scroller.x(0).y(0);
+    game.add(scroller);
 
     let flying_bird = elements::FlyingBird::<State>::default();
     flying_bird.x(40).y(6);
@@ -116,17 +118,7 @@ pub fn build() -> App<State> {
     dead_bird.x(48).y(6);
     game.add(dead_bird);
 
-    let scenery = elements::Scenery::<State>::default();
-    scenery.x(0).y(18);
-    game.add(scenery);
 
-    let pipe = elements::Pipe::<State>::default();
-    pipe.x(2).y(12);
-    game.add(pipe);
-
-    let bushing = elements::Bushing::<State>::default();
-    bushing.x(12).y(12);
-    game.add(bushing);
 
     // Initial visibility: start on Splash.
     splash.showed(true);
@@ -157,6 +149,23 @@ pub fn build() -> App<State> {
             .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_hint")
         {
             t.text(game_hint_for(state));
+        }
+        for scroller in el
+            .elements
+            .dcot_w::<elements::Scroller<State>, _>(|e| e.get_handle() == "scroller")
+        {
+            match state {
+                State::Ready => {
+                    scroller.reset();
+                    scroller.set_running(false);
+                }
+                State::Flying => {
+                    scroller.set_running(true);
+                }
+                _ => {
+                    scroller.set_running(false);
+                }
+            }
         }
         el.draw();
     });

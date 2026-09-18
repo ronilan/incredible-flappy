@@ -3,17 +3,21 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
-pub const PAVEMENT_WIDTH: usize = 80;
+pub const PAVEMENT_WIDTH: usize = 40;
 pub const PAVEMENT_HEIGHT: usize = 1;
 
 #[derive(Clone, Debug)]
 pub struct PavementOptions {
     pub background: u8,
+    pub width: usize,
 }
 
 impl Default for PavementOptions {
     fn default() -> Self {
-        Self { background: 34 }
+        Self {
+            background: 34,
+            width: PAVEMENT_WIDTH,
+        }
     }
 }
 
@@ -28,11 +32,11 @@ impl<S: Clone + PartialEq> Pavement<S> {
         let mut el = Self::blank();
         el.options = options;
 
-        el.look(Look::from((PAVEMENT_WIDTH, PAVEMENT_HEIGHT, ' ')))
+        el.look(Look::from((el.options.width, PAVEMENT_HEIGHT, ' ')))
             .background(Some(Color::Ansi(el.options.background)))
             .handle("pavement");
 
-        for i in 0..PAVEMENT_WIDTH {
+        for i in 0..el.options.width {
             let bg = if i % 2 == 0 {
                 el.options.background
             } else {

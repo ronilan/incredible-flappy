@@ -3,7 +3,7 @@ use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
 pub const BUILDINGS_COLOR: u8 = 244;
-pub const BUILDINGS_STR: &str = "    _     ___       |^^^|  \n __| |___|:::|    __|:::|  \n|oo|.|* *|:::|   |''|:::|  \n|oo|.|** |:::|   |''|:::|  \n|_o|_|[]_|_|_|   |_'|___| ";
+pub const BUILDINGS_STR: &str = "    _     ___       |^^^|     \n __| |___|:::|    __|:::|     \n|oo|.|* *|:::|   |''|:::|     \n|oo|.|** |:::|   |''|:::|     \n|_o|_|[]_|_|_|   |_'|___|     ";
 
 #[derive(Clone, Debug)]
 pub struct BuildingsOptions {

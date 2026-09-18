@@ -32,8 +32,7 @@ impl<S: Clone + PartialEq> Bushes<S> {
 
         el.look(Look::from((
             el.options.width,
-            BUSHES_HEIGHT,
-            ' ',
+            BUSHES_HEIGHT
         )))
         .handle("bushes");
 

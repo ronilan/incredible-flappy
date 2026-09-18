@@ -12,7 +12,7 @@ pub struct FloorOptions {
 
 impl Default for FloorOptions {
     fn default() -> Self {
-        Self { background: 152 }
+        Self { background: 187 }
     }
 }
 
