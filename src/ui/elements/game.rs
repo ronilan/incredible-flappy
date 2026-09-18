@@ -88,14 +88,6 @@ impl<S: Clone + PartialEq> Game<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("game");
 
-        let title = Text::<S>::default();
-        title.text("").handle("game_title").x(2).y(2);
-        el.add(title);
-
-        let hint = Text::<S>::default();
-        hint.text("").handle("game_hint").x(2).y(4);
-        el.add(hint);
-
         let flying_bird = FlyingBird::<S>::default();
         flying_bird.x(20).y(el.options.physics.start_y as isize);
         el.add(flying_bird);

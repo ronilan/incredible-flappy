@@ -17,24 +17,6 @@ pub enum State {
     Dead,
 }
 
-fn game_title_for(state: &State) -> &'static str {
-    match state {
-        State::Splash => "GAME",
-        State::Ready => "GAME - READY",
-        State::Flying => "GAME - FLYING",
-        State::Dead => "GAME - DEAD",
-    }
-}
-
-fn game_hint_for(state: &State) -> &'static str {
-    match state {
-        State::Splash => "",
-        State::Ready => "Space -> Flying | d -> Dead | Esc -> Splash",
-        State::Flying => "d -> Dead | Esc -> Splash",
-        State::Dead => "Enter -> Ready | Esc -> Splash",
-    }
-}
-
 pub fn transition(state: &State, key: &Key) -> Option<State> {
     match (key, state) {
         (Key::Escape, _) => Some(State::Splash),
@@ -80,18 +62,6 @@ pub fn build() -> App<State> {
     // Game screen: the scroller.
     let game = elements::Game::<State>::default();
     game.x(0).y(0);
-    for t in game
-        .elements
-        .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_title")
-    {
-        t.text(game_title_for(&State::Ready));
-    }
-    for t in game
-        .elements
-        .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_hint")
-    {
-        t.text(game_hint_for(&State::Ready));
-    }
 
 
 
@@ -112,18 +82,6 @@ pub fn build() -> App<State> {
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
             rect.showed(!is_splash);
-        }
-        for t in el
-            .elements
-            .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_title")
-        {
-            t.text(game_title_for(state));
-        }
-        for t in el
-            .elements
-            .dcot_w::<Text<State>, _>(|e| e.get_handle() == "game_hint")
-        {
-            t.text(game_hint_for(state));
         }
         for game in el
             .elements
