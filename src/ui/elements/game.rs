@@ -134,11 +134,13 @@ impl<S: Clone + PartialEq> Game<S> {
     /// Places a pipe + bushing cap at x 80.
     fn spawn_obstacle(&self) {
         let pipe = Pipe::<S>::default();
-        pipe.x(GAME_SPAWN_X).y(GAME_PIPE_Y);
+        pipe.x(self.get_x() + GAME_SPAWN_X).y(GAME_PIPE_Y);
         self.add(pipe);
 
         let bushing = Bushing::<S>::default();
-        bushing.x(GAME_SPAWN_X - 1).y(GAME_BUSHING_Y);
+        bushing
+            .x(self.get_x() + GAME_SPAWN_X - 1)
+            .y(GAME_BUSHING_Y);
         self.add(bushing);
     }
 
@@ -155,10 +157,10 @@ impl<S: Clone + PartialEq> Game<S> {
             bushing.x(bushing.get_x() - 1);
         }
 
-        // Leftmost at -40 wraps to 80.
+        // Leftmost at -40 wraps past the right edge, relative to self.
         for tile in self.elements.cot::<Scenery<S>>() {
-            if tile.get_x() <= -(SCENERY_WIDTH as isize) {
-                tile.x(GAME_WIDTH as isize);
+            if tile.get_x() <= self.get_x() - SCENERY_WIDTH as isize {
+                tile.x(tile.get_x() + SCENERY_WIDTH as isize * 3);
             }
         }
 
