@@ -1,6 +1,7 @@
 use incredible::*;
 use incredible_elements::{App, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
+use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
 
 use crate::ui::elements;
@@ -30,6 +31,23 @@ pub fn transition(state: &State, key: &Key) -> Option<State> {
 
 pub fn build() -> App<State> {
     let app = App::default();
+
+    transform_rule("FlappyGradient", |flattened, progress| {
+        gradient_color(
+            &[Color::ansi(22), Color::ansi(46)],
+            GradientDirection::Horizontal,
+            flattened,
+            progress,
+        )
+    });
+    transform_rule("ReadyGradient", |flattened, progress| {
+        gradient_color(
+            &[Color::ansi(124), Color::ansi(196)],
+            GradientDirection::Horizontal,
+            flattened,
+            progress,
+        )
+    });
 
     app.on_key(|el, state, event| {
         if let Some(next) = transition(state, &event.key) {

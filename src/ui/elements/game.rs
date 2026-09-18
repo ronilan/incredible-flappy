@@ -103,6 +103,7 @@ impl<S: Clone + PartialEq> Game<S> {
 
         let ready = BlockCharsStr::<S>::default();
         ready.text("Ready").size(BlockSize::Small);
+        ready.style_handle("ReadyGradient");
         ready
             .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
             .y(6);

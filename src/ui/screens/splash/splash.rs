@@ -17,7 +17,10 @@ pub(crate) fn build() -> Rectangle<State> {
         .handle("splash");
 
     let title = BlockCharsStr::<State>::default();
-    title.text("Flappy").size(BlockSize::Small);
+    title
+        .text("Flappy")
+        .size(BlockSize::Small)
+        .style_handle("FlappyGradient");
     title
         .x(
             (SCREEN_WIDTH as isize - title.visual.look.width() as isize) / 2,
