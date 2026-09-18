@@ -182,6 +182,28 @@ pub fn build() -> App<State> {
                 el.draw();
             }
         }
+        if *state == State::Flying && event.key == Key::Char(' ') {
+            for game in el
+                .elements
+                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+            {
+                game.flap();
+            }
+        }
+    });
+
+    app.on_loop(|el, state, _event| {
+        if *state != State::Flying {
+            return;
+        }
+        for game in el
+            .elements
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+        {
+            if game.check_crash() {
+                *state = State::Dead;
+            }
+        }
     });
 
     app.add(splash);

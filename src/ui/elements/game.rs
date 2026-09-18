@@ -25,6 +25,7 @@ pub struct GameOptions {
     pub background: u8,
     pub interval_ms: u128,
     pub spawn_gap: usize,
+    pub physics: BirdPhysics,
 }
 
 impl Default for GameOptions {
@@ -33,6 +34,34 @@ impl Default for GameOptions {
             background: 152,
             interval_ms: 100,
             spawn_gap: 30,
+            physics: BirdPhysics::default(),
+        }
+    }
+}
+
+/// Tweakable bird flight params. All in cells and loop steps.
+#[derive(Clone, Debug)]
+pub struct BirdPhysics {
+    /// Downward pull added to velocity every step.
+    pub gravity: f32,
+    /// Upward impulse on flap (applied negative).
+    pub flap: f32,
+    /// Terminal fall speed.
+    pub max_fall: f32,
+    /// Bird y at run start. x stays 20.
+    pub start_y: f32,
+    /// Bird y that ends the run.
+    pub ground_y: f32,
+}
+
+impl Default for BirdPhysics {
+    fn default() -> Self {
+        Self {
+            gravity: 0.5,
+            flap: 3.0,
+            max_fall: 3.0,
+            start_y: 10.0,
+            ground_y: 20.0,
         }
     }
 }
@@ -42,6 +71,9 @@ element! {
       options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
+      bird_y: Cell<f32> = Cell::new(10.0),
+      velocity: Cell<f32> = Cell::new(0.0),
+      crashed: Cell<bool> = Cell::new(false),
   }
 }
 
@@ -63,13 +95,15 @@ impl<S: Clone + PartialEq> Game<S> {
         el.add(hint);
 
         let flying_bird = FlyingBird::<S>::default();
-        flying_bird.x(20).y(10);
+        flying_bird.x(20).y(el.options.physics.start_y as isize);
         el.add(flying_bird);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
         dead_bird.showed(false);
         el.add(dead_bird);
+
+        el.bird_y.set(el.options.physics.start_y);
 
         // Always three ground tiles.
         el.add_ground();
@@ -115,14 +149,56 @@ impl<S: Clone + PartialEq> Game<S> {
         self
     }
 
-    /// Clears pipes and restores the three ground tiles.
+    /// Clears pipes, restores ground tiles and the bird.
     pub fn reset(&self) -> &Self {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.distance.set(0);
+        self.velocity.set(0.0);
+        self.crashed.set(false);
+        self.bird_y.set(self.options.physics.start_y);
+        for bird in self.elements.cot::<FlyingBird<S>>() {
+            bird.y(self.options.physics.start_y as isize);
+        }
         self
+    }
+
+    /// Upward push.
+    pub fn flap(&self) -> &Self {
+        self.velocity.set(-self.options.physics.flap);
+        self
+    }
+
+    /// True once when the bird has hit the ground.
+    pub fn check_crash(&self) -> bool {
+        if self.crashed.get() {
+            self.crashed.set(false);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Gravity pull for one step.
+    fn fall(&self) {
+        let phys = &self.options.physics;
+        let v = (self.velocity.get() + phys.gravity).min(phys.max_fall);
+        self.velocity.set(v);
+        let mut y = self.bird_y.get() + v;
+        if y < 0.0 {
+            y = 0.0;
+            self.velocity.set(0.0);
+        }
+        if y >= phys.ground_y {
+            y = phys.ground_y;
+            self.crashed.set(true);
+        }
+        self.bird_y.set(y);
+        for bird in self.elements.cot::<FlyingBird<S>>() {
+            bird.y(y.floor() as isize);
+        }
     }
 
     /// Three 40-wide tiles across and past the window.
@@ -172,6 +248,7 @@ impl<S: Clone + PartialEq> Game<S> {
     /// Moves the world one cell left, wraps ground, spawns and
     /// removes pipes. Title, hint and birds stay put.
     pub fn step(&self) {
+        self.fall();
         for tile in self.elements.cot::<Scenery<S>>() {
             tile.x(tile.get_x() - 1);
         }
