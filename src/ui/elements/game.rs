@@ -104,13 +104,12 @@ impl<S: Clone + PartialEq> Game<S> {
         self
     }
 
-    /// Starts (or stops) scrolling. Starting spawns the first pipe duos.
+    /// Starts (or stops) scrolling. Starting spawns the first pipe duo.
     pub fn set_running(&self, running: bool) -> &Self {
         let was = self.running.get();
         self.running.set(running);
         if running && !was {
             self.spawn_obstacle_at(GAME_SPAWN_X);
-            self.spawn_obstacle_at(GAME_SPAWN_X - self.options.spawn_gap as isize);
             self.distance.set(0);
         }
         self
