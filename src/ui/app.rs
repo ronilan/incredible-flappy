@@ -35,18 +35,10 @@ pub fn build() -> App<State> {
     });
 
     // Splash screen: 80x24 rectangle.
-    let splash = screens::splash::ui::screen::build();
-
-    let splash_title = screens::splash::ui::title::build();
-
-    let splash_hint = screens::splash::ui::hint::build();
-
-    splash.add(splash_title);
-    splash.add(splash_hint);
+    let splash = screens::splash::splash::build();
 
     // Game screen: the scroller.
-    let game = elements::Game::<State>::default();
-    game.x(0).y(0);
+    let game = screens::game::game::build();
 
 
 
