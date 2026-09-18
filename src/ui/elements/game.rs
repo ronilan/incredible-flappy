@@ -18,7 +18,7 @@ pub const GAME_HEIGHT: usize = 24;
 pub const GAME_GROUND_Y: isize = 16;
 pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
-pub const GAME_TOP_PIPE_MIN_Y: isize = -7;
+pub const GAME_GROUND_TOP_ROW: isize = 21;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -134,28 +134,41 @@ impl<S: Clone + PartialEq> Game<S> {
         }
     }
 
-    /// Places a top + bottom pipe duo at x 80 with an 11-row gap
-    /// between the bushings. Top pipe y is random, never less than -7.
+    /// Places a top + bottom pipe duo at x 80. Top pipe starts at row 0,
+    /// bottom pipe ends at row 21, 11-row gap between the bushings.
     fn spawn_obstacle(&self) {
-        let x = self.get_x() + GAME_SPAWN_X;
-        let top_y = rng().random_range(0..8) as isize + GAME_TOP_PIPE_MIN_Y;
+        use super::pipe::PipeOptions;
 
-        let top_pipe = Pipe::<S>::default();
-        top_pipe.x(x).y(top_y);
+        let x = self.get_x() + GAME_SPAWN_X;
+        let top_height = rng().random_range(2..=7) as isize;
+        let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
+
+        let top_pipe = Pipe::<S>::new(PipeOptions {
+            height: top_height as usize,
+            ..Default::default()
+        });
+        top_pipe.x(x).y(self.get_y());
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::default();
-        top_bushing.x(x - 1).y(top_y + 10);
+        top_bushing
+            .x(x - 1)
+            .y(self.get_y() + top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::default();
-        bottom_bushing.x(x - 1).y(top_y + 10 + 1 + GAME_GAP_ROWS);
+        bottom_bushing
+            .x(x - 1)
+            .y(self.get_y() + top_height + 1 + GAME_GAP_ROWS);
         self.add(bottom_bushing);
 
-        let bottom_pipe = Pipe::<S>::default();
+        let bottom_pipe = Pipe::<S>::new(PipeOptions {
+            height: bottom_height as usize,
+            ..Default::default()
+        });
         bottom_pipe
             .x(x)
-            .y(top_y + 10 + 1 + GAME_GAP_ROWS + 1);
+            .y(self.get_y() + top_height + 1 + GAME_GAP_ROWS + 1);
         self.add(bottom_pipe);
     }
 

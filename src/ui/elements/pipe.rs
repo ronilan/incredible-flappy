@@ -10,11 +10,15 @@ pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [28, 34, 34, 40, 46, 40];
 #[derive(Clone, Debug)]
 pub struct PipeOptions {
     pub background: u8,
+    pub height: usize,
 }
 
 impl Default for PipeOptions {
     fn default() -> Self {
-        Self { background: 34 }
+        Self {
+            background: 34,
+            height: PIPE_HEIGHT,
+        }
     }
 }
 
@@ -29,14 +33,14 @@ impl<S: Clone + PartialEq> Pipe<S> {
         let mut el = Self::blank();
         el.options = options;
 
-        el.look(Look::from((PIPE_WIDTH, PIPE_HEIGHT, ' ')))
+        el.look(Look::from((PIPE_WIDTH, el.options.height, ' ')))
             .background(Some(Color::Ansi(el.options.background)))
             .handle("pipe");
 
         for (i, bg) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
             let seg = Rectangle::<S>::new();
             seg.width(1)
-                .height(PIPE_HEIGHT)
+                .height(el.options.height)
                 .fill(Some(' '))
                 .background(Some(Color::Ansi(*bg)))
                 .x(i as isize)
