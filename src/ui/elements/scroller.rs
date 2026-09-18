@@ -120,6 +120,21 @@ impl<S: Clone + PartialEq> Scroller<S> {
             .is_some_and(|x| x >= 0 && x + SCENERY_WIDTH as isize <= SCROLLER_WIDTH as isize)
     }
 
+    /// Rightmost tile x, or 0 when there are no tiles.
+    fn rightmost_x(&self) -> isize {
+        self.elements
+            .cot::<Scenery<S>>()
+            .iter()
+            .map(|t| t.get_x())
+            .max()
+            .unwrap_or(0)
+    }
+
+    /// Right edge of the rightmost tile.
+    fn rightmost_edge(&self) -> isize {
+        self.rightmost_x() + SCENERY_WIDTH as isize
+    }
+
     /// Appends a ground tile at the given x.
     fn add_tile(&self, x: isize) {
         let tile = Scenery::<S>::default();
@@ -153,15 +168,10 @@ impl<S: Clone + PartialEq> Scroller<S> {
         {}
 
         // Keep adding while the leftmost tile is fully visual.
-        while self.leftmost_tile_fully_visual() {
-            let right = self
-                .elements
-                .cot::<Scenery<S>>()
-                .iter()
-                .map(|t| t.get_x())
-                .max()
-                .unwrap_or(0);
-            self.add_tile(right + SCENERY_WIDTH as isize);
+        if self.leftmost_tile_fully_visual() {
+            while self.rightmost_edge() <= SCROLLER_WIDTH as isize {
+                self.add_tile(self.rightmost_x() + SCENERY_WIDTH as isize);
+            }
         }
 
         // Pipe (6) + gap (24) cadence.
