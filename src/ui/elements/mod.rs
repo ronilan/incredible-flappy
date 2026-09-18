@@ -9,6 +9,7 @@ pub mod game;
 pub mod pavement;
 pub mod pipe;
 pub mod scenery;
+pub mod score;
 
 pub use buildings::*;
 pub use bush::*;
@@ -21,3 +22,4 @@ pub use game::*;
 pub use pavement::*;
 pub use pipe::*;
 pub use scenery::*;
+pub use score::*;

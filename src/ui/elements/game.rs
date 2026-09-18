@@ -14,6 +14,7 @@ use super::flying_bird::FlyingBird;
 use super::pavement::Pavement;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
+use super::score::Score;
 
 pub const GAME_WIDTH: usize = 80;
 pub const GAME_HEIGHT: usize = 24;
@@ -90,6 +91,12 @@ impl<S: Clone + PartialEq> Game<S> {
         let flying_bird = FlyingBird::<S>::default();
         flying_bird.x(20).y(el.options.physics.start_y as isize);
         el.add(flying_bird);
+
+        let score = Score::<S>::default();
+        score
+            .x((GAME_WIDTH as isize - score.visual.look.width() as isize) / 2)
+            .y(1);
+        el.add(score);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
