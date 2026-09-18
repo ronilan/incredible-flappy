@@ -2,6 +2,7 @@ use std::cell::Cell;
 
 use incredible::*;
 use incredible_elements::Text;
+use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 use rand::Rng;
@@ -9,6 +10,7 @@ use rand::rng;
 
 use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
+use super::floor::Floor;
 use super::flying_bird::FlyingBird;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
@@ -19,6 +21,7 @@ pub const GAME_GROUND_Y: isize = 16;
 pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
+pub const BIRD_REST_Y: f32 = 20.0;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -50,8 +53,6 @@ pub struct BirdPhysics {
     pub max_fall: f32,
     /// Bird y at run start. x stays 20.
     pub start_y: f32,
-    /// Bird y that ends the run.
-    pub ground_y: f32,
 }
 
 impl Default for BirdPhysics {
@@ -61,7 +62,6 @@ impl Default for BirdPhysics {
             flap: 3.0,
             max_fall: 3.0,
             start_y: 10.0,
-            ground_y: 20.0,
         }
     }
 }
@@ -161,9 +161,7 @@ impl<S: Clone + PartialEq> Game<S> {
         self.velocity.set(0.0);
         self.crashed.set(false);
         self.bird_y.set(self.options.physics.start_y);
-        for bird in self.elements.cot::<FlyingBird<S>>() {
-            bird.y(self.get_y() + self.options.physics.start_y as isize);
-        }
+        self.place_bird(self.options.physics.start_y);
         self
     }
 
@@ -201,16 +199,48 @@ impl<S: Clone + PartialEq> Game<S> {
         let phys = &self.options.physics;
         let v = (self.velocity.get() + phys.gravity).min(phys.max_fall);
         self.velocity.set(v);
-        let mut y = self.bird_y.get() + v;
-        if y >= phys.ground_y {
-            y = phys.ground_y;
-            self.crashed.set(true);
-            self.lay_dead(y);
-        }
+        let y = self.bird_y.get() + v;
         self.bird_y.set(y);
+        self.place_bird(y);
+        if self.hits_obstacle() {
+            let rest = y.min(BIRD_REST_Y);
+            self.bird_y.set(rest);
+            self.place_bird(rest);
+            self.crashed.set(true);
+            self.lay_dead(rest);
+        }
+    }
+
+    /// Positions the flying bird at the given game-relative y.
+    fn place_bird(&self, y: f32) {
         for bird in self.elements.cot::<FlyingBird<S>>() {
             bird.y(self.get_y() + y.floor() as isize);
         }
+    }
+
+    /// True when the bird touches any pipe, bushing or floor.
+    fn hits_obstacle(&self) -> bool {
+        let birds = self.elements.cot::<FlyingBird<S>>();
+        let Some(bird) = birds.first() else {
+            return false;
+        };
+        let bird = bird.as_ref();
+        for pipe in self.elements.dcot_w::<Pipe<S>, _>(|_| true) {
+            if bird.intersects_element(pipe.as_ref()) {
+                return true;
+            }
+        }
+        for bushing in self.elements.dcot_w::<Bushing<S>, _>(|_| true) {
+            if bird.intersects_element(bushing.as_ref()) {
+                return true;
+            }
+        }
+        for floor in self.elements.dcot_w::<Floor<S>, _>(|_| true) {
+            if bird.intersects_element(floor.as_ref()) {
+                return true;
+            }
+        }
+        false
     }
 
     /// Three 40-wide tiles across and past the window.
