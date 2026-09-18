@@ -38,13 +38,9 @@ fn game_hint_for(state: &State) -> &'static str {
 pub fn transition(state: &State, key: &Key) -> Option<State> {
     match (key, state) {
         (Key::Escape, _) => Some(State::Splash),
-        (Key::Enter, State::Splash) => Some(State::Ready),
-        (Key::Enter, State::Dead) => Some(State::Ready),
-        (Key::Char(' '), State::Ready) => Some(State::Flying),
-        (Key::Char('d'), State::Ready) => Some(State::Dead),
-        (Key::Char('D'), State::Ready) => Some(State::Dead),
-        (Key::Char('d'), State::Flying) => Some(State::Dead),
-        (Key::Char('D'), State::Flying) => Some(State::Dead),
+        (Key::Enter | Key::Char(' '), State::Splash) => Some(State::Ready),
+        (Key::Enter | Key::Char(' '), State::Dead) => Some(State::Ready),
+        (Key::Enter | Key::Char(' '), State::Ready) => Some(State::Flying),
         _ => None,
     }
 }
@@ -182,7 +178,27 @@ pub fn build() -> App<State> {
                 el.draw();
             }
         }
-        if *state == State::Flying && event.key == Key::Char(' ') {
+        if *state == State::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
+            for game in el
+                .elements
+                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+            {
+                game.flap();
+            }
+        }
+    });
+
+    app.on_mouse(|el, state, event| {
+        if !matches!(event.mouse, Mouse::Down) {
+            return;
+        }
+        if let Some(next) = transition(state, &Key::Enter) {
+            if next != *state {
+                *state = next;
+                el.draw();
+            }
+        }
+        if *state == State::Flying {
             for game in el
                 .elements
                 .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
