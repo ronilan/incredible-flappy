@@ -22,7 +22,7 @@ pub const GAME_GROUND_Y: isize = 16;
 pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
-pub const BIRD_REST_Y: f32 = 20.0;
+pub const DEAD_REST_Y: f32 = 17.0;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -209,6 +209,8 @@ impl<S: Clone + PartialEq> Game<S> {
         if self.dying.get() {
             self.place_dead(y);
             if self.dead_hits_ground() {
+                self.bird_y.set(DEAD_REST_Y);
+                self.place_dead(DEAD_REST_Y);
                 self.crashed.set(true);
             }
         } else {
@@ -341,6 +343,9 @@ impl<S: Clone + PartialEq> Game<S> {
     /// removes pipes. Title, hint and birds stay put.
     pub fn step(&self) {
         self.fall();
+        if self.dying.get() {
+            return;
+        }
         for tile in self.elements.cot::<Scenery<S>>() {
             tile.x(tile.get_x() - 1);
         }
