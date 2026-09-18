@@ -23,6 +23,7 @@ pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
 pub const DEAD_REST_Y: f32 = 17.0;
+pub const BIRD_X: isize = 20;
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -89,7 +90,7 @@ impl<S: Clone + PartialEq> Game<S> {
             .handle("game");
 
         let flying_bird = FlyingBird::<S>::default();
-        flying_bird.x(20).y(el.options.physics.start_y as isize);
+        flying_bird.x(BIRD_X).y(el.options.physics.start_y as isize);
         el.add(flying_bird);
 
         let score = Score::<S>::default();
@@ -151,7 +152,7 @@ impl<S: Clone + PartialEq> Game<S> {
         self
     }
 
-    /// Clears pipes, restores ground tiles and the bird.
+    /// Clears pipes, restores ground tiles, bird and score.
     pub fn reset(&self) -> &Self {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
@@ -163,7 +164,24 @@ impl<S: Clone + PartialEq> Game<S> {
         self.crashed.set(false);
         self.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
+        for score in self.elements.cot::<Score<S>>() {
+            score.set_value(0);
+            self.center_score(score.as_ref());
+        }
         self
+    }
+
+    /// Bumps the score and keeps it centered.
+    fn add_score(&self, points: u32) {
+        for score in self.elements.cot::<Score<S>>() {
+            score.set_value(score.get_value() + points);
+            self.center_score(score.as_ref());
+        }
+    }
+
+    /// Centers the score display across the window.
+    fn center_score(&self, score: &Score<S>) {
+        score.x(self.get_x() + (GAME_WIDTH as isize - score.visual.look.width() as isize) / 2);
     }
 
     /// Lays the dead bird where the flight ended, on top of the scenery.
@@ -377,15 +395,28 @@ impl<S: Clone + PartialEq> Game<S> {
             self.distance.set(distance);
         }
 
+        // Gap passed: top pipe right edge reaches the bird.
+        for pipe in self.elements.cot::<Pipe<S>>() {
+            if pipe.get_y() == self.get_y()
+                && pipe.get_x() + PIPE_WIDTH as isize == self.get_x() + BIRD_X
+            {
+                self.add_score(1);
+            }
+        }
+
         // Drop fully off-screen pipes.
         while self
             .elements
-            .sot_w::<Pipe<S>, _>(|p| p.get_x() + PIPE_WIDTH as isize <= 0)
+            .sot_w::<Pipe<S>, _>(|p| {
+                p.get_x() + PIPE_WIDTH as isize <= self.get_x()
+            })
             .is_some()
         {}
         while self
             .elements
-            .sot_w::<Bushing<S>, _>(|b| b.get_x() + BUSHING_WIDTH as isize <= 0)
+            .sot_w::<Bushing<S>, _>(|b| {
+                b.get_x() + BUSHING_WIDTH as isize <= self.get_x()
+            })
             .is_some()
         {}
     }
