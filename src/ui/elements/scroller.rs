@@ -45,8 +45,8 @@ impl<S: Clone + PartialEq> Scroller<S> {
         el.look(Look::from((SCROLLER_WIDTH, SCROLLER_HEIGHT, ' ')))
             .handle("scroller");
 
-        // Base ground cover; more tiles are added as these scroll.
-        el.add_base_tiles();
+        // Always three ground tiles.
+        el.add_ground();
 
         // Marquee method: step on animation progress each loop tick.
         el.internal_on_loop(|el, _, _event| {
@@ -89,57 +89,23 @@ impl<S: Clone + PartialEq> Scroller<S> {
         self
     }
 
-    /// Clears pipes and restores the base ground tiles.
+    /// Clears pipes and restores the three ground tiles.
     pub fn reset(&self) -> &Self {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
-        self.add_base_tiles();
+        self.add_ground();
         self.distance.set(0);
         self
     }
 
-    /// Base ground cover: two 40-wide tiles across the window.
-    fn add_base_tiles(&self) {
-        let left = Scenery::<S>::default();
-        left.x(0).y(SCROLLER_GROUND_Y);
-        self.add(left);
-
-        let right = Scenery::<S>::default();
-        right.x(SCENERY_WIDTH as isize).y(SCROLLER_GROUND_Y);
-        self.add(right);
-    }
-
-    /// The leftmost tile is fully visual when it sits inside the window.
-    fn leftmost_tile_fully_visual(&self) -> bool {
-        self.elements
-            .cot::<Scenery<S>>()
-            .iter()
-            .map(|t| t.get_x())
-            .min()
-            .is_some_and(|x| x >= 0 && x + SCENERY_WIDTH as isize <= SCROLLER_WIDTH as isize)
-    }
-
-    /// Rightmost tile x, or 0 when there are no tiles.
-    fn rightmost_x(&self) -> isize {
-        self.elements
-            .cot::<Scenery<S>>()
-            .iter()
-            .map(|t| t.get_x())
-            .max()
-            .unwrap_or(0)
-    }
-
-    /// Right edge of the rightmost tile.
-    fn rightmost_edge(&self) -> isize {
-        self.rightmost_x() + SCENERY_WIDTH as isize
-    }
-
-    /// Appends a ground tile at the given x.
-    fn add_tile(&self, x: isize) {
-        let tile = Scenery::<S>::default();
-        tile.x(x).y(SCROLLER_GROUND_Y);
-        self.add(tile);
+    /// Three 40-wide tiles across and past the window.
+    fn add_ground(&self) {
+        for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
+            let tile = Scenery::<S>::default();
+            tile.x(x).y(SCROLLER_GROUND_Y);
+            self.add(tile);
+        }
     }
 
     /// Places a pipe + bushing cap at x 80.
@@ -160,17 +126,10 @@ impl<S: Clone + PartialEq> Scroller<S> {
             child.x(child.get_x() - 1);
         }
 
-        // Drop fully off-screen ground tiles.
-        while self
-            .elements
-            .sot_w::<Scenery<S>, _>(|t| t.get_x() + SCENERY_WIDTH as isize <= 0)
-            .is_some()
-        {}
-
-        // Keep adding while the leftmost tile is fully visual.
-        if self.leftmost_tile_fully_visual() {
-            while self.rightmost_edge() <= SCROLLER_WIDTH as isize {
-                self.add_tile(self.rightmost_x() + SCENERY_WIDTH as isize);
+        // Leftmost at -40 wraps to 80.
+        for tile in self.elements.cot::<Scenery<S>>() {
+            if tile.get_x() <= -(SCENERY_WIDTH as isize) {
+                tile.x(SCROLLER_WIDTH as isize);
             }
         }
 
