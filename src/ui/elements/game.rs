@@ -165,6 +165,16 @@ impl<S: Clone + PartialEq> Game<S> {
         self
     }
 
+    /// Lays the dead bird where the flight ended.
+    fn lay_dead(&self, y: f32) {
+        if let Some(flying) = self.elements.cot::<FlyingBird<S>>().first() {
+            let bx = flying.get_x();
+            for dead in self.elements.cot::<DeadBird<S>>() {
+                dead.x(bx).y(self.get_y() + y.floor() as isize);
+            }
+        }
+    }
+
     /// Upward push.
     pub fn flap(&self) -> &Self {
         self.velocity.set(-self.options.physics.flap);
@@ -187,13 +197,10 @@ impl<S: Clone + PartialEq> Game<S> {
         let v = (self.velocity.get() + phys.gravity).min(phys.max_fall);
         self.velocity.set(v);
         let mut y = self.bird_y.get() + v;
-        if y < 0.0 {
-            y = 0.0;
-            self.velocity.set(0.0);
-        }
         if y >= phys.ground_y {
             y = phys.ground_y;
             self.crashed.set(true);
+            self.lay_dead(y);
         }
         self.bird_y.set(y);
         for bird in self.elements.cot::<FlyingBird<S>>() {
