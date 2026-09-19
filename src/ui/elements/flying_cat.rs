@@ -4,7 +4,8 @@ use incredible_macros_decl::element;
 
 pub const FLYING_CAT_WIDTH_CELLS: usize = 3;
 pub const FLYING_CAT_HEIGHT_CELLS: usize = 3;
-const FLYING_CAT_PNG: &[u8] = include_bytes!("../../../assets/FlyingCat.PNG");
+const FLYING_CAT_UP_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_up.png");
+const FLYING_CAT_DOWN_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_down.png");
 
 #[derive(Clone, Debug)]
 pub struct FlyingCatOptions {
@@ -32,23 +33,44 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         let mut el = Self::blank();
         el.options = options;
 
-        let img = Image::<S>::new();
-        img.width(el.options.width_cells);
-        img.height(el.options.height_cells);
-        img.data(decode_png(FLYING_CAT_PNG));
-        img.handle("flying_cat_image");
+        let up = Image::<S>::new();
+        up.width(el.options.width_cells);
+        up.height(el.options.height_cells);
+        up.data(decode_png(FLYING_CAT_UP_PNG));
+        up.handle("flying_cat_up");
+
+        let down = Image::<S>::new();
+        down.width(el.options.width_cells);
+        down.height(el.options.height_cells);
+        down.data(decode_png(FLYING_CAT_DOWN_PNG));
+        down.handle("flying_cat_down");
+        down.showed(false);
 
         el.look(Look::from((
-            img.visual.look.width(),
-            img.visual.look.height(),
+            el.options.width_cells,
+            el.options.height_cells,
             ' ',
         )))
         .handle("flying_cat");
-        el.add(img);
+        el.add(up);
+        el.add(down);
 
         el.decorate();
 
         el
+    }
+
+    /// Up image while rising, down image while falling.
+    pub fn set_rising(&self, rising: bool) -> &Self {
+        for img in self.elements.cot::<Image<S>>() {
+            let handle = img.get_handle();
+            if handle == "flying_cat_up" {
+                img.showed(rising);
+            } else if handle == "flying_cat_down" {
+                img.showed(!rising);
+            }
+        }
+        self
     }
 }
 

@@ -2,9 +2,9 @@ use incredible::*;
 use incredible_elements::{Image, ImageData};
 use incredible_macros_decl::element;
 
-pub const DEAD_CAT_WIDTH_CELLS: usize = 3;
-pub const DEAD_CAT_HEIGHT_CELLS: usize = 3;
-const DEAD_CAT_PNG: &[u8] = include_bytes!("../../../assets/DeadCat.PNG");
+pub const DEAD_CAT_WIDTH_CELLS: usize = 10;
+pub const DEAD_CAT_HEIGHT_CELLS: usize = 4;
+const DEAD_CAT_PNG: &[u8] = include_bytes!("../../../assets/dead_cat.png");
 
 #[derive(Clone, Debug)]
 pub struct DeadCatOptions {
@@ -41,7 +41,7 @@ impl<S: Clone + PartialEq> DeadCat<S> {
         el.look(Look::from((
             img.visual.look.width(),
             img.visual.look.height(),
-            ' ',
+            '.',
         )))
         .handle("dead_cat");
         el.add(img);

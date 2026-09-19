@@ -268,6 +268,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let phys = &self.options.physics;
         let v = (self.velocity.get() + phys.gravity).min(phys.max_fall);
         self.velocity.set(v);
+        for cat in self.elements.cot::<FlyingCat<S>>() {
+            cat.set_rising(v < 0.0);
+        }
         let y = self.bird_y.get() + v;
         self.bird_y.set(y);
         if self.dying.get() {
