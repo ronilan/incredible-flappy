@@ -2,18 +2,21 @@ use incredible::*;
 use incredible_elements::{Image, ImageData};
 use incredible_macros_decl::element;
 
-pub const FLYING_CAT_WIDTH_CELLS: usize = 5;
+pub const FLYING_CAT_WIDTH_CELLS: usize = 3;
+pub const FLYING_CAT_HEIGHT_CELLS: usize = 3;
 const FLYING_CAT_PNG: &[u8] = include_bytes!("../../../assets/FlyingCat.PNG");
 
 #[derive(Clone, Debug)]
 pub struct FlyingCatOptions {
     pub width_cells: usize,
+    pub height_cells: usize,
 }
 
 impl Default for FlyingCatOptions {
     fn default() -> Self {
         Self {
             width_cells: FLYING_CAT_WIDTH_CELLS,
+            height_cells: FLYING_CAT_HEIGHT_CELLS,
         }
     }
 }
@@ -31,6 +34,7 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
 
         let img = Image::<S>::new();
         img.width(el.options.width_cells);
+        img.height(el.options.height_cells);
         img.data(decode_png(FLYING_CAT_PNG));
         img.handle("flying_cat_image");
 

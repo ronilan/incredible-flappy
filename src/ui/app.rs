@@ -185,10 +185,10 @@ pub fn build() -> App<State> {
                 b.showed(!is_dead && state.kitty);
             }
             for b in dead {
-                b.showed(is_dead && !state.kitty);
+                b.showed(false);
             }
             for b in dead_cat {
-                b.showed(is_dead && state.kitty);
+                b.showed(is_dead);
             }
         }
         el.draw();
