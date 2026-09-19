@@ -50,7 +50,7 @@ pub fn build() -> App<State> {
     });
     transform_rule("ScoreGradient", |flattened, progress| {
         gradient_color(
-            &[Color::ansi(15), Color::ansi(255)],
+            &[Color::ansi(15), Color::ansi(250)],
             GradientDirection::Vertical,
             flattened,
             progress,
