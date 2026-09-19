@@ -6,6 +6,7 @@ pub const FLYING_CAT_WIDTH_CELLS: usize = 10;
 pub const FLYING_CAT_HEIGHT_CELLS: usize = 4;
 const FLYING_CAT_UP_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_up.png");
 const FLYING_CAT_DOWN_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_down.png");
+const READY_CAT_PNG: &[u8] = include_bytes!("../../../assets/cat.png");
 
 #[derive(Clone, Debug)]
 pub struct FlyingCatOptions {
@@ -38,6 +39,7 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         up.height(el.options.height_cells);
         up.data(decode_png(FLYING_CAT_UP_PNG));
         up.handle("flying_cat_up");
+        up.showed(false);
 
         let down = Image::<S>::new();
         down.width(el.options.width_cells);
@@ -45,6 +47,12 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         down.data(decode_png(FLYING_CAT_DOWN_PNG));
         down.handle("flying_cat_down");
         down.showed(false);
+
+        let ready = Image::<S>::new();
+        ready.width(el.options.width_cells);
+        ready.height(el.options.height_cells);
+        ready.data(decode_png(READY_CAT_PNG));
+        ready.handle("flying_cat_ready");
 
         el.look(Look::from((
             el.options.width_cells,
@@ -54,6 +62,7 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         .handle("flying_cat");
         el.add(up);
         el.add(down);
+        el.add(ready);
 
         el.decorate();
 
@@ -68,7 +77,17 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
                 img.showed(rising);
             } else if handle == "flying_cat_down" {
                 img.showed(!rising);
+            } else {
+                img.showed(false);
             }
+        }
+        self
+    }
+
+    /// Ready image, hiding up/down.
+    pub fn show_ready(&self) -> &Self {
+        for img in self.elements.cot::<Image<S>>() {
+            img.showed(img.get_handle() == "flying_cat_ready");
         }
         self
     }
