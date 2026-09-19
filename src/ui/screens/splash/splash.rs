@@ -7,6 +7,7 @@ use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
 use crate::ui::elements::Scenery;
+use crate::ui::theme;
 
 fn title_effects(el: &BlockCharsStr<State>) {
     decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);
@@ -19,7 +20,7 @@ pub(crate) fn build() -> Rectangle<State> {
         .width(SCREEN_WIDTH)
         .height(SCREEN_HEIGHT)
         .fill(Some(' '))
-        .background(Some(Color::Ansi(152)))
+        .background(Some(Color::Ansi(theme::SKY_BACKGROUND)))
         .handle("splash");
 
     let title = BlockCharsStr::<State>::default();

@@ -3,9 +3,10 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const PIPE_WIDTH: usize = 6;
 pub const PIPE_HEIGHT: usize = 10;
-pub const PIPE_SEGMENT_BACKGROUNDS: [u8; 6] = [28, 34, 34, 40, 46, 40];
 
 #[derive(Clone, Debug)]
 pub struct PipeOptions {
@@ -16,7 +17,7 @@ pub struct PipeOptions {
 impl Default for PipeOptions {
     fn default() -> Self {
         Self {
-            background: 34,
+            background: theme::PIPE_BACKGROUND,
             height: PIPE_HEIGHT,
         }
     }
@@ -37,7 +38,7 @@ impl<S: Clone + PartialEq> Pipe<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("pipe");
 
-        for (i, bg) in PIPE_SEGMENT_BACKGROUNDS.iter().enumerate() {
+        for (i, bg) in theme::PIPE_SEGMENTS.iter().enumerate() {
             let seg = Rectangle::<S>::new();
             seg.width(1)
                 .height(el.options.height)

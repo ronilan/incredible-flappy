@@ -3,6 +3,8 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const PAVEMENT_WIDTH: usize = 40;
 pub const PAVEMENT_HEIGHT: usize = 1;
 
@@ -15,7 +17,7 @@ pub struct PavementOptions {
 impl Default for PavementOptions {
     fn default() -> Self {
         Self {
-            background: 34,
+            background: theme::PAVEMENT_BASE,
             width: PAVEMENT_WIDTH,
         }
     }
@@ -40,7 +42,7 @@ impl<S: Clone + PartialEq> Pavement<S> {
             let bg = if i % 2 == 0 {
                 el.options.background
             } else {
-                el.options.background + 6
+                el.options.background + theme::PAVEMENT_STEP
             };
             let block = Rectangle::<S>::new();
             block

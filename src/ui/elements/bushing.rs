@@ -3,9 +3,10 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const BUSHING_WIDTH: usize = 8;
 pub const BUSHING_HEIGHT: usize = 1;
-pub const BUSHING_SEGMENT_BACKGROUNDS: [u8; 8] = [28, 34, 34, 40, 40, 40, 46, 40];
 
 #[derive(Clone, Debug)]
 pub struct BushingOptions {
@@ -14,7 +15,9 @@ pub struct BushingOptions {
 
 impl Default for BushingOptions {
     fn default() -> Self {
-        Self { background: 34 }
+        Self {
+            background: theme::BUSHING_BACKGROUND,
+        }
     }
 }
 
@@ -33,7 +36,7 @@ impl<S: Clone + PartialEq> Bushing<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("bushing");
 
-        for (i, bg) in BUSHING_SEGMENT_BACKGROUNDS.iter().enumerate() {
+        for (i, bg) in theme::BUSHING_SEGMENTS.iter().enumerate() {
             let seg = Rectangle::<S>::new();
             seg.width(1)
                 .height(1)

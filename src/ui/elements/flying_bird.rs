@@ -3,6 +3,8 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const FLYING_BIRD_WIDTH: usize = 5;
 pub const FLYING_BIRD_HEIGHT: usize = 2;
 
@@ -39,8 +41,8 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         eye.width(1)
             .height(1)
             .fill(Some('.'))
-            .color(Some(Color::Ansi(16)))
-            .background(Some(Color::Ansi(231)))
+            .color(Some(Color::Ansi(theme::BIRD_DARK)))
+            .background(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .x(3)
             .y(0);
         el.add(eye);
@@ -50,8 +52,8 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         wing.width(2)
             .height(1)
             .fill(Some('─'))
-            .color(Some(Color::Ansi(16)))
-            .background(Some(Color::Ansi(160)))
+            .color(Some(Color::Ansi(theme::BIRD_DARK)))
+            .background(Some(Color::Ansi(theme::BIRD_WING_BACKGROUND)))
             .x(3)
             .y(1);
         el.add(wing);
@@ -61,7 +63,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         body.width(3)
             .height(1)
             .fill(Some(' '))
-            .background(Some(Color::Ansi(220)))
+            .background(Some(Color::Ansi(theme::BIRD_BODY_BACKGROUND)))
             .x(0)
             .y(0);
         el.add(body);
@@ -72,7 +74,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .width(1)
             .height(1)
             .fill(Some(' '))
-            .background(Some(Color::Ansi(214)))
+            .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(2)
             .y(1);
         el.add(belly);
@@ -82,8 +84,8 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         beak.width(2)
             .height(1)
             .fill(Some('>'))
-            .color(Some(Color::Ansi(231)))
-            .background(Some(Color::Ansi(214)))
+            .color(Some(Color::Ansi(theme::BIRD_LIGHT)))
+            .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(0)
             .y(1);
         el.add(beak);

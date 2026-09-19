@@ -4,6 +4,8 @@ use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
 
+use crate::ui::theme;
+
 /// Fill character for a bush by column index:
 /// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
@@ -27,8 +29,8 @@ impl Default for BushOptions {
     fn default() -> Self {
         Self {
             index: 0,
-            background: 156,
-            color: 40,
+            background: theme::BUSH_BACKGROUND,
+            color: theme::BUSH_COLOR,
         }
     }
 }

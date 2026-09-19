@@ -41,7 +41,7 @@ pub struct GameOptions {
 impl Default for GameOptions {
     fn default() -> Self {
         Self {
-            background: 152,
+            background: crate::ui::theme::SKY_BACKGROUND,
             interval_ms: 100,
             spawn_gap: 30,
             physics: BirdPhysics::default(),

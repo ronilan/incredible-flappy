@@ -3,6 +3,8 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const DEAD_BIRD_WIDTH: usize = 2;
 pub const DEAD_BIRD_HEIGHT: usize = 4;
 
@@ -45,8 +47,8 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         eye.width(1)
             .height(1)
             .fill(Some('x'))
-            .color(Some(Color::Ansi(16)))
-            .background(Some(Color::Ansi(231)))
+            .color(Some(Color::Ansi(theme::BIRD_DARK)))
+            .background(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .x(1)
             .y(2);
         el.add(eye);
@@ -56,8 +58,8 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         tail.width(1)
             .height(2)
             .fill(Some('|'))
-            .color(Some(Color::Ansi(16)))
-            .background(Some(Color::Ansi(160)))
+            .color(Some(Color::Ansi(theme::BIRD_DARK)))
+            .background(Some(Color::Ansi(theme::BIRD_WING_BACKGROUND)))
             .x(0)
             .y(2);
         el.add(tail);
@@ -67,8 +69,8 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         body.width(1)
             .height(2)
             .fill(Some(' '))
-            .color(Some(Color::Ansi(16)))
-            .background(Some(Color::Ansi(220)))
+            .color(Some(Color::Ansi(theme::BIRD_DARK)))
+            .background(Some(Color::Ansi(theme::BIRD_BODY_BACKGROUND)))
             .x(1)
             .y(0);
         el.add(body);
@@ -78,8 +80,8 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         head.width(1)
             .height(2)
             .fill(Some('v'))
-            .color(Some(Color::Ansi(231)))
-            .background(Some(Color::Ansi(214)))
+            .color(Some(Color::Ansi(theme::BIRD_LIGHT)))
+            .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(0)
             .y(0);
         el.add(head);

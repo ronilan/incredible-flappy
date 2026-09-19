@@ -2,6 +2,8 @@ use incredible::*;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use crate::ui::theme;
+
 pub const FLOOR_WIDTH: usize = 40;
 pub const FLOOR_HEIGHT: usize = 2;
 
@@ -12,7 +14,7 @@ pub struct FloorOptions {
 
 impl Default for FloorOptions {
     fn default() -> Self {
-        Self { background: 187 }
+        Self { background: theme::FLOOR_BACKGROUND }
     }
 }
 
