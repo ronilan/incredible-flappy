@@ -43,7 +43,6 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .background(Some(Color::Ansi(231)))
             .x(3)
             .y(0);
-        eye.decorate();
         el.add(eye);
 
         // Wing.
@@ -55,7 +54,6 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .background(Some(Color::Ansi(160)))
             .x(3)
             .y(1);
-        wing.decorate();
         el.add(wing);
 
         // Body.
@@ -66,7 +64,6 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .background(Some(Color::Ansi(220)))
             .x(0)
             .y(0);
-        body.decorate();
         el.add(body);
 
         // Belly patch.
@@ -78,7 +75,6 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .background(Some(Color::Ansi(214)))
             .x(2)
             .y(1);
-        belly.decorate();
         el.add(belly);
 
         // Beak.
@@ -90,10 +86,8 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
             .background(Some(Color::Ansi(214)))
             .x(0)
             .y(1);
-        beak.decorate();
         el.add(beak);
 
-        el.decorate();
 
         el
     }

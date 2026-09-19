@@ -50,11 +50,9 @@ impl<S: Clone + PartialEq> Pavement<S> {
                 .background(Some(Color::Ansi(bg)))
                 .x(i as isize)
                 .y(0);
-            block.decorate();
             el.add(block);
         }
 
-        el.decorate();
 
         el
     }

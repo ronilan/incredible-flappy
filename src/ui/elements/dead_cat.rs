@@ -46,7 +46,6 @@ impl<S: Clone + PartialEq> DeadCat<S> {
         .handle("dead_cat");
         el.add(img);
 
-        el.decorate();
 
         el
     }

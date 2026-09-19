@@ -45,11 +45,9 @@ impl<S: Clone + PartialEq> Pipe<S> {
                 .background(Some(Color::Ansi(*bg)))
                 .x(i as isize)
                 .y(0);
-            seg.decorate();
             el.add(seg);
         }
 
-        el.decorate();
 
         el
     }

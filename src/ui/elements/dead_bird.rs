@@ -49,7 +49,6 @@ impl<S: Clone + PartialEq> DeadBird<S> {
             .background(Some(Color::Ansi(231)))
             .x(1)
             .y(2);
-        eye.decorate();
         el.add(eye);
 
         // Tail.
@@ -61,7 +60,6 @@ impl<S: Clone + PartialEq> DeadBird<S> {
             .background(Some(Color::Ansi(160)))
             .x(0)
             .y(2);
-        tail.decorate();
         el.add(tail);
 
         // Body.
@@ -73,7 +71,6 @@ impl<S: Clone + PartialEq> DeadBird<S> {
             .background(Some(Color::Ansi(220)))
             .x(1)
             .y(0);
-        body.decorate();
         el.add(body);
 
         // Head.
@@ -85,10 +82,8 @@ impl<S: Clone + PartialEq> DeadBird<S> {
             .background(Some(Color::Ansi(214)))
             .x(0)
             .y(0);
-        head.decorate();
         el.add(head);
 
-        el.decorate();
 
         el
     }

@@ -47,7 +47,6 @@ impl<S: Clone + PartialEq> Bushes<S> {
             el.add(bush);
         }
 
-        el.decorate();
 
         el
     }

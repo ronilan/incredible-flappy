@@ -31,7 +31,6 @@ impl<S: Clone + PartialEq> Floor<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("floor");
 
-        el.decorate();
 
         el
     }

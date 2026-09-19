@@ -156,7 +156,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
 
         el.refresh();
-        el.decorate();
 
         el
     }

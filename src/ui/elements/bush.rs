@@ -52,7 +52,6 @@ impl<S: Clone + PartialEq> Bush<S> {
             .color(Some(Color::Ansi(el.options.color)))
             .handle("bush");
 
-        el.decorate();
 
         el
     }

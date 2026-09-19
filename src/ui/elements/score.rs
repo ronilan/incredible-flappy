@@ -49,7 +49,6 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
         .handle("score");
         el.add(display);
 
-        el.decorate();
 
         el
     }
@@ -68,7 +67,6 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
                 ' ',
             )));
         }
-        self.decorate();
         self
     }
 }

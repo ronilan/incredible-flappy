@@ -64,7 +64,6 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         el.add(down);
         el.add(ready);
 
-        el.decorate();
 
         el
     }

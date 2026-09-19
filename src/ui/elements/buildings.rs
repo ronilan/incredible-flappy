@@ -33,7 +33,6 @@ impl<S: Clone + PartialEq> Buildings<S> {
             .color(Some(Color::Ansi(el.options.color)))
             .handle("buildings");
 
-        el.decorate();
 
         el
     }
