@@ -16,6 +16,7 @@ use super::dead_cat::DeadCat;
 use super::floor::Floor;
 use super::flying_bird::FlyingBird;
 use super::flying_cat::FlyingCat;
+use super::kitty_scenery::KittyScenery;
 use super::pavement::Pavement;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
@@ -181,6 +182,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Mirrors the kitty toggle from app state.
     pub fn set_kitty(&self, kitty: bool) -> &Self {
         self.kitty.set(kitty);
+        for tile in self.elements.cot::<Scenery<S>>() {
+            tile.showed(!kitty);
+        }
+        for tile in self.elements.cot::<KittyScenery<S>>() {
+            tile.showed(kitty);
+        }
         self
     }
 
@@ -200,6 +207,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
+        while self.elements.sot::<KittyScenery<S>>().is_some() {}
         self.add_ground();
         self.distance.set(0);
         self.velocity.set(0.0);
@@ -413,12 +421,18 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         false
     }
 
-    /// Three 40-wide tiles across and past the window.
+    /// Three 40-wide tiles across and past the window, both kinds.
     fn add_ground(&self) {
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::default();
             tile.x(x).y(GAME_GROUND_Y);
+            tile.showed(!self.kitty.get());
             self.add(tile);
+
+            let kitty_tile = KittyScenery::<S>::default();
+            kitty_tile.x(x).y(GAME_GROUND_Y);
+            kitty_tile.showed(self.kitty.get());
+            self.add(kitty_tile);
         }
     }
 
@@ -469,6 +483,13 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 std::ptr::eq(t as *const _, ptr)
             });
         }
+        let tiles: Vec<Rc<KittyScenery<S>>> = self.elements.cot::<KittyScenery<S>>();
+        for tile in tiles.iter().rev() {
+            let ptr = Rc::as_ptr(tile);
+            self.to_back_of_type_where::<KittyScenery<S>, _>(|t| {
+                std::ptr::eq(t as *const _, ptr)
+            });
+        }
     }
 
     /// Moves the world one cell left, wraps ground, spawns and
@@ -483,6 +504,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         for tile in self.elements.cot::<Scenery<S>>() {
             tile.x(tile.get_x() - 1);
         }
+        for tile in self.elements.cot::<KittyScenery<S>>() {
+            tile.x(tile.get_x() - 1);
+        }
         for pipe in self.elements.cot::<Pipe<S>>() {
             pipe.x(pipe.get_x() - 1);
         }
@@ -492,6 +516,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         // Leftmost at -40 wraps past the right edge, relative to self.
         for tile in self.elements.cot::<Scenery<S>>() {
+            if tile.get_x() <= self.get_x() - SCENERY_WIDTH as isize {
+                tile.x(tile.get_x() + SCENERY_WIDTH as isize * 3);
+            }
+        }
+        for tile in self.elements.cot::<KittyScenery<S>>() {
             if tile.get_x() <= self.get_x() - SCENERY_WIDTH as isize {
                 tile.x(tile.get_x() + SCENERY_WIDTH as isize * 3);
             }
