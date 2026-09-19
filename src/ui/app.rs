@@ -11,7 +11,7 @@ pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
 
 #[derive(Clone, PartialEq, Debug, Default)]
-pub enum State {
+pub enum Phase {
     #[default]
     Splash,
     Ready,
@@ -19,12 +19,18 @@ pub enum State {
     Dead,
 }
 
-pub fn transition(state: &State, key: &Key) -> Option<State> {
-    match (key, state) {
-        (Key::Escape, _) => Some(State::Splash),
-        (Key::Enter | Key::Char(' '), State::Splash) => Some(State::Ready),
-        (Key::Enter | Key::Char(' '), State::Dead) => Some(State::Ready),
-        (Key::Enter | Key::Char(' '), State::Ready) => Some(State::Flying),
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct State {
+    pub phase: Phase,
+    pub kitty: bool,
+}
+
+pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
+    match (key, phase) {
+        (Key::Escape, _) => Some(Phase::Splash),
+        (Key::Enter | Key::Char(' '), Phase::Splash) => Some(Phase::Ready),
+        (Key::Enter | Key::Char(' '), Phase::Dead) => Some(Phase::Ready),
+        (Key::Enter | Key::Char(' '), Phase::Ready) => Some(Phase::Flying),
         _ => None,
     }
 }
@@ -57,14 +63,18 @@ pub fn build() -> App<State> {
         )
     });
 
-    app.on_key(|el, state, event| {
-        if let Some(next) = transition(state, &event.key) {
-            if next != *state {
-                *state = next;
+    app.on_key(|el, state: &mut State, event| {
+        if matches!(event.key, Key::Char('k') | Key::Char('K')) {
+            state.kitty = !state.kitty;
+            el.draw();
+        }
+        if let Some(next) = transition(&state.phase, &event.key) {
+            if next != state.phase {
+                state.phase = next;
                 el.draw();
             }
         }
-        if *state == State::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
+        if state.phase == Phase::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
             for game in el
                 .elements
                 .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
@@ -76,13 +86,13 @@ pub fn build() -> App<State> {
         if !matches!(event.mouse, Mouse::Down) {
             return;
         }
-        if let Some(next) = transition(state, &Key::Enter) {
-            if next != *state {
-                *state = next;
+        if let Some(next) = transition(&state.phase, &Key::Enter) {
+            if next != state.phase {
+                state.phase = next;
                 el.draw();
             }
         }
-        if *state == State::Flying {
+        if state.phase == Phase::Flying {
             for game in el
                 .elements
                 .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
@@ -93,7 +103,7 @@ pub fn build() -> App<State> {
     }).on_window(|el, _state, _event| {
         el.elements_to_center();
     }).on_loop(|el, state, _event| {
-        if *state != State::Flying {
+        if state.phase != Phase::Flying {
             return;
         }
         for game in el
@@ -101,12 +111,12 @@ pub fn build() -> App<State> {
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
             if game.check_crash() {
-                *state = State::Dead;
+                state.phase = Phase::Dead;
                 el.draw();
             }
         }
     }).on_state(|el, state, _event| {
-        let is_splash = *state == State::Splash;
+        let is_splash = state.phase == Phase::Splash;
         for rect in el
             .elements
             .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")
@@ -123,13 +133,13 @@ pub fn build() -> App<State> {
             .elements
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
-            match state {
-                State::Ready => {
+            match state.phase {
+                Phase::Ready => {
                     game.reset();
                     game.set_running(true);
                     game.set_spawning(false);
                 }
-                State::Flying => {
+                Phase::Flying => {
                     game.set_running(true);
                     game.set_spawning(true);
                 }
@@ -138,11 +148,12 @@ pub fn build() -> App<State> {
                     game.set_spawning(false);
                 }
             }
+            game.set_kitty(state.kitty);
             for score in game
                 .elements
                 .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
             {
-                score.showed(*state == State::Flying || *state == State::Dead);
+                score.showed(state.phase == Phase::Flying || state.phase == Phase::Dead);
             }
             let flying = game
                 .elements
@@ -156,25 +167,28 @@ pub fn build() -> App<State> {
                 .elements
                 .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
             for r in ready {
-                r.showed(*state == State::Ready);
+                r.showed(state.phase == Phase::Ready);
             }
-            match state {
-                State::Dead => {
-                    for b in flying {
-                        b.showed(false);
-                    }
-                    for b in dead {
-                        b.showed(true);
-                    }
-                }
-                _ => {
-                    for b in flying {
-                        b.showed(true);
-                    }
-                    for b in dead {
-                        b.showed(false);
-                    }
-                }
+            let flying_cat = game
+                .elements
+                .dcot_w::<elements::FlyingCat<State>, _>(|e| {
+                    e.get_handle() == "flying_cat"
+                });
+            let dead_cat = game
+                .elements
+                .dcot_w::<elements::DeadCat<State>, _>(|e| e.get_handle() == "dead_cat");
+            let is_dead = state.phase == Phase::Dead;
+            for b in flying {
+                b.showed(!is_dead && !state.kitty);
+            }
+            for b in flying_cat {
+                b.showed(!is_dead && state.kitty);
+            }
+            for b in dead {
+                b.showed(is_dead && !state.kitty);
+            }
+            for b in dead_cat {
+                b.showed(is_dead && state.kitty);
             }
         }
         el.draw();

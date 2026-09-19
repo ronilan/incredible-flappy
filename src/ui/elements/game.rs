@@ -12,8 +12,10 @@ use rand::rng;
 
 use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
+use super::dead_cat::DeadCat;
 use super::floor::Floor;
 use super::flying_bird::FlyingBird;
+use super::flying_cat::FlyingCat;
 use super::pavement::Pavement;
 use super::pipe::{PIPE_WIDTH, Pipe};
 use super::scenery::{SCENERY_WIDTH, Scenery};
@@ -76,6 +78,7 @@ element! {
       options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
       spawning: Cell<bool> = Cell::new(false),
+      kitty: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
       bird_y: Cell<f32> = Cell::new(10.0),
       velocity: Cell<f32> = Cell::new(0.0),
@@ -101,6 +104,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         flying_bird.x(BIRD_X).y(el.options.physics.start_y as isize);
         el.add(flying_bird);
 
+        let flying_cat = FlyingCat::<S>::default();
+        flying_cat.x(BIRD_X).y(el.options.physics.start_y as isize);
+        flying_cat.showed(false);
+        el.add(flying_cat);
+
         let score = Score::<S>::default();
         score
             .x((GAME_WIDTH as isize - score.visual.look.width() as isize) / 2)
@@ -121,13 +129,18 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         dead_bird.x(48).y(6);
         dead_bird.showed(false);
 
+        let dead_cat = DeadCat::<S>::default();
+        dead_cat.x(48).y(6);
+        dead_cat.showed(false);
+
         el.bird_y.set(el.options.physics.start_y);
 
         // Always three ground tiles.
         el.add_ground();
 
-        // After the ground so it paints on top of it.
+        // After the ground so they paint on top of it.
         el.add(dead_bird);
+        el.add(dead_cat);
 
         // Marquee method: step on animation progress each loop tick.
         el.internal_on_loop(|el, _, _event| {
@@ -162,6 +175,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Starts (or stops) scrolling.
     pub fn set_running(&self, running: bool) -> &Self {
         self.running.set(running);
+        self
+    }
+
+    /// Mirrors the kitty toggle from app state.
+    pub fn set_kitty(&self, kitty: bool) -> &Self {
+        self.kitty.set(kitty);
         self
     }
 
@@ -212,11 +231,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Lays the dead bird where the flight ended, on top of the scenery.
     /// Rests 3 rows above the crash row, on the pavement.
     fn lay_dead(&self, y: f32) {
-        let bx = match self.elements.cot::<FlyingBird<S>>().first() {
-            Some(flying) => flying.get_x(),
+        let bx = match self.active_flier() {
+            Some(flier) => flier.get_x(),
             None => return,
         };
         if let Some((_, dead)) = self.elements.sot::<DeadBird<S>>() {
+            dead.x(bx).y(self.get_y() + y.floor() as isize);
+            self.elements.inner.borrow_mut().push(dead);
+        }
+        if let Some((_, dead)) = self.elements.sot::<DeadCat<S>>() {
             dead.x(bx).y(self.get_y() + y.floor() as isize);
             self.elements.inner.borrow_mut().push(dead);
         }
@@ -279,24 +302,63 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// Positions the flying bird at the given game-relative y.
+    /// Positions the flying bird and cat at the given game-relative y.
     fn place_bird(&self, y: f32) {
         for bird in self.elements.cot::<FlyingBird<S>>() {
             bird.y(self.get_y() + y.floor() as isize);
         }
+        for cat in self.elements.cot::<FlyingCat<S>>() {
+            cat.y(self.get_y() + y.floor() as isize);
+        }
     }
 
-    /// Positions the dead bird at the given game-relative y.
+    /// Positions the dead bird and cat at the given game-relative y.
     fn place_dead(&self, y: f32) {
         for dead in self.elements.cot::<DeadBird<S>>() {
             dead.y(self.get_y() + y.floor() as isize);
         }
+        for dead in self.elements.cot::<DeadCat<S>>() {
+            dead.y(self.get_y() + y.floor() as isize);
+        }
     }
 
-    /// True when the flying bird touches any pipe, bushing or floor.
+    /// The currently flown creature, bird or cat.
+    fn active_flier(&self) -> Option<Rc<dyn ElementTrait<S>>> {
+        if self.kitty.get() {
+            self.elements
+                .cot::<FlyingCat<S>>()
+                .first()
+                .cloned()
+                .map(|el| el as Rc<dyn ElementTrait<S>>)
+        } else {
+            self.elements
+                .cot::<FlyingBird<S>>()
+                .first()
+                .cloned()
+                .map(|el| el as Rc<dyn ElementTrait<S>>)
+        }
+    }
+
+    /// The currently dying creature, bird or cat.
+    fn active_dead(&self) -> Option<Rc<dyn ElementTrait<S>>> {
+        if self.kitty.get() {
+            self.elements
+                .cot::<DeadCat<S>>()
+                .first()
+                .cloned()
+                .map(|el| el as Rc<dyn ElementTrait<S>>)
+        } else {
+            self.elements
+                .cot::<DeadBird<S>>()
+                .first()
+                .cloned()
+                .map(|el| el as Rc<dyn ElementTrait<S>>)
+        }
+    }
+
+    /// True when the flown creature touches any pipe, bushing or floor.
     fn flying_hits_obstacle(&self) -> bool {
-        let birds = self.elements.cot::<FlyingBird<S>>();
-        let Some(bird) = birds.first() else {
+        let Some(bird) = self.active_flier() else {
             return false;
         };
         let bird = bird.as_ref();
@@ -323,10 +385,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         false
     }
 
-    /// True when the falling dead bird touches pavement or floor.
+    /// True when the falling dead creature touches pavement or floor.
     fn dead_hits_ground(&self) -> bool {
-        let deads = self.elements.cot::<DeadBird<S>>();
-        let Some(dead) = deads.first() else {
+        let Some(dead) = self.active_dead() else {
             return false;
         };
         let dead = dead.as_ref();
