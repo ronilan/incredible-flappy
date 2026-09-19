@@ -3,17 +3,20 @@ use incredible_elements::{Image, ImageData};
 use incredible_macros_decl::element;
 
 pub const DEAD_CAT_WIDTH_CELLS: usize = 3;
+pub const DEAD_CAT_HEIGHT_CELLS: usize = 3;
 const DEAD_CAT_PNG: &[u8] = include_bytes!("../../../assets/DeadCat.PNG");
 
 #[derive(Clone, Debug)]
 pub struct DeadCatOptions {
     pub width_cells: usize,
+    pub height_cells: usize,
 }
 
 impl Default for DeadCatOptions {
     fn default() -> Self {
         Self {
             width_cells: DEAD_CAT_WIDTH_CELLS,
+            height_cells: DEAD_CAT_HEIGHT_CELLS,
         }
     }
 }
@@ -31,6 +34,7 @@ impl<S: Clone + PartialEq> DeadCat<S> {
 
         let img = Image::<S>::new();
         img.width(el.options.width_cells);
+        img.height(el.options.height_cells);
         img.data(decode_png(DEAD_CAT_PNG));
         img.handle("dead_cat_image");
 
