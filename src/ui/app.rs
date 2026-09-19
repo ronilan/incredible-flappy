@@ -1,7 +1,6 @@
 use incredible::*;
 use incredible_elements::{App, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
-use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
 
 use crate::ui::elements;
