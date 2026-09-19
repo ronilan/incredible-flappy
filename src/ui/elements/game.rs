@@ -208,6 +208,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.spawning.set(false);
         self.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
+        for cat in self.elements.cot::<FlyingCat<S>>() {
+            cat.set_rising(true);
+        }
         for score in self.elements.cot::<Score<S>>() {
             score.set_value(0);
             self.center_score(score.as_ref());
