@@ -290,14 +290,17 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// Hit: swap to the dead bird, boosting stops, it keeps dropping.
+    /// Hit: swap to the dead cat, boosting stops, it keeps dropping.
     fn start_dying(&self, y: f32) {
         self.dying.set(true);
         for bird in self.elements.cot::<FlyingBird<S>>() {
             bird.showed(false);
         }
+        for cat in self.elements.cot::<FlyingCat<S>>() {
+            cat.showed(false);
+        }
         self.lay_dead(y);
-        for dead in self.elements.cot::<DeadBird<S>>() {
+        for dead in self.elements.cot::<DeadCat<S>>() {
             dead.showed(true);
         }
     }
