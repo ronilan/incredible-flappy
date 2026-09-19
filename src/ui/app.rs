@@ -6,6 +6,7 @@ use incredible_helpers_layout::*;
 
 use crate::ui::elements;
 use crate::ui::screens;
+use crate::ui::theme;
 
 pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
@@ -38,30 +39,7 @@ pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
 pub fn build() -> App<State> {
     let app = App::default();
 
-    transform_rule("FlappyGradient", |flattened, progress| {
-        gradient_color(
-            &[Color::ansi(156), Color::ansi(46)],
-            GradientDirection::Vertical,
-            flattened,
-            progress,
-        )
-    });
-    transform_rule("ReadyGradient", |flattened, progress| {
-        gradient_color(
-            &[Color::ansi(214), Color::ansi(220)],
-            GradientDirection::Vertical,
-            flattened,
-            progress,
-        )
-    });
-    transform_rule("ScoreGradient", |flattened, progress| {
-        gradient_color(
-            &[Color::ansi(15), Color::ansi(250)],
-            GradientDirection::Vertical,
-            flattened,
-            progress,
-        )
-    });
+    theme::theme_all();
 
     app.on_key(|el, state: &mut State, event| {
         if matches!(event.key, Key::Char('k') | Key::Char('K')) {
