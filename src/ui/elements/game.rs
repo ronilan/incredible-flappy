@@ -98,6 +98,7 @@ pub struct GameState {
     pub velocity: Cell<f32>,
     pub dying: Cell<bool>,
     pub crashed: Cell<bool>,
+    pub landed: Cell<bool>,
 }
 
 impl Default for GameState {
@@ -112,6 +113,7 @@ impl Default for GameState {
             velocity: Cell::new(0.0),
             dying: Cell::new(false),
             crashed: Cell::new(false),
+            landed: Cell::new(false),
         }
     }
 }
@@ -243,6 +245,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.internal_state.velocity.set(0.0);
         self.internal_state.dying.set(false);
         self.internal_state.crashed.set(false);
+        self.internal_state.landed.set(false);
         self.internal_state.spawning.set(false);
         self.internal_state.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
@@ -286,9 +289,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// Upward push. Dead birds don't flap.
+    /// Upward push. Dead birds don't flap. Take off when perched.
     pub fn flap(&self) -> &Self {
         if !self.internal_state.dying.get() {
+            self.internal_state.landed.set(false);
             self.internal_state.velocity.set(-self.options.physics.flap);
         }
         self
@@ -310,18 +314,47 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let v = (self.internal_state.velocity.get() + phys.gravity).min(phys.max_fall);
         self.internal_state.velocity.set(v);
         for cat in self.elements.cot::<FlyingCat<S>>() {
-            cat.set_rising(v < 0.0);
+            if self.internal_state.landed.get() && self.over_bud() {
+                cat.show_ready();
+            } else {
+                cat.set_rising(v < 0.0);
+            }
         }
-        let y = self.internal_state.bird_y.get() + v;
-        self.internal_state.bird_y.set(y);
         if self.internal_state.dying.get() {
+            let y = self.internal_state.bird_y.get() + v;
+            self.internal_state.bird_y.set(y);
             self.place_dead(y);
             if self.dead_hits_ground() {
                 self.internal_state.bird_y.set(DEAD_REST_Y);
                 self.place_dead(DEAD_REST_Y);
                 self.internal_state.crashed.set(true);
             }
+        } else if self.internal_state.landed.get() && self.over_bud() {
+            // Perched: hold position, no gravity. Pipes can still kill.
+            self.internal_state.velocity.set(0.0);
+            self.place_bird(self.internal_state.bird_y.get());
+            if self.flying_hits_obstacle() {
+                self.start_dying(self.internal_state.bird_y.get());
+            }
         } else {
+            self.internal_state.landed.set(false);
+            let prev = self.internal_state.bird_y.get();
+            let y = prev + v;
+            self.internal_state.bird_y.set(y);
+            // Touching down onto a bud top while falling = land, not kill.
+            if v >= 0.0 {
+                if let Some(flier) = self.active_flier() {
+                    let fh = flier.visual().look.height() as f32;
+                    if let Some(top) = self.bud_top_under(prev + fh, y + fh) {
+                        self.internal_state.landed.set(true);
+                        self.internal_state.velocity.set(0.0);
+                        self.internal_state.bird_y.set(top - fh);
+                        self.place_bird(top - fh);
+                        self.add_score(1);
+                        return;
+                    }
+                }
+            }
             self.place_bird(y);
             if self.flying_hits_obstacle() {
                 self.start_dying(y);
@@ -332,6 +365,43 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 }
             }
         }
+    }
+
+    /// True while the flier sits over a bud top.
+    fn over_bud(&self) -> bool {
+        let Some(flier) = self.active_flier() else {
+            return false;
+        };
+        let fx0 = flier.get_x();
+        let fx1 = fx0 + flier.visual().look.width() as isize;
+        for bud in self.elements.cot::<FlowerBud<S>>() {
+            let w = bud.visual.look.width() as isize;
+            if fx0 < bud.get_x() + w && bud.get_x() < fx1 {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Bud top crossed falling from prev_bottom to new_bottom, if any.
+    fn bud_top_under(&self, prev_bottom: f32, new_bottom: f32) -> Option<f32> {
+        let Some(flier) = self.active_flier() else {
+            return None;
+        };
+        let fx0 = flier.get_x();
+        let fx1 = fx0 + flier.visual().look.width() as isize;
+        for bud in self.elements.cot::<FlowerBud<S>>() {
+            let w = bud.visual.look.width() as isize;
+            let top = (bud.get_y() - self.get_y()) as f32;
+            if prev_bottom <= top
+                && top <= new_bottom
+                && fx0 < bud.get_x() + w
+                && bud.get_x() < fx1
+            {
+                return Some(top);
+            }
+        }
+        None
     }
 
     /// Hit: swap to the matching dead creature, boosting stops.
