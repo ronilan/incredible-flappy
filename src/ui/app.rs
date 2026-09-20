@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Rectangle, Select};
+use incredible_elements::{App, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -28,7 +28,7 @@ pub struct State {
     pub selected: SelectedGame,
 }
 
-#[derive(Clone, PartialEq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum SelectedGame {
     #[default]
     Classic,
@@ -142,6 +142,19 @@ pub fn build() -> App<State> {
             state.kitty = !state.kitty;
             el.draw();
         }
+        if state.phase == Phase::Splash {
+            let pick = match event.key {
+                Key::Char('1') => Some(SelectedGame::Classic),
+                Key::Char('2') => Some(SelectedGame::Busy),
+                Key::Char('3') => Some(SelectedGame::Invaders),
+                _ => None,
+            };
+            if let Some(pick) = pick {
+                state.selected = pick;
+                state.phase = Phase::Ready;
+                el.draw();
+            }
+        }
         if let Some(next) = transition(&state.phase, &event.key) {
             if next != state.phase {
                 state.phase = next;
@@ -187,21 +200,6 @@ pub fn build() -> App<State> {
         let is_splash = state.phase == Phase::Splash;
         let classic = state.selected == SelectedGame::Classic;
         let busy = state.selected == SelectedGame::Busy;
-        // Single source of truth is app state: push the selection into the widget.
-        if is_splash {
-            let idx = match state.selected {
-                SelectedGame::Classic => 0,
-                SelectedGame::Busy => 1,
-                SelectedGame::Invaders => 2,
-            };
-            for select in el
-                .elements
-                .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
-            {
-                select.focused_index(Some(idx));
-                select.select_action(idx);
-            }
-        }
         for rect in el
             .elements
             .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")

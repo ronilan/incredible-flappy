@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::{Rectangle, Select};
+use incredible_elements::{Button, Rectangle};
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
@@ -13,18 +13,27 @@ fn title_effects(el: &BlockCharsStr<State>) {
     decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);
 }
 
-/// Launches the selected game.
-fn launch(select: &Select<State>, state: &mut State) {
-    let idx = select
-        .get_selected()
-        .or(select.get_focused_index())
-        .unwrap_or(0);
-    state.selected = match idx {
-        1 => SelectedGame::Busy,
-        2 => SelectedGame::Invaders,
-        _ => SelectedGame::Classic,
-    };
+/// Launches a game straight from app state. No widget state involved.
+fn launch(selected: SelectedGame, state: &mut State) {
+    state.selected = selected;
     state.phase = crate::ui::app::Phase::Ready;
+}
+
+fn game_button(label: &str, game: SelectedGame) -> Button<State> {
+    let btn = Button::<State>::default();
+    btn.width(label.len() + 2).text(label);
+    let pick = game;
+    btn.on_key(move |_el, state, event| {
+        if event.key == Key::Enter {
+            launch(pick, state);
+        }
+    })
+    .on_mouse(move |_el, state, event| {
+        if event.mouse == Mouse::Click {
+            launch(pick, state);
+        }
+    });
+    btn
 }
 
 /// Builds the whole splash screen.
@@ -55,28 +64,16 @@ pub(crate) fn build() -> Rectangle<State> {
     right.x(40).y(16);
     splash.add(right);
 
-    let select = Select::<State>::new();
-    select
-        .add_item("Classic", "classic")
-        .add_item("Busy", "busy")
-        .add_item("Invaders", "invaders");
-    select.width(20).height(5);
-    select.focused_index(Some(0));
-    select.focused(true);
-    select.handle("game_select");
-    select.y(11);
-    select.on_key(|el, state: &mut State, event| {
-        if event.key == Key::Enter {
-            launch(el, state);
-        }
-    });
-    select.on_mouse(|el, state: &mut State, event| {
-        if event.mouse == Mouse::Click {
-            launch(el, state);
-        }
-    });
-    splash.add(select);
-    splash.elements_to_center_x_of_type::<Select<State>>();
+    let classic = game_button("Classic", SelectedGame::Classic);
+    let busy = game_button("Busy", SelectedGame::Busy);
+    let invaders = game_button("Invaders", SelectedGame::Invaders);
+    let total = 9 + 1 + 6 + 1 + 10;
+    classic.x((SCREEN_WIDTH as isize - total) / 2).y(11);
+    busy.x((SCREEN_WIDTH as isize - total) / 2 + 10).y(11);
+    invaders.x((SCREEN_WIDTH as isize - total) / 2 + 17).y(11);
+    splash.add(classic);
+    splash.add(busy);
+    splash.add(invaders);
 
     splash
 }
