@@ -85,6 +85,7 @@ element! {
       options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
       spawning: Cell<bool> = Cell::new(false),
+      base: Cell<u8> = Cell::new(34),
       kitty: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
       bird_y: Cell<f32> = Cell::new(10.0),
@@ -102,6 +103,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
+        el.base.set(el.options.base);
 
         el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
             .background(Some(Color::Ansi(el.options.background)))
@@ -187,6 +189,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Mirrors the kitty toggle from app state.
     pub fn set_kitty(&self, kitty: bool) -> &Self {
         self.kitty.set(kitty);
+        self
+    }
+
+    /// Switches the palette base. Takes effect on next reset/spawn.
+    pub fn set_base(&self, base: u8) -> &Self {
+        self.base.set(base);
         self
     }
 
@@ -437,7 +445,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::new(SceneryOptions {
-                pavement_background: self.options.base,
+                pavement_background: self.base.get(),
             });
             tile.x(x).y(GAME_GROUND_Y);
             self.add(tile);
@@ -468,20 +476,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.options.base,
+            background: self.base.get(),
             height: top_height as usize,
         });
         top_pipe.x(x).y(0);
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.options.base,
+            background: self.base.get(),
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.options.base,
+            background: self.base.get(),
         });
         bottom_bushing
             .x(x - 1)
@@ -489,7 +497,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.add(bottom_bushing);
 
         let bottom_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.options.base,
+            background: self.base.get(),
             height: bottom_height as usize,
         });
         bottom_pipe

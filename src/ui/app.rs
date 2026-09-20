@@ -46,25 +46,26 @@ pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     }
 }
 
-/// Games of the selected screen: both live as direct app children
-/// under their own handles.
+/// The one shared scroller, direct app child.
 fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State>>> {
-    let handle = match state.selected {
-        SelectedGame::Classic => "game",
-        SelectedGame::Busy => "busy_game",
-        SelectedGame::Invaders => return Vec::new(),
-    };
-    el.elements
-        .cot::<elements::Game<State>>()
-        .into_iter()
-        .filter(|g| g.get_handle() == handle)
-        .collect()
+    let _ = state;
+    el.elements.cot::<elements::Game<State>>()
+}
+
+/// Palette base per selected game.
+fn base_for(selected: &SelectedGame) -> u8 {
+    match selected {
+        SelectedGame::Classic => crate::ui::theme::PIPE_BACKGROUND,
+        SelectedGame::Busy => crate::ui::theme::BUSY_BASE,
+        SelectedGame::Invaders => crate::ui::theme::PIPE_BACKGROUND,
+    }
 }
 
 /// Drives one game from app state: sim flags, kitty, score and creatures.
 fn drive_game(game: &elements::Game<State>, state: &State) {
     match state.phase {
         Phase::Ready => {
+            game.set_base(base_for(&state.selected));
             game.reset();
             game.set_running(true);
             game.set_spawning(false);
@@ -187,13 +188,7 @@ pub fn build() -> App<State> {
             .elements
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
-            rect.showed(!is_splash && classic);
-        }
-        for rect in el
-            .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "busy_game")
-        {
-            rect.showed(!is_splash && busy);
+            rect.showed(!is_splash);
         }
         for rect in el
             .elements
@@ -212,13 +207,9 @@ pub fn build() -> App<State> {
     let splash = screens::splash::splash::build();
     app.add(splash);
 
-    // Game screen: the scroller.
+    // Game screen: the shared scroller.
     let game = screens::game::game::build();
     app.add(game);
-
-    // Busy game: purple copy of the classic scroller.
-    let busy = screens::busy::busy::build();
-    app.add(busy);
 
     let invaders = screens::invaders::invaders::build();
     invaders.showed(false);
