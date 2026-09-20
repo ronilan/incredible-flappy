@@ -110,7 +110,6 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         }
     }
     game.set_kitty(state.kitty);
-    game.set_flowers(state.selected == SelectedGame::Busy);
     for score in game
         .elements
         .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")

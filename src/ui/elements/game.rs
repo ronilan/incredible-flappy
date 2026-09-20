@@ -14,7 +14,8 @@ use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
 use super::dead_cat::DeadCat;
 use super::floor::Floor;
-use super::flower::Flower;
+use super::flower_bud::FlowerBud;
+use super::flower_stem::FlowerStem;
 use super::flying_bird::FlyingBird;
 use super::flying_cat::FlyingCat;
 use super::pavement::Pavement;
@@ -90,7 +91,6 @@ element! {
 pub struct GameState {
     pub running: Cell<bool>,
     pub spawning: Cell<bool>,
-    pub flowers: Cell<bool>,
     pub kind: Cell<crate::ui::app::SelectedGame>,
     pub kitty: Cell<bool>,
     pub distance: Cell<usize>,
@@ -105,7 +105,6 @@ impl Default for GameState {
         Self {
             running: Cell::new(false),
             spawning: Cell::new(false),
-            flowers: Cell::new(false),
             kind: Cell::new(crate::ui::app::SelectedGame::Classic),
             kitty: Cell::new(false),
             distance: Cell::new(0),
@@ -214,12 +213,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self
     }
 
-    /// Flowers spawn in busy only.
-    pub fn set_flowers(&self, flowers: bool) -> &Self {
-        self.internal_state.flowers.set(flowers);
-        self
-    }
-
     /// Switches the game kind. Sky applies now, rest on next reset/spawn.
     pub fn set_kind(&self, kind: crate::ui::app::SelectedGame) -> &Self {
         self.internal_state.kind.set(kind);
@@ -242,7 +235,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn reset(&self) -> &Self {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
-        while self.elements.sot::<Flower<S>>().is_some() {}
+        while self.elements.sot::<FlowerStem<S>>().is_some() {}
+        while self.elements.sot::<FlowerBud<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.internal_state.distance.set(0);
@@ -431,7 +425,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 return true;
             }
         }
-        for flower in self.elements.dcot_w::<Flower<S>, _>(|_| true) {
+        for flower in self.elements.dcot_w::<FlowerStem<S>, _>(|_| true) {
+            if bird.intersects_element(flower.as_ref()) {
+                return true;
+            }
+        }
+        for flower in self.elements.dcot_w::<FlowerBud<S>, _>(|_| true) {
             if bird.intersects_element(flower.as_ref()) {
                 return true;
             }
@@ -484,19 +483,54 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// Places a ground flower at the given x, bottom row on 20.
+    /// Flower duo mirroring the pipe duo: top stem from row 0, bud caps,
+    /// 11-row gap, bottom bud and stem ending at row 20.
     fn spawn_flower_at(&self, x: isize) {
-        let flower = Flower::<S>::default();
-        let h = flower.visual.look.height() as isize;
-        flower.x(x).y(self.get_y() + 21 - h);
-        self.add(flower);
+        use super::flower_bud::FlowerBudOptions;
+        use super::flower_stem::FlowerStemOptions;
+
+        let top_height = rng().random_range(2..=5) as isize;
+        let bottom_height = 6 - top_height;
+
+        let top_stem = FlowerStem::<S>::new(FlowerStemOptions {
+            height: top_height as usize,
+        });
+        top_stem.x(x + 1).y(0);
+        self.add(top_stem);
+
+        let top_bud = FlowerBud::<S>::new(FlowerBudOptions {
+            height: 2,
+            ..Default::default()
+        });
+        top_bud.x(x).y(top_height);
+        self.add(top_bud);
+
+        let bottom_bud = FlowerBud::<S>::new(FlowerBudOptions {
+            height: 2,
+            ..Default::default()
+        });
+        bottom_bud.x(x).y(top_height + 13);
+        self.add(bottom_bud);
+
+        let bottom_stem = FlowerStem::<S>::new(FlowerStemOptions {
+            height: bottom_height as usize,
+        });
+        bottom_stem.x(x + 1).y(top_height + 15);
+        self.add(bottom_stem);
+
         self.send_scenery_to_back();
     }
 
     /// Places a top + bottom pipe duo at the given x. Top pipe starts
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
-    /// With flowers on, flips a coin for a ground flower instead.
+    /// Busy games skip the duo half the time.
     fn spawn_obstacle_at(&self, x: isize) {
+        if matches!(self.internal_state.kind.get(), crate::ui::app::SelectedGame::Busy)
+            && rng().random_bool(0.5)
+        {
+            self.spawn_flower_at(x);
+            return;
+        }
         use super::bushing::BushingOptions;
         use super::pipe::PipeOptions;
 
@@ -594,9 +628,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             }
         }
 
-        // Flower passed: right edge reaches the bird.
-        for flower in self.elements.cot::<Flower<S>>() {
-            if flower.get_x() + flower.visual.look.width() as isize == self.get_x() + BIRD_X
+        // Flower passed: top stem right edge reaches the bird.
+        for stem in self.elements.cot::<FlowerStem<S>>() {
+            if stem.get_y() == self.get_y()
+                && stem.get_x() + 3 == self.get_x() + BIRD_X
             {
                 self.add_score(1);
             }
@@ -614,6 +649,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .elements
             .sot_w::<Bushing<S>, _>(|b| {
                 b.get_x() + BUSHING_WIDTH as isize <= self.get_x()
+            })
+            .is_some()
+        {}
+        while self
+            .elements
+            .sot_w::<FlowerStem<S>, _>(|s| {
+                s.get_x() + 3 <= self.get_x()
+            })
+            .is_some()
+        {}
+        while self
+            .elements
+            .sot_w::<FlowerBud<S>, _>(|b| {
+                b.get_x() + 5 <= self.get_x()
             })
             .is_some()
         {}
