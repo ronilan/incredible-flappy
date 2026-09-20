@@ -144,12 +144,24 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let ready = BlockCharsStr::<S>::default();
         ready.text("Ready").size(BlockSize::Small);
         ready.style_handle("ReadyGradient");
-        ready.y(6);
+        ready
+            .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
+            .y(6);
         ready.handle("ready_title");
         ready.showed(false);
         effect(&ready, ready_effects);
         el.add(ready);
-        el.elements_to_center_x_of_type::<BlockCharsStr<S>>();
+
+        let over = BlockCharsStr::<S>::default();
+        over.text("Game Over").size(BlockSize::Small);
+        over.style_handle("ReadyGradient");
+        over
+            .x((GAME_WIDTH as isize - over.visual.look.width() as isize) / 2)
+            .y(6);
+        over.handle("gameover_title");
+        over.showed(false);
+        effect(&over, ready_effects);
+        el.add(over);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
@@ -577,7 +589,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             return;
         }
 
-        let top_height = rng().random_range(2..=7) as isize;
+        let top_height = rng().random_range(2..=5) as isize;
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
