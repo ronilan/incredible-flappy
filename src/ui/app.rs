@@ -23,6 +23,15 @@ pub enum Phase {
 pub struct State {
     pub phase: Phase,
     pub kitty: bool,
+    pub selected: SelectedGame,
+}
+
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum SelectedGame {
+    #[default]
+    Classic,
+    Busy,
+    Invaders,
 }
 
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
@@ -94,6 +103,8 @@ pub fn build() -> App<State> {
         }
     }).on_state(|el, state, _event| {
         let is_splash = state.phase == Phase::Splash;
+        let classic = state.selected == SelectedGame::Classic;
+        let busy = state.selected == SelectedGame::Busy;
         for rect in el
             .elements
             .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")
@@ -104,12 +115,29 @@ pub fn build() -> App<State> {
             .elements
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
-            rect.showed(!is_splash);
+            rect.showed(!is_splash && classic);
+        }
+        for rect in el
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "busy")
+        {
+            rect.showed(!is_splash && busy);
+        }
+        for rect in el
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "invaders")
+        {
+            rect.showed(!is_splash && !classic && !busy);
         }
         for game in el
             .elements
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
+            if state.selected != SelectedGame::Classic {
+                game.set_running(false);
+                game.set_spawning(false);
+                continue;
+            }
             match state.phase {
                 Phase::Ready => {
                     game.reset();
@@ -179,6 +207,15 @@ pub fn build() -> App<State> {
     // Game screen: the scroller.
     let game = screens::game::game::build();
     app.add(game);
+
+    // Stub screens for the next games.
+    let busy = screens::busy::busy::build();
+    busy.showed(false);
+    app.add(busy);
+
+    let invaders = screens::invaders::invaders::build();
+    invaders.showed(false);
+    app.add(invaders);
 
     app
 }
