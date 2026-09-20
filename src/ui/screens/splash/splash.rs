@@ -62,6 +62,7 @@ pub(crate) fn build() -> Rectangle<State> {
         .add_item("Invaders", "invaders");
     select.width(20).height(5);
     select.focused_index(Some(0));
+    select.focused(true);
     select.handle("game_select");
     select.y(11);
     select.on_key(|el, state: &mut State, event| {
