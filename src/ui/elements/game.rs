@@ -79,17 +79,42 @@ impl Default for BirdPhysics {
 element! {
   pub struct Game<S> {
       options: GameOptions = GameOptions::default(),
-      running: Cell<bool> = Cell::new(false),
-      spawning: Cell<bool> = Cell::new(false),
-      flowers: Cell<bool> = Cell::new(false),
-      palette: Cell<crate::ui::theme::Palette> = Cell::new(crate::ui::theme::CLASSIC_PALETTE),
-      kitty: Cell<bool> = Cell::new(false),
-      distance: Cell<usize> = Cell::new(0),
-      bird_y: Cell<f32> = Cell::new(10.0),
-      velocity: Cell<f32> = Cell::new(0.0),
-      dying: Cell<bool> = Cell::new(false),
-      crashed: Cell<bool> = Cell::new(false),
+      internal_state: GameState = GameState::default(),
   }
+}
+
+// -----------------------------
+// GameState: live run data.
+// -----------------------------
+#[derive(Clone, Debug)]
+pub struct GameState {
+    pub running: Cell<bool>,
+    pub spawning: Cell<bool>,
+    pub flowers: Cell<bool>,
+    pub palette: Cell<crate::ui::theme::Palette>,
+    pub kitty: Cell<bool>,
+    pub distance: Cell<usize>,
+    pub bird_y: Cell<f32>,
+    pub velocity: Cell<f32>,
+    pub dying: Cell<bool>,
+    pub crashed: Cell<bool>,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            running: Cell::new(false),
+            spawning: Cell::new(false),
+            flowers: Cell::new(false),
+            palette: Cell::new(crate::ui::theme::CLASSIC_PALETTE),
+            kitty: Cell::new(false),
+            distance: Cell::new(0),
+            bird_y: Cell::new(10.0),
+            velocity: Cell::new(0.0),
+            dying: Cell::new(false),
+            crashed: Cell::new(false),
+        }
+    }
 }
 
 fn ready_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
@@ -100,7 +125,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
-        el.palette.set(el.options.palette);
+        el.internal_state.palette.set(el.options.palette);
 
         el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
             .background(Some(Color::Ansi(el.options.palette.sky)))
@@ -139,7 +164,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         dead_cat.x(48).y(6);
         dead_cat.showed(false);
 
-        el.bird_y.set(el.options.physics.start_y);
+        el.internal_state.bird_y.set(el.options.physics.start_y);
 
         // Always three ground tiles.
         el.add_ground();
@@ -150,7 +175,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         // Marquee method: step on animation progress each loop tick.
         el.internal_on_loop(|el, _, _event| {
-            if !el.running.get() {
+            if !el.internal_state.running.get() {
                 return;
             }
             if let Some(anim) = el.get_animation() {
@@ -167,7 +192,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     }
 
     /// (Re)arms the step animation from the configured interval.
-    pub fn refresh(&self) -> &Self {
+    fn refresh(&self) -> &Self {
         let interval = self.options.interval_ms as f64;
         self.animation(Some(Animation::new(
             interval * 2.0,
@@ -179,36 +204,36 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Starts (or stops) scrolling.
     pub fn set_running(&self, running: bool) -> &Self {
-        self.running.set(running);
+        self.internal_state.running.set(running);
         self
     }
 
     /// Mirrors the kitty toggle from app state.
     pub fn set_kitty(&self, kitty: bool) -> &Self {
-        self.kitty.set(kitty);
+        self.internal_state.kitty.set(kitty);
         self
     }
 
     /// Flowers spawn in busy only.
     pub fn set_flowers(&self, flowers: bool) -> &Self {
-        self.flowers.set(flowers);
+        self.internal_state.flowers.set(flowers);
         self
     }
 
     /// Switches the palette. Sky applies now, rest on next reset/spawn.
     pub fn set_palette(&self, palette: crate::ui::theme::Palette) -> &Self {
-        self.palette.set(palette);
+        self.internal_state.palette.set(palette);
         self.background(Some(Color::Ansi(palette.sky)));
         self
     }
 
     /// Starts (or stops) pipe spawning. Starting spawns the first duo.
     pub fn set_spawning(&self, spawning: bool) -> &Self {
-        let was = self.spawning.get();
-        self.spawning.set(spawning);
+        let was = self.internal_state.spawning.get();
+        self.internal_state.spawning.set(spawning);
         if spawning && !was {
             self.spawn_obstacle_at(GAME_SPAWN_X);
-            self.distance.set(0);
+            self.internal_state.distance.set(0);
         }
         self
     }
@@ -220,12 +245,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<Flower<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
-        self.distance.set(0);
-        self.velocity.set(0.0);
-        self.dying.set(false);
-        self.crashed.set(false);
-        self.spawning.set(false);
-        self.bird_y.set(self.options.physics.start_y);
+        self.internal_state.distance.set(0);
+        self.internal_state.velocity.set(0.0);
+        self.internal_state.dying.set(false);
+        self.internal_state.crashed.set(false);
+        self.internal_state.spawning.set(false);
+        self.internal_state.bird_y.set(self.options.physics.start_y);
         self.place_bird(self.options.physics.start_y);
         for cat in self.elements.cot::<FlyingCat<S>>() {
             cat.show_ready();
@@ -269,16 +294,16 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Upward push. Dead birds don't flap.
     pub fn flap(&self) -> &Self {
-        if !self.dying.get() {
-            self.velocity.set(-self.options.physics.flap);
+        if !self.internal_state.dying.get() {
+            self.internal_state.velocity.set(-self.options.physics.flap);
         }
         self
     }
 
     /// True once when the bird has hit the ground.
     pub fn check_crash(&self) -> bool {
-        if self.crashed.get() {
-            self.crashed.set(false);
+        if self.internal_state.crashed.get() {
+            self.internal_state.crashed.set(false);
             true
         } else {
             false
@@ -288,28 +313,28 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Gravity pull for one step.
     fn fall(&self) {
         let phys = &self.options.physics;
-        let v = (self.velocity.get() + phys.gravity).min(phys.max_fall);
-        self.velocity.set(v);
+        let v = (self.internal_state.velocity.get() + phys.gravity).min(phys.max_fall);
+        self.internal_state.velocity.set(v);
         for cat in self.elements.cot::<FlyingCat<S>>() {
             cat.set_rising(v < 0.0);
         }
-        let y = self.bird_y.get() + v;
-        self.bird_y.set(y);
-        if self.dying.get() {
+        let y = self.internal_state.bird_y.get() + v;
+        self.internal_state.bird_y.set(y);
+        if self.internal_state.dying.get() {
             self.place_dead(y);
             if self.dead_hits_ground() {
-                self.bird_y.set(DEAD_REST_Y);
+                self.internal_state.bird_y.set(DEAD_REST_Y);
                 self.place_dead(DEAD_REST_Y);
-                self.crashed.set(true);
+                self.internal_state.crashed.set(true);
             }
         } else {
             self.place_bird(y);
             if self.flying_hits_obstacle() {
                 self.start_dying(y);
                 if self.dead_hits_ground() {
-                    self.bird_y.set(DEAD_REST_Y);
+                    self.internal_state.bird_y.set(DEAD_REST_Y);
                     self.place_dead(DEAD_REST_Y);
-                    self.crashed.set(true);
+                    self.internal_state.crashed.set(true);
                 }
             }
         }
@@ -317,7 +342,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Hit: swap to the matching dead creature, boosting stops.
     fn start_dying(&self, y: f32) {
-        self.dying.set(true);
+        self.internal_state.dying.set(true);
         for bird in self.elements.cot::<FlyingBird<S>>() {
             bird.showed(false);
         }
@@ -325,7 +350,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             cat.showed(false);
         }
         self.lay_dead(y);
-        if self.kitty.get() {
+        if self.internal_state.kitty.get() {
             for dead in self.elements.cot::<DeadCat<S>>() {
                 dead.showed(true);
             }
@@ -358,7 +383,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// The currently flown creature, bird or cat.
     fn active_flier(&self) -> Option<Rc<dyn ElementTrait<S>>> {
-        if self.kitty.get() {
+        if self.internal_state.kitty.get() {
             self.elements
                 .cot::<FlyingCat<S>>()
                 .first()
@@ -375,7 +400,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// The currently dying creature, bird or cat.
     fn active_dead(&self) -> Option<Rc<dyn ElementTrait<S>>> {
-        if self.kitty.get() {
+        if self.internal_state.kitty.get() {
             self.elements
                 .cot::<DeadCat<S>>()
                 .first()
@@ -449,10 +474,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::new(SceneryOptions {
-                pavement_background: self.palette.get().pipe_base,
-                floor_background: self.palette.get().floor,
-                bush_background: self.palette.get().bush_bg,
-                bush_color: self.palette.get().bush_color,
+                pavement_background: self.internal_state.palette.get().pipe_base,
+                floor_background: self.internal_state.palette.get().floor,
+                bush_background: self.internal_state.palette.get().bush_bg,
+                bush_color: self.internal_state.palette.get().bush_color,
             });
             tile.x(x).y(GAME_GROUND_Y);
             self.add(tile);
@@ -479,20 +504,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.palette.get().pipe_base,
+            background: self.internal_state.palette.get().pipe_base,
             height: top_height as usize,
         });
         top_pipe.x(x).y(0);
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.palette.get().pipe_base,
+            background: self.internal_state.palette.get().pipe_base,
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.palette.get().pipe_base,
+            background: self.internal_state.palette.get().pipe_base,
         });
         bottom_bushing
             .x(x - 1)
@@ -500,7 +525,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.add(bottom_bushing);
 
         let bottom_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.palette.get().pipe_base,
+            background: self.internal_state.palette.get().pipe_base,
             height: bottom_height as usize,
         });
         bottom_pipe
@@ -525,11 +550,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Moves the world one cell left, wraps ground, spawns and
     /// removes pipes. Title, hint and birds stay put.
-    pub fn step(&self) {
-        if self.spawning.get() || self.dying.get() {
+    fn step(&self) {
+        if self.internal_state.spawning.get() || self.internal_state.dying.get() {
             self.fall();
         }
-        if self.dying.get() {
+        if self.internal_state.dying.get() {
             return;
         }
         for tile in self.elements.cot::<Scenery<S>>() {
@@ -550,13 +575,13 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
 
         // Pipe (6) + gap (24) cadence.
-        if self.spawning.get() {
-            let distance = self.distance.get() + 1;
+        if self.internal_state.spawning.get() {
+            let distance = self.internal_state.distance.get() + 1;
             if distance >= self.options.spawn_gap {
                 self.spawn_obstacle_at(GAME_SPAWN_X);
-                self.distance.set(0);
+                self.internal_state.distance.set(0);
             } else {
-                self.distance.set(distance);
+                self.internal_state.distance.set(distance);
             }
         }
 

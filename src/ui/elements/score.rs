@@ -19,8 +19,13 @@ impl Default for ScoreOptions {
 element! {
   pub struct Score<S> {
       options: ScoreOptions = ScoreOptions::default(),
-      current: Cell<u32> = Cell::new(0),
+      internal_state: ScoreState = ScoreState::default(),
   }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct ScoreState {
+    pub current: Cell<u32>,
 }
 
 fn score_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
@@ -31,11 +36,11 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
     pub fn new(options: ScoreOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
-        el.current.set(el.options.value);
+        el.internal_state.current.set(el.options.value);
 
         let display = BlockCharsStr::<S>::default();
         display
-            .text(el.current.get().to_string().as_str())
+            .text(el.internal_state.current.get().to_string().as_str())
             .size(BlockSize::Small)
             .style_handle("ScoreGradient")
             .handle("score_display");
@@ -54,11 +59,11 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
     }
 
     pub fn get_value(&self) -> u32 {
-        self.current.get()
+        self.internal_state.current.get()
     }
 
     pub fn set_value(&self, value: u32) -> &Self {
-        self.current.set(value);
+        self.internal_state.current.set(value);
         if let Some(display) = self.elements.cot::<BlockCharsStr<S>>().first() {
             display.text(value.to_string().as_str());
             self.look(Look::from((
