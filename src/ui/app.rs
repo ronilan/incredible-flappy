@@ -163,8 +163,7 @@ pub fn build() -> App<State> {
             && matches!(event.key, Key::Enter | Key::Char(' '))
         {
             launch_from_select(el, state);
-        }
-        if let Some(next) = transition(&state.phase, &event.key) {
+        } else if let Some(next) = transition(&state.phase, &event.key) {
             if next != state.phase {
                 state.phase = next;
                 el.draw();
