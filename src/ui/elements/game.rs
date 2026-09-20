@@ -597,6 +597,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         for pipe in self.elements.cot::<Pipe<S>>() {
             pipe.x(pipe.get_x() - 1);
         }
+        for stem in self.elements.cot::<FlowerStem<S>>() {
+            stem.x(stem.get_x() - 1);
+        }
+        for bud in self.elements.cot::<FlowerBud<S>>() {
+            bud.x(bud.get_x() - 1);
+        }
         for bushing in self.elements.cot::<Bushing<S>>() {
             bushing.x(bushing.get_x() - 1);
         }
