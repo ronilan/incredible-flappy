@@ -46,10 +46,19 @@ pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     }
 }
 
-/// The one shared scroller, direct app child.
+/// Games of the selected screen: three independent clones,
+/// each a direct app child under its own handle.
 fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State>>> {
-    let _ = state;
-    el.elements.cot::<elements::Game<State>>()
+    let handle = match state.selected {
+        SelectedGame::Classic => "game",
+        SelectedGame::Busy => "busy_game",
+        SelectedGame::Invaders => "invaders_game",
+    };
+    el.elements
+        .cot::<elements::Game<State>>()
+        .into_iter()
+        .filter(|g| g.get_handle() == handle)
+        .collect()
 }
 
 /// Palette per selected game.
@@ -57,7 +66,7 @@ fn palette_for(selected: &SelectedGame) -> crate::ui::theme::Palette {
     match selected {
         SelectedGame::Classic => crate::ui::theme::CLASSIC_PALETTE,
         SelectedGame::Busy => crate::ui::theme::BUSY_PALETTE,
-        SelectedGame::Invaders => crate::ui::theme::CLASSIC_PALETTE,
+        SelectedGame::Invaders => crate::ui::theme::INVADERS_PALETTE,
     }
 }
 
@@ -188,11 +197,17 @@ pub fn build() -> App<State> {
             .elements
             .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
-            rect.showed(!is_splash);
+            rect.showed(!is_splash && classic);
         }
         for rect in el
             .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "invaders")
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "busy_game")
+        {
+            rect.showed(!is_splash && busy);
+        }
+        for rect in el
+            .elements
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "invaders_game")
         {
             rect.showed(!is_splash && !classic && !busy);
         }
@@ -211,8 +226,12 @@ pub fn build() -> App<State> {
     let game = screens::game::game::build();
     app.add(game);
 
-    let invaders = screens::invaders::invaders::build();
-    invaders.showed(false);
+    // Busy game: independent clone, purple palette.
+    let busy = screens::game::game::build_as("busy_game");
+    app.add(busy);
+
+    // Invaders game: independent clone, invaders palette.
+    let invaders = screens::game::game::build_as("invaders_game");
     app.add(invaders);
 
     app

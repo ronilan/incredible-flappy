@@ -86,6 +86,14 @@ pub const BUSY_PALETTE: Palette = Palette {
     pipe_base: 98,
 };
 
+pub const INVADERS_PALETTE: Palette = Palette {
+    sky: 152,
+    floor: 191,
+    bush_bg: 148,
+    bush_color: 24,
+    pipe_base: 167,
+};
+
 // Title gradients (start, end).
 pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);
 pub const READY_GRADIENT: (u8, u8) = (214, 220);
