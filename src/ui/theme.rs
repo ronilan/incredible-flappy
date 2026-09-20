@@ -30,6 +30,12 @@ pub const BIRD_WING_BACKGROUND: u8 = 160;
 pub const BIRD_BODY_BACKGROUND: u8 = 220;
 pub const BIRD_BELLY_BACKGROUND: u8 = 214;
 
+// Flowers.
+pub const FLOWER_STEM: u8 = 34;
+pub const FLOWER_LEAF: u8 = 40;
+pub const FLOWER_BUD_COLORS: [u8; 4] = [129, 208, 162, 207];
+pub const FLOWER_BUD_FG: u8 = 255;
+
 // Title gradients (start, end).
 pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);
 pub const READY_GRADIENT: (u8, u8) = (214, 220);

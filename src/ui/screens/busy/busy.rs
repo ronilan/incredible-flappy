@@ -4,6 +4,7 @@ use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
+use crate::ui::elements::Flower;
 use crate::ui::theme;
 
 /// Builds the whole busy screen (stub).
@@ -19,6 +20,10 @@ pub(crate) fn build() -> Rectangle<State> {
     title.text("BUSY").handle("busy_title").x(2).y(2);
     busy.add(title);
     busy.elements_to_center_x_of_type::<Text<State>>();
+
+    let flower = Flower::<State>::default();
+    flower.x(38).y(8);
+    busy.add(flower);
 
     busy
 }
