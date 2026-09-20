@@ -47,7 +47,7 @@ pub(crate) fn build() -> Rectangle<State> {
     splash.elements_to_center_x_of_type::<BlockCharsStr<State>>();
 
     let fluffy = Image::<State>::new();
-    fluffy.width(20);
+    fluffy.width(22);
     fluffy.data(decode_png(include_bytes!("../../../../assets/fluffy.png")));
     fluffy.handle("fluffy_title");
     fluffy.showed(false);
