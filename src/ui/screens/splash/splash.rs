@@ -47,6 +47,7 @@ pub(crate) fn build() -> Rectangle<State> {
         .add_item("Busy", "busy")
         .add_item("Invaders", "invaders");
     select.width(20).height(5);
+    select.allow_unselect(false);
     select.handle("game_select");
     select.y(11);
     select.select_action(0);

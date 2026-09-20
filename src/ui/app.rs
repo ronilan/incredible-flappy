@@ -38,7 +38,11 @@ pub enum SelectedGame {
 
 /// Launches whichever game the splash select points at.
 fn launch_from_select(el: &App<State>, state: &mut State) {
-    if let Some(select) = el.elements.cot::<Select<State>>().first() {
+    if let Some(select) = el
+        .elements
+        .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
+        .first()
+    {
         let idx = select.get_selected().or_else(|| select.get_focused_index());
         if let Some(idx) = idx {
             if let Some(val) = select.item_value(idx) {
