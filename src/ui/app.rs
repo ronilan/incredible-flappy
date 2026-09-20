@@ -72,10 +72,13 @@ pub fn build() -> App<State> {
         if !matches!(event.mouse, Mouse::Down) {
             return;
         }
-        if let Some(next) = transition(&state.phase, &Key::Enter) {
-            if next != state.phase {
-                state.phase = next;
-                el.draw();
+        // Splash launching belongs to the game select.
+        if state.phase != Phase::Splash {
+            if let Some(next) = transition(&state.phase, &Key::Enter) {
+                if next != state.phase {
+                    state.phase = next;
+                    el.draw();
+                }
             }
         }
         if state.phase == Phase::Flying {
