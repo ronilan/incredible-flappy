@@ -43,11 +43,12 @@ pub(crate) fn build() -> Rectangle<State> {
     title.y((16 - title.visual.look.height() as isize) / 2);
     title.handle("flappy_title");
     effect(&title, title_effects);
+    let title_w = title.visual.look.width();
     splash.add(title);
     splash.elements_to_center_x_of_type::<BlockCharsStr<State>>();
 
     let fluffy = Image::<State>::new();
-    fluffy.width(22);
+    fluffy.width(title_w);
     fluffy.data(decode_png(include_bytes!("../../../../assets/fluffy.png")));
     fluffy.handle("fluffy_title");
     fluffy.showed(false);
