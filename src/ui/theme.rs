@@ -16,9 +16,6 @@ pub const PAVEMENT_STEP: u8 = 6;
 pub const PIPE_BACKGROUND: u8 = CLASSIC_PALETTE.pipe_base;
 pub const BUSHING_BACKGROUND: u8 = CLASSIC_PALETTE.pipe_base;
 
-// Busy game base: same striping formula evaluated at 98.
-pub const BUSY_BASE: u8 = 98;
-
 /// Pipe striping for any base: base-6, base, base, base+6, base+12, base+6.
 pub const fn pipe_segments(base: u8) -> [u8; 6] {
     [
