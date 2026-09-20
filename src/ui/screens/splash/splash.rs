@@ -5,7 +5,8 @@ use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
-use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, SelectedGame, State};
+use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
+use crate::ui::theme::SelectedGame;
 use crate::ui::elements::Scenery;
 use crate::ui::theme;
 

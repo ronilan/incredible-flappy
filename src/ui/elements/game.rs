@@ -36,7 +36,7 @@ pub struct GameOptions {
     pub interval_ms: u128,
     pub spawn_gap: usize,
     pub physics: BirdPhysics,
-    pub palette: crate::ui::theme::Palette,
+    pub kind: crate::ui::theme::SelectedGame,
     pub handle: String,
 }
 
@@ -46,7 +46,7 @@ impl Default for GameOptions {
             interval_ms: 100,
             spawn_gap: 30,
             physics: BirdPhysics::default(),
-            palette: crate::ui::theme::CLASSIC_PALETTE,
+            kind: crate::ui::theme::SelectedGame::Classic,
             handle: "game".to_string(),
         }
     }
@@ -91,7 +91,7 @@ pub struct GameState {
     pub running: Cell<bool>,
     pub spawning: Cell<bool>,
     pub flowers: Cell<bool>,
-    pub palette: Cell<crate::ui::theme::Palette>,
+    pub kind: Cell<crate::ui::theme::SelectedGame>,
     pub kitty: Cell<bool>,
     pub distance: Cell<usize>,
     pub bird_y: Cell<f32>,
@@ -106,7 +106,7 @@ impl Default for GameState {
             running: Cell::new(false),
             spawning: Cell::new(false),
             flowers: Cell::new(false),
-            palette: Cell::new(crate::ui::theme::CLASSIC_PALETTE),
+            kind: Cell::new(crate::ui::theme::SelectedGame::Classic),
             kitty: Cell::new(false),
             distance: Cell::new(0),
             bird_y: Cell::new(10.0),
@@ -125,10 +125,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
-        el.internal_state.palette.set(el.options.palette);
+        el.internal_state.kind.set(el.options.kind);
 
         el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
-            .background(Some(Color::Ansi(el.options.palette.sky)))
+            .background(Some(Color::Ansi(crate::ui::theme::palette_for(&el.options.kind).sky)))
             .handle(el.options.handle.clone());
 
         let flying_bird = FlyingBird::<S>::default();
@@ -220,10 +220,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self
     }
 
-    /// Switches the palette. Sky applies now, rest on next reset/spawn.
-    pub fn set_palette(&self, palette: crate::ui::theme::Palette) -> &Self {
-        self.internal_state.palette.set(palette);
-        self.background(Some(Color::Ansi(palette.sky)));
+    /// Switches the game kind. Sky applies now, rest on next reset/spawn.
+    pub fn set_kind(&self, kind: crate::ui::theme::SelectedGame) -> &Self {
+        self.internal_state.kind.set(kind);
+        self.background(Some(Color::Ansi(crate::ui::theme::palette_for(&kind).sky)));
         self
     }
 
@@ -474,10 +474,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::new(SceneryOptions {
-                pavement_background: self.internal_state.palette.get().pipe_base,
-                floor_background: self.internal_state.palette.get().floor,
-                bush_background: self.internal_state.palette.get().bush_bg,
-                bush_color: self.internal_state.palette.get().bush_color,
+                pavement_background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).pipe_base,
+                floor_background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).floor,
+                bush_background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).bush_bg,
+                bush_color: crate::ui::theme::palette_for(&self.internal_state.kind.get()).bush_color,
             });
             tile.x(x).y(GAME_GROUND_Y);
             self.add(tile);
@@ -504,20 +504,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.internal_state.palette.get().pipe_base,
+            background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).pipe_base,
             height: top_height as usize,
         });
         top_pipe.x(x).y(0);
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.internal_state.palette.get().pipe_base,
+            background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).pipe_base,
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
-            background: self.internal_state.palette.get().pipe_base,
+            background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).pipe_base,
         });
         bottom_bushing
             .x(x - 1)
@@ -525,7 +525,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.add(bottom_bushing);
 
         let bottom_pipe = Pipe::<S>::new(PipeOptions {
-            background: self.internal_state.palette.get().pipe_base,
+            background: crate::ui::theme::palette_for(&self.internal_state.kind.get()).pipe_base,
             height: bottom_height as usize,
         });
         bottom_pipe

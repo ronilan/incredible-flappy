@@ -8,6 +8,7 @@ use incredible_helpers_layout::*;
 use crate::ui::elements;
 use crate::ui::screens;
 use crate::ui::theme;
+use crate::ui::theme::SelectedGame;
 
 pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
@@ -25,15 +26,7 @@ pub enum Phase {
 pub struct State {
     pub phase: Phase,
     pub kitty: bool,
-    pub selected: SelectedGame,
-}
-
-#[derive(Clone, Copy, PartialEq, Debug, Default)]
-pub enum SelectedGame {
-    #[default]
-    Classic,
-    Busy,
-    Invaders,
+    pub selected: theme::SelectedGame,
 }
 
 /// Launches whichever game the splash select points at.
@@ -82,20 +75,11 @@ fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State
         .collect()
 }
 
-/// Palette per selected game.
-fn palette_for(selected: &SelectedGame) -> crate::ui::theme::Palette {
-    match selected {
-        SelectedGame::Classic => crate::ui::theme::CLASSIC_PALETTE,
-        SelectedGame::Busy => crate::ui::theme::BUSY_PALETTE,
-        SelectedGame::Invaders => crate::ui::theme::INVADERS_PALETTE,
-    }
-}
-
 /// Drives one game from app state: sim flags, kitty, score and creatures.
 fn drive_game(game: &elements::Game<State>, state: &State) {
     match state.phase {
         Phase::Ready => {
-            game.set_palette(palette_for(&state.selected));
+            game.set_kind(state.selected);
             game.reset();
             game.set_running(true);
             game.set_spawning(false);
