@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Image, Label, Rectangle, Select};
+use incredible_elements::{App, FramedText, Image, Rectangle, Select};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -227,7 +227,7 @@ pub fn build() -> App<State> {
         }
         for hint in el
             .elements
-            .dcot_w::<Label<State>, _>(|e| e.get_handle() == "game_hint")
+            .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
         {
             hint.text(screens::splash::splash::game_hint_for(&state.selected));
         }

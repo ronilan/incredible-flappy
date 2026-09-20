@@ -146,7 +146,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         ready.style_handle("ReadyGradient");
         ready
             .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
-            .y(6);
+            .y(5);
         ready.handle("ready_title");
         ready.showed(false);
         effect(&ready, ready_effects);
@@ -157,7 +157,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         over.style_handle("ReadyGradient");
         over
             .x((GAME_WIDTH as isize - over.visual.look.width() as isize) / 2)
-            .y(6);
+            .y(5);
         over.handle("gameover_title");
         over.showed(false);
         effect(&over, ready_effects);

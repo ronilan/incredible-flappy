@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::{Image, ImageData, Label, Rectangle, Select};
+use incredible_elements::{FramedText, Image, ImageData, Rectangle, Select};
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
@@ -78,12 +78,13 @@ pub(crate) fn build() -> Rectangle<State> {
     splash.add(select);
     splash.elements_to_center_x_of_type::<Select<State>>();
 
-    let hint = Label::<State>::default();
+    let hint = FramedText::<State>::default();
     hint.text(game_hint_for(&SelectedGame::Classic));
     hint.handle("game_hint");
-    hint.y(23);
+    hint.width(40);
+    hint.x((SCREEN_WIDTH as isize - 40) / 2);
+    hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 1);
     splash.add(hint);
-    splash.elements_to_center_x_of_type::<Label<State>>();
 
     splash
 }
