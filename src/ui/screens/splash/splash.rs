@@ -1,11 +1,11 @@
 use incredible::*;
-use incredible_elements::{Rectangle, Select};
+use incredible_elements::{Label, Rectangle, Select};
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
-use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
+use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, SelectedGame, State};
 use crate::ui::elements::Scenery;
 use crate::ui::theme;
 
@@ -55,5 +55,21 @@ pub(crate) fn build() -> Rectangle<State> {
     splash.add(select);
     splash.elements_to_center_x_of_type::<Select<State>>();
 
+    let hint = Label::<State>::default();
+    hint.text(game_hint_for(&SelectedGame::Classic));
+    hint.handle("game_hint");
+    hint.y(23);
+    splash.add(hint);
+    splash.elements_to_center_x_of_type::<Label<State>>();
+
     splash
+}
+
+/// Hint text per selected game.
+pub(crate) fn game_hint_for(selected: &SelectedGame) -> &'static str {
+    match selected {
+        SelectedGame::Classic => "Avoid the pipes. Avoid the ground.",
+        SelectedGame::Busy => "Graze (but don't bump) the flowers for fame and fortune.",
+        SelectedGame::Invaders => "Shoot the invaders",
+    }
 }
