@@ -472,13 +472,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
     /// With flowers on, flips a coin for a ground flower instead.
     fn spawn_obstacle_at(&self, x: isize) {
-        if self.flowers.get() && rng().random_bool(0.5) {
-            self.spawn_flower_at(x);
-            return;
-        }
-        if self.flowers.get() && rng().random_bool(0.5) {
-            return;
-        }
         use super::bushing::BushingOptions;
         use super::pipe::PipeOptions;
 
