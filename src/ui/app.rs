@@ -46,19 +46,19 @@ pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     }
 }
 
-/// Games of the selected screen: classic lives at app root,
-/// busy nests its game inside its screen.
+/// Games of the selected screen: both live as direct app children
+/// under their own handles.
 fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State>>> {
-    match state.selected {
-        SelectedGame::Classic => el.elements.cot::<elements::Game<State>>(),
-        SelectedGame::Busy => el
-            .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "busy")
-            .first()
-            .map(|b| b.elements.cot::<elements::Game<State>>())
-            .unwrap_or_default(),
-        SelectedGame::Invaders => Vec::new(),
-    }
+    let handle = match state.selected {
+        SelectedGame::Classic => "game",
+        SelectedGame::Busy => "busy_game",
+        SelectedGame::Invaders => return Vec::new(),
+    };
+    el.elements
+        .cot::<elements::Game<State>>()
+        .into_iter()
+        .filter(|g| g.get_handle() == handle)
+        .collect()
 }
 
 /// Drives one game from app state: sim flags, kitty, score and creatures.
@@ -185,13 +185,13 @@ pub fn build() -> App<State> {
         }
         for rect in el
             .elements
-            .cot::<elements::Game<State>>()
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
         {
             rect.showed(!is_splash && classic);
         }
         for rect in el
             .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "busy")
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "busy_game")
         {
             rect.showed(!is_splash && busy);
         }
@@ -216,9 +216,8 @@ pub fn build() -> App<State> {
     let game = screens::game::game::build();
     app.add(game);
 
-    // Stub screens for the next games.
+    // Busy game: purple copy of the classic scroller.
     let busy = screens::busy::busy::build();
-    busy.showed(false);
     app.add(busy);
 
     let invaders = screens::invaders::invaders::build();

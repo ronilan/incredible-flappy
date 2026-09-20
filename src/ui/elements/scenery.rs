@@ -4,13 +4,23 @@ use incredible_macros_decl::element;
 use super::bushes::Bushes;
 use super::buildings::Buildings;
 use super::floor::Floor;
-use super::pavement::Pavement;
+use super::pavement::{PAVEMENT_WIDTH, Pavement, PavementOptions};
 
 pub const SCENERY_WIDTH: usize = 40;
 pub const SCENERY_HEIGHT: usize = 9;
 
-#[derive(Clone, Debug, Default)]
-pub struct SceneryOptions;
+#[derive(Clone, Debug)]
+pub struct SceneryOptions {
+    pub pavement_background: u8,
+}
+
+impl Default for SceneryOptions {
+    fn default() -> Self {
+        Self {
+            pavement_background: 34,
+        }
+    }
+}
 
 element! {
   pub struct Scenery<S> {
@@ -31,7 +41,10 @@ impl<S: Clone + PartialEq> Scenery<S> {
         floor.x(0).y(6);
         el.add(floor);
 
-        let pavement = Pavement::<S>::default();
+        let pavement = Pavement::<S>::new(PavementOptions {
+            background: el.options.pavement_background,
+            width: PAVEMENT_WIDTH,
+        });
         pavement.x(0).y(5);
         el.add(pavement);
 

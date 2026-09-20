@@ -12,11 +12,38 @@ pub const FLOOR_BACKGROUND: u8 = 187;
 pub const PAVEMENT_BASE: u8 = 34;
 pub const PAVEMENT_STEP: u8 = 6;
 
-// Pipe and cap.
+// Pipe and cap bases. Striping derives from the base, see below.
 pub const PIPE_BACKGROUND: u8 = 34;
-pub const PIPE_SEGMENTS: [u8; 6] = [28, 34, 34, 40, 46, 40];
 pub const BUSHING_BACKGROUND: u8 = 34;
-pub const BUSHING_SEGMENTS: [u8; 8] = [28, 34, 34, 40, 40, 40, 46, 40];
+
+// Busy game base: same striping formula evaluated at 98.
+pub const BUSY_BASE: u8 = 98;
+
+/// Pipe striping for any base: base-6, base, base, base+6, base+12, base+6.
+pub const fn pipe_segments(base: u8) -> [u8; 6] {
+    [
+        base.saturating_sub(6),
+        base,
+        base,
+        base.saturating_add(6),
+        base.saturating_add(12),
+        base.saturating_add(6),
+    ]
+}
+
+/// Bushing striping for any base.
+pub const fn bushing_segments(base: u8) -> [u8; 8] {
+    [
+        base.saturating_sub(6),
+        base,
+        base,
+        base.saturating_add(6),
+        base.saturating_add(6),
+        base.saturating_add(6),
+        base.saturating_add(12),
+        base.saturating_add(6),
+    ]
+}
 
 // Flora and architecture.
 pub const BUSH_BACKGROUND: u8 = 156;

@@ -36,7 +36,7 @@ impl<S: Clone + PartialEq> Bushing<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("bushing");
 
-        for (i, bg) in theme::BUSHING_SEGMENTS.iter().enumerate() {
+        for (i, bg) in theme::bushing_segments(el.options.background).iter().enumerate() {
             let seg = Rectangle::<S>::new();
             seg.width(1)
                 .height(1)

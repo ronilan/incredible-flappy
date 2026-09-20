@@ -38,7 +38,7 @@ impl<S: Clone + PartialEq> Pipe<S> {
             .background(Some(Color::Ansi(el.options.background)))
             .handle("pipe");
 
-        for (i, bg) in theme::PIPE_SEGMENTS.iter().enumerate() {
+        for (i, bg) in theme::pipe_segments(el.options.background).iter().enumerate() {
             let seg = Rectangle::<S>::new();
             seg.width(1)
                 .height(el.options.height)

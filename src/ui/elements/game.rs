@@ -38,6 +38,8 @@ pub struct GameOptions {
     pub spawn_gap: usize,
     pub physics: BirdPhysics,
     pub flowers: bool,
+    pub base: u8,
+    pub handle: String,
 }
 
 impl Default for GameOptions {
@@ -48,6 +50,8 @@ impl Default for GameOptions {
             spawn_gap: 30,
             physics: BirdPhysics::default(),
             flowers: false,
+            base: crate::ui::theme::PIPE_BACKGROUND,
+            handle: "game".to_string(),
         }
     }
 }
@@ -101,7 +105,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
             .background(Some(Color::Ansi(el.options.background)))
-            .handle("game");
+            .handle(el.options.handle.clone());
 
         let flying_bird = FlyingBird::<S>::default();
         flying_bird.x(BIRD_X).y(el.options.physics.start_y as isize);
@@ -429,8 +433,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Three 40-wide tiles across and past the window.
     fn add_ground(&self) {
+        use super::scenery::SceneryOptions;
+
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
-            let tile = Scenery::<S>::default();
+            let tile = Scenery::<S>::new(SceneryOptions {
+                pavement_background: self.options.base,
+            });
             tile.x(x).y(GAME_GROUND_Y);
             self.add(tile);
         }
@@ -453,31 +461,36 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             self.spawn_flower_at(x);
             return;
         }
+        use super::bushing::BushingOptions;
         use super::pipe::PipeOptions;
 
         let top_height = rng().random_range(2..=7) as isize;
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
+            background: self.options.base,
             height: top_height as usize,
-            ..Default::default()
         });
         top_pipe.x(x).y(0);
         self.add(top_pipe);
 
-        let top_bushing = Bushing::<S>::default();
+        let top_bushing = Bushing::<S>::new(BushingOptions {
+            background: self.options.base,
+        });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
-        let bottom_bushing = Bushing::<S>::default();
+        let bottom_bushing = Bushing::<S>::new(BushingOptions {
+            background: self.options.base,
+        });
         bottom_bushing
             .x(x - 1)
             .y(top_height + 1 + GAME_GAP_ROWS);
         self.add(bottom_bushing);
 
         let bottom_pipe = Pipe::<S>::new(PipeOptions {
+            background: self.options.base,
             height: bottom_height as usize,
-            ..Default::default()
         });
         bottom_pipe
             .x(x)
