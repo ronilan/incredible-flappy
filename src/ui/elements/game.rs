@@ -350,7 +350,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 }
             }
             self.place_bird(y);
-            if self.flying_hits_obstacle() {
+            if y <= 0.0 || self.flying_hits_obstacle() {
                 self.start_dying(y);
                 if self.dead_hits_ground() {
                     self.internal_state.bird_y.set(DEAD_REST_Y);
