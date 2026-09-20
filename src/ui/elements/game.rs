@@ -483,40 +483,24 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// Flower duo mirroring the pipe duo: top stem from row 0, bud caps,
-    /// 11-row gap, bottom bud and stem ending at row 20.
+    /// Single flower on the ground: random stem height with the
+    /// specified bud on top, bottom row on 20.
     fn spawn_flower_at(&self, x: isize) {
-        use super::flower_bud::FlowerBudOptions;
+        use super::flower_bud::{FLOWER_BUD_HEIGHT, FlowerBudOptions};
         use super::flower_stem::FlowerStemOptions;
 
-        let top_height = rng().random_range(2..=5) as isize;
-        let bottom_height = 6 - top_height;
+        let stem_height = rng().random_range(2..=7) as isize;
+        let top_y = 21 - (FLOWER_BUD_HEIGHT as isize + stem_height);
 
-        let top_stem = FlowerStem::<S>::new(FlowerStemOptions {
-            height: top_height as usize,
-        });
-        top_stem.x(x + 1).y(0);
-        self.add(top_stem);
+        let bud = FlowerBud::<S>::default();
+        bud.x(x).y(top_y);
+        self.add(bud);
 
-        let top_bud = FlowerBud::<S>::new(FlowerBudOptions {
-            height: 2,
-            ..Default::default()
+        let stem = FlowerStem::<S>::new(FlowerStemOptions {
+            height: stem_height as usize,
         });
-        top_bud.x(x).y(top_height);
-        self.add(top_bud);
-
-        let bottom_bud = FlowerBud::<S>::new(FlowerBudOptions {
-            height: 2,
-            ..Default::default()
-        });
-        bottom_bud.x(x).y(top_height + 13);
-        self.add(bottom_bud);
-
-        let bottom_stem = FlowerStem::<S>::new(FlowerStemOptions {
-            height: bottom_height as usize,
-        });
-        bottom_stem.x(x + 1).y(top_height + 15);
-        self.add(bottom_stem);
+        stem.x(x + 1).y(top_y + FLOWER_BUD_HEIGHT as isize);
+        self.add(stem);
 
         self.send_scenery_to_back();
     }
@@ -634,10 +618,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             }
         }
 
-        // Flower passed: top stem right edge reaches the bird.
+        // Flower passed: stem right edge reaches the bird.
         for stem in self.elements.cot::<FlowerStem<S>>() {
-            if stem.get_y() == self.get_y()
-                && stem.get_x() + 3 == self.get_x() + BIRD_X
+            if stem.get_x() + 3 == self.get_x() + BIRD_X
             {
                 self.add_score(1);
             }
