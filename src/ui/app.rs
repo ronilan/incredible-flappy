@@ -52,12 +52,12 @@ fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State
     el.elements.cot::<elements::Game<State>>()
 }
 
-/// Palette base per selected game.
-fn base_for(selected: &SelectedGame) -> u8 {
+/// Palette per selected game.
+fn palette_for(selected: &SelectedGame) -> crate::ui::theme::Palette {
     match selected {
-        SelectedGame::Classic => crate::ui::theme::PIPE_BACKGROUND,
-        SelectedGame::Busy => crate::ui::theme::BUSY_BASE,
-        SelectedGame::Invaders => crate::ui::theme::PIPE_BACKGROUND,
+        SelectedGame::Classic => crate::ui::theme::CLASSIC_PALETTE,
+        SelectedGame::Busy => crate::ui::theme::BUSY_PALETTE,
+        SelectedGame::Invaders => crate::ui::theme::CLASSIC_PALETTE,
     }
 }
 
@@ -65,7 +65,7 @@ fn base_for(selected: &SelectedGame) -> u8 {
 fn drive_game(game: &elements::Game<State>, state: &State) {
     match state.phase {
         Phase::Ready => {
-            game.set_base(base_for(&state.selected));
+            game.set_palette(palette_for(&state.selected));
             game.reset();
             game.set_running(true);
             game.set_spawning(false);

@@ -7,14 +7,14 @@ use incredible_helpers_effects::{GradientDirection, gradient_color, transform_ru
 // -----------------------------
 
 // Sky and ground.
-pub const SKY_BACKGROUND: u8 = 152;
-pub const FLOOR_BACKGROUND: u8 = 187;
-pub const PAVEMENT_BASE: u8 = 34;
+pub const SKY_BACKGROUND: u8 = CLASSIC_PALETTE.sky;
+pub const FLOOR_BACKGROUND: u8 = CLASSIC_PALETTE.floor;
+pub const PAVEMENT_BASE: u8 = CLASSIC_PALETTE.pipe_base;
 pub const PAVEMENT_STEP: u8 = 6;
 
 // Pipe and cap bases. Striping derives from the base, see below.
-pub const PIPE_BACKGROUND: u8 = 34;
-pub const BUSHING_BACKGROUND: u8 = 34;
+pub const PIPE_BACKGROUND: u8 = CLASSIC_PALETTE.pipe_base;
+pub const BUSHING_BACKGROUND: u8 = CLASSIC_PALETTE.pipe_base;
 
 // Busy game base: same striping formula evaluated at 98.
 pub const BUSY_BASE: u8 = 98;
@@ -46,8 +46,8 @@ pub const fn bushing_segments(base: u8) -> [u8; 8] {
 }
 
 // Flora and architecture.
-pub const BUSH_BACKGROUND: u8 = 156;
-pub const BUSH_COLOR: u8 = 40;
+pub const BUSH_BACKGROUND: u8 = CLASSIC_PALETTE.bush_bg;
+pub const BUSH_COLOR: u8 = CLASSIC_PALETTE.bush_color;
 pub const BUILDINGS_COLOR: u8 = 244;
 
 // Birds (eye, wing/tail, body, belly/beak/head).
@@ -62,6 +62,32 @@ pub const FLOWER_STEM: u8 = 34;
 pub const FLOWER_LEAF: u8 = 40;
 pub const FLOWER_BUD_COLORS: [u8; 4] = [129, 208, 162, 207];
 pub const FLOWER_BUD_FG: u8 = 255;
+
+// Per-game palettes. Classic is the default everywhere.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Palette {
+    pub sky: u8,
+    pub floor: u8,
+    pub bush_bg: u8,
+    pub bush_color: u8,
+    pub pipe_base: u8,
+}
+
+pub const CLASSIC_PALETTE: Palette = Palette {
+    sky: 152,
+    floor: 187,
+    bush_bg: 156,
+    bush_color: 40,
+    pipe_base: 34,
+};
+
+pub const BUSY_PALETTE: Palette = Palette {
+    sky: 153,
+    floor: 173,
+    bush_bg: 148,
+    bush_color: 24,
+    pipe_base: 98,
+};
 
 // Title gradients (start, end).
 pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);

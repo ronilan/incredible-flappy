@@ -9,12 +9,16 @@ pub const BUSHES_HEIGHT: usize = 2;
 #[derive(Clone, Debug)]
 pub struct BushesOptions {
     pub width: usize,
+    pub bush_background: u8,
+    pub bush_color: u8,
 }
 
 impl Default for BushesOptions {
     fn default() -> Self {
         Self {
             width: BUSHES_WIDTH,
+            bush_background: crate::ui::theme::BUSH_BACKGROUND,
+            bush_color: crate::ui::theme::BUSH_COLOR,
         }
     }
 }
@@ -39,7 +43,8 @@ impl<S: Clone + PartialEq> Bushes<S> {
         for index in 0..el.options.width {
             let bush = Bush::<S>::new(BushOptions {
                 index,
-                ..Default::default()
+                background: el.options.bush_background,
+                color: el.options.bush_color,
             });
             // Bottom-align within the 2-row strip.
             let h = bush.visual.look.height();
