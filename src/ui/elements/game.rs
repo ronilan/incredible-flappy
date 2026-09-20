@@ -14,6 +14,7 @@ use super::bushing::{Bushing, BUSHING_WIDTH};
 use super::dead_bird::DeadBird;
 use super::dead_cat::DeadCat;
 use super::floor::Floor;
+use super::flower::Flower;
 use super::flying_bird::FlyingBird;
 use super::flying_cat::FlyingCat;
 use super::pavement::Pavement;
@@ -36,6 +37,7 @@ pub struct GameOptions {
     pub interval_ms: u128,
     pub spawn_gap: usize,
     pub physics: BirdPhysics,
+    pub flowers: bool,
 }
 
 impl Default for GameOptions {
@@ -45,6 +47,7 @@ impl Default for GameOptions {
             interval_ms: 100,
             spawn_gap: 30,
             physics: BirdPhysics::default(),
+            flowers: false,
         }
     }
 }
@@ -198,6 +201,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn reset(&self) -> &Self {
         while self.elements.sot::<Pipe<S>>().is_some() {}
         while self.elements.sot::<Bushing<S>>().is_some() {}
+        while self.elements.sot::<Flower<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.distance.set(0);
@@ -386,6 +390,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 return true;
             }
         }
+        for flower in self.elements.dcot_w::<Flower<S>, _>(|_| true) {
+            if bird.intersects_element(flower.as_ref()) {
+                return true;
+            }
+        }
         for pavement in self.elements.dcot_w::<Pavement<S>, _>(|_| true) {
             if bird.intersects_element(pavement.as_ref()) {
                 return true;
@@ -427,9 +436,23 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
+    /// Places a ground flower at the given x, bottom row on 20.
+    fn spawn_flower_at(&self, x: isize) {
+        let flower = Flower::<S>::default();
+        let h = flower.visual.look.height() as isize;
+        flower.x(x).y(self.get_y() + 21 - h);
+        self.add(flower);
+        self.send_scenery_to_back();
+    }
+
     /// Places a top + bottom pipe duo at the given x. Top pipe starts
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
+    /// With flowers on, flips a coin for a ground flower instead.
     fn spawn_obstacle_at(&self, x: isize) {
+        if self.options.flowers && rng().random_bool(0.5) {
+            self.spawn_flower_at(x);
+            return;
+        }
         use super::pipe::PipeOptions;
 
         let top_height = rng().random_range(2..=7) as isize;
@@ -517,6 +540,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         for pipe in self.elements.cot::<Pipe<S>>() {
             if pipe.get_y() == self.get_y()
                 && pipe.get_x() + PIPE_WIDTH as isize == self.get_x() + BIRD_X
+            {
+                self.add_score(1);
+            }
+        }
+
+        // Flower passed: right edge reaches the bird.
+        for flower in self.elements.cot::<Flower<S>>() {
+            if flower.get_x() + flower.visual.look.width() as isize == self.get_x() + BIRD_X
             {
                 self.add_score(1);
             }

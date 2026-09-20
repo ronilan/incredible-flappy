@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use incredible::*;
 use incredible_elements::{App, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
@@ -44,6 +46,82 @@ pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     }
 }
 
+/// Games of the selected screen: classic lives at app root,
+/// busy nests its game inside its screen.
+fn selected_games(el: &App<State>, state: &State) -> Vec<Rc<elements::Game<State>>> {
+    match state.selected {
+        SelectedGame::Classic => el.elements.cot::<elements::Game<State>>(),
+        SelectedGame::Busy => el
+            .elements
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "busy")
+            .first()
+            .map(|b| b.elements.cot::<elements::Game<State>>())
+            .unwrap_or_default(),
+        SelectedGame::Invaders => Vec::new(),
+    }
+}
+
+/// Drives one game from app state: sim flags, kitty, score and creatures.
+fn drive_game(game: &elements::Game<State>, state: &State) {
+    match state.phase {
+        Phase::Ready => {
+            game.reset();
+            game.set_running(true);
+            game.set_spawning(false);
+        }
+        Phase::Flying => {
+            game.set_running(true);
+            game.set_spawning(true);
+        }
+        _ => {
+            game.set_running(false);
+            game.set_spawning(false);
+        }
+    }
+    game.set_kitty(state.kitty);
+    for score in game
+        .elements
+        .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
+    {
+        score.showed(state.phase == Phase::Flying || state.phase == Phase::Dead);
+    }
+    let flying = game
+        .elements
+        .dcot_w::<elements::FlyingBird<State>, _>(|e| {
+            e.get_handle() == "flying_bird"
+        });
+    let dead = game
+        .elements
+        .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
+    let ready = game
+        .elements
+        .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
+    for r in ready {
+        r.showed(state.phase == Phase::Ready);
+    }
+    let flying_cat = game
+        .elements
+        .dcot_w::<elements::FlyingCat<State>, _>(|e| {
+            e.get_handle() == "flying_cat"
+        });
+    let dead_cat = game
+        .elements
+        .dcot_w::<elements::DeadCat<State>, _>(|e| e.get_handle() == "dead_cat");
+    let is_dead = state.phase == Phase::Dead;
+    for b in flying {
+        b.showed(!is_dead && !state.kitty);
+    }
+    for b in flying_cat {
+        b.showed(!is_dead && state.kitty);
+    }
+    for b in dead {
+        b.showed(is_dead && !state.kitty);
+    }
+    for b in dead_cat {
+        b.showed(is_dead && state.kitty);
+    }
+}
+
 pub fn build() -> App<State> {
     let app = App::default();
 
@@ -61,10 +139,7 @@ pub fn build() -> App<State> {
             }
         }
         if state.phase == Phase::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
-            for game in el
-                .elements
-                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-            {
+            for game in selected_games(el, state) {
                 game.flap();
             }
         }
@@ -82,10 +157,7 @@ pub fn build() -> App<State> {
             }
         }
         if state.phase == Phase::Flying {
-            for game in el
-                .elements
-                .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-            {
+            for game in selected_games(el, state) {
                 game.flap();
             }
         }
@@ -95,10 +167,7 @@ pub fn build() -> App<State> {
         if state.phase != Phase::Flying {
             return;
         }
-        for game in el
-            .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-        {
+        for game in selected_games(el, state) {
             if game.check_crash() {
                 state.phase = Phase::Dead;
                 el.draw();
@@ -132,72 +201,8 @@ pub fn build() -> App<State> {
         {
             rect.showed(!is_splash && !classic && !busy);
         }
-        for game in el
-            .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
-        {
-            if state.selected != SelectedGame::Classic {
-                game.set_running(false);
-                game.set_spawning(false);
-                continue;
-            }
-            match state.phase {
-                Phase::Ready => {
-                    game.reset();
-                    game.set_running(true);
-                    game.set_spawning(false);
-                }
-                Phase::Flying => {
-                    game.set_running(true);
-                    game.set_spawning(true);
-                }
-                _ => {
-                    game.set_running(false);
-                    game.set_spawning(false);
-                }
-            }
-            game.set_kitty(state.kitty);
-            for score in game
-                .elements
-                .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
-            {
-                score.showed(state.phase == Phase::Flying || state.phase == Phase::Dead);
-            }
-            let flying = game
-                .elements
-                .dcot_w::<elements::FlyingBird<State>, _>(|e| {
-                    e.get_handle() == "flying_bird"
-                });
-            let dead = game
-                .elements
-                .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
-            let ready = game
-                .elements
-                .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
-            for r in ready {
-                r.showed(state.phase == Phase::Ready);
-            }
-            let flying_cat = game
-                .elements
-                .dcot_w::<elements::FlyingCat<State>, _>(|e| {
-                    e.get_handle() == "flying_cat"
-                });
-            let dead_cat = game
-                .elements
-                .dcot_w::<elements::DeadCat<State>, _>(|e| e.get_handle() == "dead_cat");
-            let is_dead = state.phase == Phase::Dead;
-            for b in flying {
-                b.showed(!is_dead && !state.kitty);
-            }
-            for b in flying_cat {
-                b.showed(!is_dead && state.kitty);
-            }
-            for b in dead {
-                b.showed(is_dead && !state.kitty);
-            }
-            for b in dead_cat {
-                b.showed(is_dead && state.kitty);
-            }
+        for game in selected_games(el, state) {
+            drive_game(&game, state);
         }
         el.draw();
     });
