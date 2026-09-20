@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Rectangle};
+use incredible_elements::{App, Rectangle, Select};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -187,6 +187,21 @@ pub fn build() -> App<State> {
         let is_splash = state.phase == Phase::Splash;
         let classic = state.selected == SelectedGame::Classic;
         let busy = state.selected == SelectedGame::Busy;
+        // Single source of truth is app state: push the selection into the widget.
+        if is_splash {
+            let idx = match state.selected {
+                SelectedGame::Classic => 0,
+                SelectedGame::Busy => 1,
+                SelectedGame::Invaders => 2,
+            };
+            for select in el
+                .elements
+                .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
+            {
+                select.focused_index(Some(idx));
+                select.select_action(idx);
+            }
+        }
         for rect in el
             .elements
             .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")
@@ -211,8 +226,17 @@ pub fn build() -> App<State> {
         {
             rect.showed(!is_splash && !classic && !busy);
         }
-        for game in selected_games(el, state) {
-            drive_game(&game, state);
+        for game in el.elements.cot::<elements::Game<State>>() {
+            let handle = game.get_handle();
+            let mine = (handle == "game" && classic)
+                || (handle == "busy_game" && busy)
+                || (handle == "invaders_game" && !classic && !busy);
+            if mine {
+                drive_game(&game, state);
+            } else {
+                game.set_running(false);
+                game.set_spawning(false);
+            }
         }
         el.draw();
     });
