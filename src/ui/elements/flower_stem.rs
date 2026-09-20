@@ -3,6 +3,9 @@ use incredible_elements::Rectangle;
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
+use rand::Rng;
+use rand::rng;
+
 use crate::ui::theme;
 
 pub const FLOWER_STEM_WIDTH: usize = 3;
@@ -51,15 +54,16 @@ impl<S: Clone + PartialEq> FlowerStem<S> {
         el.add(middle);
 
         // Leaves on the outside columns, mid-stem.
-        let leaf_y = el.get_y() + (el.options.height.saturating_sub(2)) as isize / 2;
+        // Each side jitters +-1 in y with length 2 or 3.
+        let mid_y = el.get_y() + (el.options.height.saturating_sub(2)) as isize / 2;
         for dx in [0, FLOWER_STEM_WIDTH as isize - 1] {
             let leaf = Rectangle::<S>::new();
             leaf.width(1)
-                .height(2)
+                .height(rng().random_range(2..=3))
                 .fill(Some(' '))
                 .background(Some(Color::Ansi(theme::FLOWER_LEAF)))
                 .x(el.get_x() + dx)
-                .y(leaf_y);
+                .y(mid_y + rng().random_range(-1i32..=1i32) as isize);
             el.add(leaf);
         }
 
