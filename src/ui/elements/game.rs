@@ -36,7 +36,6 @@ pub struct GameOptions {
     pub interval_ms: u128,
     pub spawn_gap: usize,
     pub physics: BirdPhysics,
-    pub flowers: bool,
     pub palette: crate::ui::theme::Palette,
     pub handle: String,
 }
@@ -47,7 +46,6 @@ impl Default for GameOptions {
             interval_ms: 100,
             spawn_gap: 30,
             physics: BirdPhysics::default(),
-            flowers: false,
             palette: crate::ui::theme::CLASSIC_PALETTE,
             handle: "game".to_string(),
         }
@@ -83,6 +81,7 @@ element! {
       options: GameOptions = GameOptions::default(),
       running: Cell<bool> = Cell::new(false),
       spawning: Cell<bool> = Cell::new(false),
+      flowers: Cell<bool> = Cell::new(false),
       palette: Cell<crate::ui::theme::Palette> = Cell::new(crate::ui::theme::CLASSIC_PALETTE),
       kitty: Cell<bool> = Cell::new(false),
       distance: Cell<usize> = Cell::new(0),
@@ -187,6 +186,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Mirrors the kitty toggle from app state.
     pub fn set_kitty(&self, kitty: bool) -> &Self {
         self.kitty.set(kitty);
+        self
+    }
+
+    /// Flowers spawn in busy only.
+    pub fn set_flowers(&self, flowers: bool) -> &Self {
+        self.flowers.set(flowers);
         self
     }
 
@@ -467,8 +472,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
     /// With flowers on, flips a coin for a ground flower instead.
     fn spawn_obstacle_at(&self, x: isize) {
-        if self.options.flowers && rng().random_bool(0.5) {
+        if self.flowers.get() && rng().random_bool(0.5) {
             self.spawn_flower_at(x);
+            return;
+        }
+        if self.flowers.get() && rng().random_bool(0.5) {
             return;
         }
         use super::bushing::BushingOptions;
