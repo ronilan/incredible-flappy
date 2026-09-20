@@ -185,7 +185,7 @@ pub fn build() -> App<State> {
         }
         for rect in el
             .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "game")
+            .cot::<elements::Game<State>>()
         {
             rect.showed(!is_splash && classic);
         }
