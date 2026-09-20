@@ -180,11 +180,8 @@ pub fn build() -> App<State> {
             }
         }
     }).on_mouse(|el, state, event| {
-        // Splash launching belongs to the game select.
+        // Splash launching is Enter-only now; clicks never start the game.
         if state.phase == Phase::Splash {
-            if event.mouse == Mouse::Click {
-                launch_from_select(el, state);
-            }
             return;
         }
         if !matches!(event.mouse, Mouse::Down) {
