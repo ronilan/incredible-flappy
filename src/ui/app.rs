@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Rectangle};
+use incredible_elements::{App, Rectangle, Select};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -36,6 +36,23 @@ pub enum SelectedGame {
     Invaders,
 }
 
+/// Launches whichever game the splash select points at.
+fn launch_from_select(el: &App<State>, state: &mut State) {
+    if let Some(select) = el.elements.cot::<Select<State>>().first() {
+        let idx = select.get_selected().or_else(|| select.get_focused_index());
+        if let Some(idx) = idx {
+            if let Some(val) = select.item_value(idx) {
+                state.selected = match val.as_str() {
+                    "busy" => SelectedGame::Busy,
+                    "invaders" => SelectedGame::Invaders,
+                    _ => SelectedGame::Classic,
+                };
+                state.phase = Phase::Ready;
+                el.draw();
+            }
+        }
+    }
+}
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     match (key, phase) {
         (Key::Escape, _) => Some(Phase::Splash),
@@ -142,18 +159,10 @@ pub fn build() -> App<State> {
             state.kitty = !state.kitty;
             el.draw();
         }
-        if state.phase == Phase::Splash {
-            let pick = match event.key {
-                Key::Char('1') => Some(SelectedGame::Classic),
-                Key::Char('2') => Some(SelectedGame::Busy),
-                Key::Char('3') => Some(SelectedGame::Invaders),
-                _ => None,
-            };
-            if let Some(pick) = pick {
-                state.selected = pick;
-                state.phase = Phase::Ready;
-                el.draw();
-            }
+        if state.phase == Phase::Splash
+            && matches!(event.key, Key::Enter | Key::Char(' '))
+        {
+            launch_from_select(el, state);
         }
         if let Some(next) = transition(&state.phase, &event.key) {
             if next != state.phase {
@@ -167,16 +176,20 @@ pub fn build() -> App<State> {
             }
         }
     }).on_mouse(|el, state, event| {
+        // Splash launching belongs to the game select.
+        if state.phase == Phase::Splash {
+            if event.mouse == Mouse::Click {
+                launch_from_select(el, state);
+            }
+            return;
+        }
         if !matches!(event.mouse, Mouse::Down) {
             return;
         }
-        // Splash launching belongs to the game select.
-        if state.phase != Phase::Splash {
-            if let Some(next) = transition(&state.phase, &Key::Enter) {
-                if next != state.phase {
-                    state.phase = next;
-                    el.draw();
-                }
+        if let Some(next) = transition(&state.phase, &Key::Enter) {
+            if next != state.phase {
+                state.phase = next;
+                el.draw();
             }
         }
         if state.phase == Phase::Flying {
