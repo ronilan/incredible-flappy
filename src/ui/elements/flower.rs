@@ -35,21 +35,20 @@ impl<S: Clone + PartialEq> Flower<S> {
         el.options = options;
 
         let total_height = el.options.bud_height + el.options.stem_height;
-        el.look(Look::from((
-            el.options.bud_width.max(FLOWER_STEM_WIDTH),
-            total_height,
-            ' ',
-        )))
-        .handle("flower");
+        let footprint = FLOWER_STEM_WIDTH + 2;
+        let look_width = el.options.bud_width.max(footprint);
+        el.look(Look::from((look_width, total_height, ' ')))
+            .handle("flower");
 
         // Bud on top, stem centered under it. Both inside the parent look.
-        let stem_x = el.get_x() + (el.options.bud_width as isize - FLOWER_STEM_WIDTH as isize) / 2;
+        let bud_x = el.get_x() + (look_width as isize - el.options.bud_width as isize) / 2;
+        let stem_x = el.get_x() + (look_width as isize - footprint as isize) / 2;
         let bud = FlowerBud::<S>::new(FlowerBudOptions {
             width: el.options.bud_width,
             height: el.options.bud_height,
             color: el.options.bud_color,
         });
-        bud.x(stem_x - 1).y(el.get_y());
+        bud.x(bud_x).y(el.get_y());
         el.add(bud);
 
         let stem = FlowerStem::<S>::new(FlowerStemOptions {

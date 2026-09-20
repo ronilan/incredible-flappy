@@ -33,26 +33,26 @@ impl<S: Clone + PartialEq> FlowerStem<S> {
         el.options = options;
 
         el.look(Look::from((
-            FLOWER_STEM_WIDTH,
+            FLOWER_STEM_WIDTH + 2,
             el.options.height,
             ' ',
         )))
         .handle("flower_stem");
 
-        // Middle column.
+        // Middle column (center of the 5-wide footprint).
         let middle = Rectangle::<S>::new();
         middle
             .width(1)
             .height(el.options.height)
             .fill(Some(' '))
             .background(Some(Color::Ansi(theme::FLOWER_STEM)))
-            .x(el.get_x() + 1)
+            .x(el.get_x() + 2)
             .y(el.get_y());
         el.add(middle);
 
         // Leaves sticking out on both sides, mid-stem.
         let leaf_y = el.get_y() + (el.options.height.saturating_sub(2)) as isize / 2;
-        for dx in [-1, FLOWER_STEM_WIDTH as isize] {
+        for dx in [0, FLOWER_STEM_WIDTH as isize + 1] {
             let leaf = Rectangle::<S>::new();
             leaf.width(1)
                 .height(2)
