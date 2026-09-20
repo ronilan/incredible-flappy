@@ -1,10 +1,10 @@
 use incredible::*;
 use incredible_macros_decl::element;
 
-use super::bushes::{BUSHES_WIDTH, Bushes, BushesOptions};
-use super::buildings::Buildings;
-use super::floor::{Floor, FloorOptions};
-use super::pavement::{PAVEMENT_WIDTH, Pavement, PavementOptions};
+use crate::ui::elements::{
+    BUSHES_WIDTH, Buildings, Bushes, BushesOptions, Floor, FloorOptions, PAVEMENT_WIDTH,
+    Pavement, PavementOptions,
+};
 
 pub const SCENERY_WIDTH: usize = 40;
 pub const SCENERY_HEIGHT: usize = 9;

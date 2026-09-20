@@ -10,18 +10,12 @@ use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
 
-use super::bushing::{Bushing, BUSHING_WIDTH};
-use super::dead_bird::DeadBird;
-use super::dead_cat::DeadCat;
-use super::floor::Floor;
-use super::flower_bud::FlowerBud;
-use super::flower_stem::FlowerStem;
-use super::flying_bird::FlyingBird;
-use super::flying_cat::FlyingCat;
-use super::pavement::Pavement;
-use super::pipe::{PIPE_WIDTH, Pipe};
-use super::scenery::{SCENERY_WIDTH, Scenery};
-use super::score::Score;
+use crate::ui::elements::pipe::{PIPE_WIDTH, Pipe, PipeOptions};
+use crate::ui::elements::{
+    BUSHING_WIDTH, Bushing, BushingOptions, DeadBird, DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud,
+    FlowerBudOptions, FlowerStem, FlowerStemOptions, FlyingBird, FlyingCat, Pavement,
+    SCENERY_WIDTH, Scenery, SceneryOptions, Score,
+};
 
 pub const GAME_WIDTH: usize = 80;
 pub const GAME_HEIGHT: usize = 24;
@@ -539,7 +533,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// Three 40-wide tiles across and past the window.
     fn add_ground(&self) {
-        use super::scenery::SceneryOptions;
 
         for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
             let tile = Scenery::<S>::new(SceneryOptions {
@@ -556,8 +549,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Single flower on the ground: random stem height with the
     /// specified bud on top, bottom row on 20.
     fn spawn_flower_at(&self, x: isize) {
-        use super::flower_bud::{FLOWER_BUD_HEIGHT, FlowerBudOptions};
-        use super::flower_stem::FlowerStemOptions;
 
         let stem_height = rng().random_range(2..=7) as isize;
         let top_y = 21 - (FLOWER_BUD_HEIGHT as isize + stem_height);
@@ -585,8 +576,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             self.spawn_flower_at(x);
             return;
         }
-        use super::bushing::BushingOptions;
-        use super::pipe::PipeOptions;
 
         let top_height = rng().random_range(2..=7) as isize;
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;

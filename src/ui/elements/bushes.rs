@@ -1,7 +1,7 @@
 use incredible::*;
 use incredible_macros_decl::element;
 
-use super::bush::{Bush, BushOptions};
+use crate::ui::elements::{Bush, BushOptions};
 
 pub const BUSHES_WIDTH: usize = 40;
 pub const BUSHES_HEIGHT: usize = 2;
