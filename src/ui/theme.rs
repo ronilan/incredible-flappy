@@ -1,4 +1,4 @@
-use incredible::Color;
+use incredible::*;
 use incredible_helpers_effects::{GradientDirection, gradient_color, transform_rule};
 
 // -----------------------------
@@ -100,6 +100,11 @@ pub const READY_GRADIENT: (u8, u8) = (214, 220);
 pub const SCORE_GRADIENT: (u8, u8) = (15, 250);
 
 pub(crate) fn theme_all() {
+
+    theme_rule::<Style>("Select", |s| {
+        s.base.decor.color.set(Some(Color::from(16)));
+    });
+
     transform_rule("FlappyGradient", |flattened, progress| {
         gradient_color(
             &[

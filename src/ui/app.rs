@@ -130,6 +130,12 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     for r in ready {
         r.showed(state.phase == Phase::Ready);
     }
+    for over in game
+        .elements
+        .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "gameover_title")
+    {
+        over.showed(state.phase == Phase::Dead);
+    }
     let flying_cat = game
         .elements
         .dcot_w::<elements::FlyingCat<State>, _>(|e| {
