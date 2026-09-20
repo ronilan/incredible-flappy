@@ -42,6 +42,7 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
         display
             .text(el.internal_state.current.get().to_string().as_str())
             .size(BlockSize::Small)
+            .showed(false)
             .style_handle("ScoreGradient")
             .handle("score_display");
         effect(&display, score_effects);
@@ -52,8 +53,8 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
             ' ',
         )))
         .handle("score");
+        
         el.add(display);
-
 
         el
     }

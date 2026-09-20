@@ -94,24 +94,6 @@ pub const INVADERS_PALETTE: Palette = Palette {
     pipe_base: 167,
 };
 
-/// The three games. Palette and gameplay variations derive from this.
-#[derive(Clone, Copy, PartialEq, Debug, Default)]
-pub enum SelectedGame {
-    #[default]
-    Classic,
-    Busy,
-    Invaders,
-}
-
-/// Palette per selected game.
-pub fn palette_for(selected: &SelectedGame) -> Palette {
-    match selected {
-        SelectedGame::Classic => CLASSIC_PALETTE,
-        SelectedGame::Busy => BUSY_PALETTE,
-        SelectedGame::Invaders => INVADERS_PALETTE,
-    }
-}
-
 // Title gradients (start, end).
 pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);
 pub const READY_GRADIENT: (u8, u8) = (214, 220);

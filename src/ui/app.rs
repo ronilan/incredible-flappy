@@ -8,7 +8,6 @@ use incredible_helpers_layout::*;
 use crate::ui::elements;
 use crate::ui::screens;
 use crate::ui::theme;
-use crate::ui::theme::SelectedGame;
 
 pub const SCREEN_WIDTH: usize = 80;
 pub const SCREEN_HEIGHT: usize = 24;
@@ -26,7 +25,24 @@ pub enum Phase {
 pub struct State {
     pub phase: Phase,
     pub kitty: bool,
-    pub selected: theme::SelectedGame,
+    pub selected: SelectedGame,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub enum SelectedGame {
+    #[default]
+    Classic,
+    Busy,
+    Invaders,
+}
+
+/// Palette per selected game.
+pub(crate) fn palette_for(selected: &SelectedGame) -> theme::Palette {
+    match selected {
+        SelectedGame::Classic => theme::CLASSIC_PALETTE,
+        SelectedGame::Busy => theme::BUSY_PALETTE,
+        SelectedGame::Invaders => theme::INVADERS_PALETTE,
+    }
 }
 
 /// Launches whichever game the splash select points at.
