@@ -257,15 +257,14 @@ pub fn build() -> App<State> {
         }
         for rect in el
             .elements
-            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "invaders_game")
+            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "invaders")
         {
             rect.showed(!is_splash && !classic && !busy);
         }
         for game in el.elements.cot::<elements::Game<State>>() {
             let handle = game.get_handle();
             let mine = (handle == "game" && classic)
-                || (handle == "busy_game" && busy)
-                || (handle == "invaders_game" && !classic && !busy);
+                || (handle == "busy_game" && busy);
             if mine {
                 drive_game(&game, state);
             } else {
@@ -289,8 +288,8 @@ pub fn build() -> App<State> {
     let busy = screens::game::game::build_as("busy_game");
     app.add(busy);
 
-    // Invaders game: independent clone, invaders palette.
-    let invaders = screens::game::game::build_as("invaders_game");
+    // Invaders screen with the marching crab.
+    let invaders = screens::invaders::invaders::build();
     app.add(invaders);
 
     app

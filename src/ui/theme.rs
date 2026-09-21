@@ -60,6 +60,11 @@ pub const FLOWER_LEAF: u8 = 40;
 pub const FLOWER_BUD_COLORS: [u8; 4] = [129, 208, 162, 207];
 pub const FLOWER_BUD_FG: u8 = 255;
 
+// Invaders.
+pub const CRAB_COLOR: u8 = 46;
+pub const SQUID_COLOR: u8 = 46;
+pub const OCTOPUS_COLOR: u8 = 46;
+
 // Per-game palettes. Classic is the default everywhere.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Palette {
