@@ -12,9 +12,10 @@ use rand::rng;
 
 use crate::ui::elements::pipe::{PIPE_WIDTH, Pipe, PipeOptions};
 use crate::ui::elements::{
-    BUSHING_WIDTH, Bushing, BushingOptions, DeadBird, DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud,
-    FlowerBudOptions, FlowerStem, FlowerStemOptions, FlyingBird, FlyingCat, Pavement,
-    SCENERY_WIDTH, Scenery, SceneryOptions, Score,
+    BUSHING_WIDTH, Bushing, BushingOptions, CRAB_WIDTH, Crab, DeadBird, DeadCat, Floor,
+    FLOWER_BUD_HEIGHT, FlowerBud, FlowerBudOptions, FlowerStem, FlowerStemOptions, FlyingBird,
+    FlyingCat, OCTOPUS_WIDTH, Octopus, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score,
+    SQUID_WIDTH, Squid,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -245,6 +246,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<Bushing<S>>().is_some() {}
         while self.elements.sot::<FlowerStem<S>>().is_some() {}
         while self.elements.sot::<FlowerBud<S>>().is_some() {}
+        while self.elements.sot::<Crab<S>>().is_some() {}
+        while self.elements.sot::<Squid<S>>().is_some() {}
+        while self.elements.sot::<Octopus<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.internal_state.distance.set(0);
@@ -511,6 +515,21 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 return true;
             }
         }
+        for alien in self.elements.dcot_w::<Crab<S>, _>(|_| true) {
+            if bird.intersects_element(alien.as_ref()) {
+                return true;
+            }
+        }
+        for alien in self.elements.dcot_w::<Squid<S>, _>(|_| true) {
+            if bird.intersects_element(alien.as_ref()) {
+                return true;
+            }
+        }
+        for alien in self.elements.dcot_w::<Octopus<S>, _>(|_| true) {
+            if bird.intersects_element(alien.as_ref()) {
+                return true;
+            }
+        }
         for pavement in self.elements.dcot_w::<Pavement<S>, _>(|_| true) {
             if bird.intersects_element(pavement.as_ref()) {
                 return true;
@@ -578,6 +597,29 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.send_scenery_to_back();
     }
 
+    /// Single alien on the ground, bottom row on 20. Random type.
+    fn spawn_alien_at(&self, x: isize) {
+        let h = 4;
+        match rng().random_range(0..3) {
+            0 => {
+                let alien = Crab::<S>::default();
+                alien.x(x).y(self.get_y() + 21 - h);
+                self.add(alien);
+            }
+            1 => {
+                let alien = Squid::<S>::default();
+                alien.x(x).y(self.get_y() + 21 - h);
+                self.add(alien);
+            }
+            _ => {
+                let alien = Octopus::<S>::default();
+                alien.x(x).y(self.get_y() + 21 - h);
+                self.add(alien);
+            }
+        }
+        self.send_scenery_to_back();
+    }
+
     /// Places a top + bottom pipe duo at the given x. Top pipe starts
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
     /// Busy games skip the duo half the time.
@@ -586,6 +628,13 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             && rng().random_bool(0.5)
         {
             self.spawn_flower_at(x);
+            return;
+        }
+        if matches!(
+            self.internal_state.kind.get(),
+            crate::ui::app::SelectedGame::Invaders
+        ) {
+            self.spawn_alien_at(x);
             return;
         }
 
@@ -658,6 +707,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         for bud in self.elements.cot::<FlowerBud<S>>() {
             bud.x(bud.get_x() - 1);
         }
+        for alien in self.elements.cot::<Crab<S>>() {
+            alien.x(alien.get_x() - 1);
+        }
+        for alien in self.elements.cot::<Squid<S>>() {
+            alien.x(alien.get_x() - 1);
+        }
+        for alien in self.elements.cot::<Octopus<S>>() {
+            alien.x(alien.get_x() - 1);
+        }
         for bushing in self.elements.cot::<Bushing<S>>() {
             bushing.x(bushing.get_x() - 1);
         }
@@ -697,6 +755,23 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             }
         }
 
+        // Alien passed: right edge reaches the bird.
+        for alien in self.elements.cot::<Crab<S>>() {
+            if alien.get_x() + CRAB_WIDTH as isize == self.get_x() + BIRD_X {
+                self.add_score(1);
+            }
+        }
+        for alien in self.elements.cot::<Squid<S>>() {
+            if alien.get_x() + SQUID_WIDTH as isize == self.get_x() + BIRD_X {
+                self.add_score(1);
+            }
+        }
+        for alien in self.elements.cot::<Octopus<S>>() {
+            if alien.get_x() + OCTOPUS_WIDTH as isize == self.get_x() + BIRD_X {
+                self.add_score(1);
+            }
+        }
+
         // Drop fully off-screen pipes.
         while self
             .elements
@@ -723,6 +798,27 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .elements
             .sot_w::<FlowerBud<S>, _>(|b| {
                 b.get_x() + 5 <= self.get_x()
+            })
+            .is_some()
+        {}
+        while self
+            .elements
+            .sot_w::<Crab<S>, _>(|a| {
+                a.get_x() + CRAB_WIDTH as isize <= self.get_x()
+            })
+            .is_some()
+        {}
+        while self
+            .elements
+            .sot_w::<Squid<S>, _>(|a| {
+                a.get_x() + SQUID_WIDTH as isize <= self.get_x()
+            })
+            .is_some()
+        {}
+        while self
+            .elements
+            .sot_w::<Octopus<S>, _>(|a| {
+                a.get_x() + OCTOPUS_WIDTH as isize <= self.get_x()
             })
             .is_some()
         {}
