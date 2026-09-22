@@ -2,20 +2,22 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use incredible::*;
+use incredible_elements::Image;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
-use incredible_helpers_effects::*;
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
 
+use crate::ui::assets::decode_png;
+
 use crate::ui::elements::pipe::{PIPE_WIDTH, Pipe, PipeOptions};
 use crate::ui::elements::{
-    BUSHING_WIDTH, Bushing, BushingOptions, CRAB_WIDTH, Crab, DeadBird, DeadCat, Floor,
-    FLOWER_BUD_HEIGHT, FlowerBud, FlowerBudOptions, FlowerStem, FlowerStemOptions, FlyingBird,
-    FlyingCat, OCTOPUS_WIDTH, Octopus, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score,
-    SQUID_WIDTH, Squid,
+    ALIEN_MAX_Y, ALIEN_MIN_Y, Alien, AlienKind, AlienOptions, BULLET_SPEED, BUSHING_WIDTH, Bullet,
+    Bushing, BushingOptions, DeadBird,
+    DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
+    FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -113,10 +115,6 @@ impl Default for GameState {
     }
 }
 
-fn ready_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
-    decorate_rules::<S, BlockCharsStr<S>>(el, ready_effects);
-}
-
 impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn new(options: GameOptions) -> Self {
         let mut el = Self::blank();
@@ -143,26 +141,47 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         el.add(score);
 
         let ready = BlockCharsStr::<S>::default();
-        ready.text("Ready").size(BlockSize::Small);
-        ready.style_handle("ReadyGradient");
+        ready.text("Get Ready").size(BlockSize::Small);
+        ready.style_handle("TitleOrange");
         ready
             .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
             .y(5);
         ready.handle("ready_title");
         ready.showed(false);
-        effect(&ready, ready_effects);
+        let ready_w = ready.visual.look.width();
         el.add(ready);
 
         let over = BlockCharsStr::<S>::default();
         over.text("Game Over").size(BlockSize::Small);
-        over.style_handle("ReadyGradient");
+        over.style_handle("TitleOrange");
         over
             .x((GAME_WIDTH as isize - over.visual.look.width() as isize) / 2)
             .y(5);
         over.handle("gameover_title");
         over.showed(false);
-        effect(&over, ready_effects);
+        let over_w = over.visual.look.width();
         el.add(over);
+
+        // Kitty-mode images replacing the text titles.
+        let ready_img = Image::<S>::new();
+        ready_img.width(ready_w);
+        ready_img.data(decode_png(include_bytes!("../../../assets/get_ready.png")));
+        ready_img.handle("ready_image");
+        ready_img.showed(false);
+        ready_img
+            .x((GAME_WIDTH as isize - ready_img.visual.look.width() as isize) / 2)
+            .y(5);
+        el.add(ready_img);
+
+        let over_img = Image::<S>::new();
+        over_img.width(over_w);
+        over_img.data(decode_png(include_bytes!("../../../assets/game_over.png")));
+        over_img.handle("gameover_image");
+        over_img.showed(false);
+        over_img
+            .x((GAME_WIDTH as isize - over_img.visual.look.width() as isize) / 2)
+            .y(5);
+        el.add(over_img);
 
         let dead_bird = DeadBird::<S>::default();
         dead_bird.x(48).y(6);
@@ -246,9 +265,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<Bushing<S>>().is_some() {}
         while self.elements.sot::<FlowerStem<S>>().is_some() {}
         while self.elements.sot::<FlowerBud<S>>().is_some() {}
-        while self.elements.sot::<Crab<S>>().is_some() {}
-        while self.elements.sot::<Squid<S>>().is_some() {}
-        while self.elements.sot::<Octopus<S>>().is_some() {}
+        while self.elements.sot::<Alien<S>>().is_some() {}
+        while self.elements.sot::<Bullet<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.internal_state.distance.set(0);
@@ -305,6 +323,28 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             self.internal_state.landed.set(false);
             self.internal_state.velocity.set(-self.options.physics.flap);
         }
+        self
+    }
+
+    /// Fires a bullet from the beak. Invaders only, never while dying.
+    pub fn shoot(&self) -> &Self {
+        if !matches!(
+            self.internal_state.kind.get(),
+            crate::ui::app::SelectedGame::Invaders
+        ) || self.internal_state.dying.get()
+        {
+            return self;
+        }
+        let Some(flier) = self.active_flier() else {
+            return self;
+        };
+        let w = flier.visual().look.width() as isize;
+        let h = flier.visual().look.height() as isize;
+        let bullet = Bullet::<S>::default();
+        bullet
+            .x(BIRD_X + w)
+            .y(self.internal_state.bird_y.get() as isize + h / 2);
+        self.add(bullet);
         self
     }
 
@@ -515,17 +555,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 return true;
             }
         }
-        for alien in self.elements.dcot_w::<Crab<S>, _>(|_| true) {
-            if bird.intersects_element(alien.as_ref()) {
-                return true;
-            }
-        }
-        for alien in self.elements.dcot_w::<Squid<S>, _>(|_| true) {
-            if bird.intersects_element(alien.as_ref()) {
-                return true;
-            }
-        }
-        for alien in self.elements.dcot_w::<Octopus<S>, _>(|_| true) {
+        for alien in self.elements.dcot_w::<Alien<S>, _>(|_| true) {
             if bird.intersects_element(alien.as_ref()) {
                 return true;
             }
@@ -597,32 +627,22 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.send_scenery_to_back();
     }
 
-    /// Single alien on the ground, bottom row on 20. Random type.
+    /// Single alien: random kind, random starting height.
     fn spawn_alien_at(&self, x: isize) {
-        let h = 4;
-        match rng().random_range(0..3) {
-            0 => {
-                let alien = Crab::<S>::default();
-                alien.x(x).y(self.get_y() + 21 - h);
-                self.add(alien);
-            }
-            1 => {
-                let alien = Squid::<S>::default();
-                alien.x(x).y(self.get_y() + 21 - h);
-                self.add(alien);
-            }
-            _ => {
-                let alien = Octopus::<S>::default();
-                alien.x(x).y(self.get_y() + 21 - h);
-                self.add(alien);
-            }
-        }
+        let alien = Alien::<S>::new(AlienOptions {
+            kind: AlienKind::random(),
+        });
+        alien
+            .x(x)
+            .y(rng().random_range(ALIEN_MIN_Y as i32..=ALIEN_MAX_Y as i32) as isize);
+        self.add(alien);
         self.send_scenery_to_back();
     }
 
     /// Places a top + bottom pipe duo at the given x. Top pipe starts
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
-    /// Busy games skip the duo half the time.
+    /// Busy games swap the duo for a flower half the time,
+    /// invaders games for an alien.
     fn spawn_obstacle_at(&self, x: isize) {
         if matches!(self.internal_state.kind.get(), crate::ui::app::SelectedGame::Busy)
             && rng().random_bool(0.5)
@@ -633,11 +653,17 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         if matches!(
             self.internal_state.kind.get(),
             crate::ui::app::SelectedGame::Invaders
-        ) {
+        ) && rng().random_bool(0.5)
+        {
             self.spawn_alien_at(x);
             return;
         }
+        self.spawn_pipe_at(x);
+    }
 
+    /// Places a top + bottom pipe duo at the given x. Top pipe starts
+    /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
+    fn spawn_pipe_at(&self, x: isize) {
         let top_height = rng().random_range(2..=5) as isize;
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
@@ -686,6 +712,64 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
+    /// Flies bullets right, killing aliens, dying on pipes,
+    /// expiring at the right edge.
+    fn step_bullets(&self) {
+        for bullet in self.elements.cot::<Bullet<S>>() {
+            bullet.x(bullet.get_x() + BULLET_SPEED);
+        }
+        for bullet in self.elements.cot::<Bullet<S>>() {
+            let bx = bullet.get_x();
+            let by = bullet.get_y();
+            if bx >= self.get_x() + GAME_WIDTH as isize {
+                while self
+                    .elements
+                    .sot_w::<Bullet<S>, _>(|b| b.get_x() == bx && b.get_y() == by)
+                    .is_some()
+                {}
+                continue;
+            }
+            let pipe_hit = self
+                .elements
+                .cot::<Pipe<S>>()
+                .into_iter()
+                .any(|p| bullet.intersects_element(p.as_ref()))
+                || self
+                    .elements
+                    .cot::<Bushing<S>>()
+                    .into_iter()
+                    .any(|b| bullet.intersects_element(b.as_ref()));
+            if pipe_hit {
+                while self
+                    .elements
+                    .sot_w::<Bullet<S>, _>(|b| b.get_x() == bx && b.get_y() == by)
+                    .is_some()
+                {}
+                continue;
+            }
+            let alien_hit = self
+                .elements
+                .cot::<Alien<S>>()
+                .into_iter()
+                .find(|a| bullet.intersects_element(a.as_ref()));
+            if let Some(hit) = alien_hit {
+                let (ax, ay, aw) = (hit.get_x(), hit.get_y(), hit.width() as isize);
+                while self
+                    .elements
+                    .sot_w::<Alien<S>, _>(|a| {
+                        a.get_x() == ax && a.get_y() == ay && a.width() as isize == aw
+                    })
+                    .is_some()
+                {}
+                while self
+                    .elements
+                    .sot_w::<Bullet<S>, _>(|b| b.get_x() == bx && b.get_y() == by)
+                    .is_some()
+                {}
+            }
+        }
+    }
+
     /// Moves the world one cell left, wraps ground, spawns and
     /// removes pipes. Title, hint and birds stay put.
     fn step(&self) {
@@ -707,18 +791,31 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         for bud in self.elements.cot::<FlowerBud<S>>() {
             bud.x(bud.get_x() - 1);
         }
-        for alien in self.elements.cot::<Crab<S>>() {
+        for alien in self.elements.cot::<Alien<S>>() {
             alien.x(alien.get_x() - 1);
-        }
-        for alien in self.elements.cot::<Squid<S>>() {
-            alien.x(alien.get_x() - 1);
-        }
-        for alien in self.elements.cot::<Octopus<S>>() {
-            alien.x(alien.get_x() - 1);
+            alien.step_vertical(
+                self.get_y() + ALIEN_MIN_Y,
+                self.get_y() + ALIEN_MAX_Y,
+            );
         }
         for bushing in self.elements.cot::<Bushing<S>>() {
             bushing.x(bushing.get_x() - 1);
         }
+
+        // March starts once the alien is fully on-screen, freezes at the wall.
+        for alien in self.elements.cot::<Alien<S>>() {
+            let w = alien.width() as isize;
+            if !alien.marching()
+                && alien.get_x() > self.get_x()
+                && alien.get_x() + w <= self.get_x() + GAME_WIDTH as isize
+            {
+                alien.start_marching();
+            }
+            if alien.marching() && alien.get_x() <= self.get_x() {
+                alien.stop_marching();
+            }
+        }
+        self.step_bullets();
 
         // Leftmost at -40 wraps past the right edge, relative to self.
         for tile in self.elements.cot::<Scenery<S>>() {
@@ -756,18 +853,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
 
         // Alien passed: right edge reaches the bird.
-        for alien in self.elements.cot::<Crab<S>>() {
-            if alien.get_x() + CRAB_WIDTH as isize == self.get_x() + BIRD_X {
-                self.add_score(1);
-            }
-        }
-        for alien in self.elements.cot::<Squid<S>>() {
-            if alien.get_x() + SQUID_WIDTH as isize == self.get_x() + BIRD_X {
-                self.add_score(1);
-            }
-        }
-        for alien in self.elements.cot::<Octopus<S>>() {
-            if alien.get_x() + OCTOPUS_WIDTH as isize == self.get_x() + BIRD_X {
+        for alien in self.elements.cot::<Alien<S>>() {
+            if alien.get_x() + alien.width() as isize == self.get_x() + BIRD_X {
                 self.add_score(1);
             }
         }
@@ -803,22 +890,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         {}
         while self
             .elements
-            .sot_w::<Crab<S>, _>(|a| {
-                a.get_x() + CRAB_WIDTH as isize <= self.get_x()
-            })
-            .is_some()
-        {}
-        while self
-            .elements
-            .sot_w::<Squid<S>, _>(|a| {
-                a.get_x() + SQUID_WIDTH as isize <= self.get_x()
-            })
-            .is_some()
-        {}
-        while self
-            .elements
-            .sot_w::<Octopus<S>, _>(|a| {
-                a.get_x() + OCTOPUS_WIDTH as isize <= self.get_x()
+            .sot_w::<Alien<S>, _>(|a| {
+                a.get_x() + a.width() as isize <= self.get_x()
             })
             .is_some()
         {}

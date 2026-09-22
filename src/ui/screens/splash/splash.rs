@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::{FramedText, Image, ImageData, Rectangle, Select};
+use incredible_elements::{FrameKind, FramedText, Image, Rectangle, Select};
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
@@ -7,22 +7,12 @@ use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
 use crate::ui::app::SelectedGame;
+use crate::ui::assets::decode_png;
 use crate::ui::elements::Scenery;
 use crate::ui::theme;
 
 fn title_effects(el: &BlockCharsStr<State>) {
     decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);
-}
-
-fn decode_png(bytes: &[u8]) -> ImageData {
-    let img = image::load_from_memory(bytes).expect("splash asset decodes");
-    let rgba = img.to_rgba8();
-    let (width_px, height_px) = (rgba.width(), rgba.height());
-    ImageData {
-        bytes: rgba.into_raw(),
-        width_px,
-        height_px,
-    }
 }
 
 /// Builds the whole splash screen.
@@ -34,6 +24,13 @@ pub(crate) fn build() -> Rectangle<State> {
         .fill(Some(' '))
         .background(Some(Color::Ansi(theme::SKY_BACKGROUND)))
         .handle("splash");
+       
+    //TODO: look at this again.
+    // splash.draw_override(Some(DrawOverride::default()));
+
+    // splash.on_key(|el, state, event|{
+    //     el.draw();
+    // });
 
     let title = BlockCharsStr::<State>::default();
     title
@@ -71,6 +68,8 @@ pub(crate) fn build() -> Rectangle<State> {
         .add_item("Invaders", "invaders");
     select.width(20).height(5);
     select.allow_unselect(false);
+    select.frame_kind(Some(FrameKind::Double));
+    select.selected_color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
     select.handle("game_select");
     select.y(11);
     select.select_action(0);
@@ -81,9 +80,10 @@ pub(crate) fn build() -> Rectangle<State> {
     let hint = FramedText::<State>::default();
     hint.text(game_hint_for(&SelectedGame::Classic));
     hint.handle("game_hint");
-    hint.width(40);
-    hint.x((SCREEN_WIDTH as isize - 40) / 2);
-    hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 1);
+    hint.width(30);
+    hint.color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
+    hint.x((SCREEN_WIDTH as isize - 30) / 2);
+    hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 2);
     splash.add(hint);
 
     splash

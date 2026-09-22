@@ -64,6 +64,7 @@ pub const FLOWER_BUD_FG: u8 = 255;
 pub const CRAB_COLOR: u8 = 46;
 pub const SQUID_COLOR: u8 = 46;
 pub const OCTOPUS_COLOR: u8 = 46;
+pub const BULLET_COLOR: u8 = 231;
 
 // Per-game palettes. Classic is the default everywhere.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -101,13 +102,22 @@ pub const INVADERS_PALETTE: Palette = Palette {
 
 // Title gradients (start, end).
 pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);
-pub const READY_GRADIENT: (u8, u8) = (214, 220);
 pub const SCORE_GRADIENT: (u8, u8) = (15, 250);
+
+// Flat title color: orange end of the old ready gradient.
+pub const TITLE_ORANGE: u8 = 214;
+
+// Selected game: dark gray.
+pub const SELECTED_ITEM_COLOR: u8 = 240;
 
 pub(crate) fn theme_all() {
 
     theme_rule::<Style>("Select", |s| {
-        s.base.decor.color.set(Some(Color::from(16)));
+        s.base.decor.color.set(Some(Color::ansi(SELECTED_ITEM_COLOR)));
+    });
+
+    theme_rule::<Style>("TitleOrange", |s| {
+        s.base.decor.color.set(Some(Color::ansi(TITLE_ORANGE)));
     });
 
     transform_rule("FlappyGradient", |flattened, progress| {
@@ -116,14 +126,6 @@ pub(crate) fn theme_all() {
                 Color::ansi(FLAPPY_GRADIENT.0),
                 Color::ansi(FLAPPY_GRADIENT.1),
             ],
-            GradientDirection::Vertical,
-            flattened,
-            progress,
-        )
-    });
-    transform_rule("ReadyGradient", |flattened, progress| {
-        gradient_color(
-            &[Color::ansi(READY_GRADIENT.0), Color::ansi(READY_GRADIENT.1)],
             GradientDirection::Vertical,
             flattened,
             progress,

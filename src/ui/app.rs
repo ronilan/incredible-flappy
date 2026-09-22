@@ -26,6 +26,7 @@ pub struct State {
     pub phase: Phase,
     pub kitty: bool,
     pub selected: SelectedGame,
+    pub hinted: SelectedGame,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
@@ -55,21 +56,45 @@ fn launch_from_select(el: &App<State>, state: &mut State) {
         let idx = select.get_selected().or_else(|| select.get_focused_index());
         if let Some(idx) = idx {
             if let Some(val) = select.item_value(idx) {
-                state.selected = match val.as_str() {
-                    "busy" => SelectedGame::Busy,
-                    "invaders" => SelectedGame::Invaders,
-                    _ => SelectedGame::Classic,
-                };
+                state.selected = game_for_value(val.as_str());
                 state.phase = Phase::Ready;
                 el.draw();
             }
         }
     }
 }
+
+/// Maps a select item value to its game.
+fn game_for_value(val: &str) -> SelectedGame {
+    match val {
+        "busy" => SelectedGame::Busy,
+        "invaders" => SelectedGame::Invaders,
+        _ => SelectedGame::Classic,
+    }
+}
+
+/// Game the splash cursor points at right now.
+fn hovered_game(el: &App<State>) -> SelectedGame {
+    if let Some(select) = el
+        .elements
+        .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
+        .first()
+    {
+        let idx = select
+            .get_focused_index()
+            .or_else(|| select.get_selected());
+        if let Some(idx) = idx {
+            if let Some(val) = select.item_value(idx) {
+                return game_for_value(val.as_str());
+            }
+        }
+    }
+    SelectedGame::Classic
+}
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     match (key, phase) {
         (Key::Escape, _) => Some(Phase::Splash),
-        (Key::Enter | Key::Char(' '), Phase::Splash) => Some(Phase::Ready),
+        (Key::Enter, Phase::Splash) => Some(Phase::Ready),
         (Key::Enter | Key::Char(' '), Phase::Dead) => Some(Phase::Ready),
         (Key::Enter | Key::Char(' '), Phase::Ready) => Some(Phase::Flying),
         _ => None,
@@ -128,13 +153,25 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .elements
         .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
     for r in ready {
-        r.showed(state.phase == Phase::Ready);
+        r.showed(state.phase == Phase::Ready && !state.kitty);
     }
     for over in game
         .elements
         .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "gameover_title")
     {
-        over.showed(state.phase == Phase::Dead);
+        over.showed(state.phase == Phase::Dead && !state.kitty);
+    }
+    for img in game
+        .elements
+        .dcot_w::<Image<State>, _>(|e| e.get_handle() == "ready_image")
+    {
+        img.showed(state.phase == Phase::Ready && state.kitty);
+    }
+    for img in game
+        .elements
+        .dcot_w::<Image<State>, _>(|e| e.get_handle() == "gameover_image")
+    {
+        img.showed(state.phase == Phase::Dead && state.kitty);
     }
     let flying_cat = game
         .elements
@@ -169,9 +206,7 @@ pub fn build() -> App<State> {
             state.kitty = !state.kitty;
             el.draw();
         }
-        if state.phase == Phase::Splash
-            && matches!(event.key, Key::Enter | Key::Char(' '))
-        {
+        if state.phase == Phase::Splash && matches!(event.key, Key::Enter) {
             launch_from_select(el, state);
         } else if let Some(next) = transition(&state.phase, &event.key) {
             if next != state.phase {
@@ -182,6 +217,7 @@ pub fn build() -> App<State> {
         if state.phase == Phase::Flying && matches!(event.key, Key::Enter | Key::Char(' ')) {
             for game in selected_games(el, state) {
                 game.flap();
+                game.shoot();
             }
         }
     }).on_mouse(|el, state, event| {
@@ -201,11 +237,26 @@ pub fn build() -> App<State> {
         if state.phase == Phase::Flying {
             for game in selected_games(el, state) {
                 game.flap();
+                game.shoot();
             }
         }
     }).on_window(|el, _state, _event| {
         el.elements_to_center();
     }).on_loop(|el, state, _event| {
+        if state.phase == Phase::Splash {
+            let hovered = hovered_game(el);
+            if hovered != state.hinted {
+                state.hinted = hovered;
+                for hint in el
+                    .elements
+                    .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
+                {
+                    hint.text(screens::splash::splash::game_hint_for(&hovered));
+                }
+                el.draw();
+            }
+            return;
+        }
         if state.phase != Phase::Flying {
             return;
         }
@@ -225,11 +276,16 @@ pub fn build() -> App<State> {
         {
             rect.showed(is_splash);
         }
+        let hinted = if is_splash {
+            hovered_game(el)
+        } else {
+            state.selected
+        };
         for hint in el
             .elements
             .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
         {
-            hint.text(screens::splash::splash::game_hint_for(&state.selected));
+            hint.text(screens::splash::splash::game_hint_for(&hinted));
         }
         for title in el
             .elements
@@ -257,14 +313,15 @@ pub fn build() -> App<State> {
         }
         for rect in el
             .elements
-            .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "invaders")
+            .dcot_w::<elements::Game<State>, _>(|e| e.get_handle() == "invaders_game")
         {
             rect.showed(!is_splash && !classic && !busy);
         }
         for game in el.elements.cot::<elements::Game<State>>() {
             let handle = game.get_handle();
             let mine = (handle == "game" && classic)
-                || (handle == "busy_game" && busy);
+                || (handle == "busy_game" && busy)
+                || (handle == "invaders_game" && !classic && !busy);
             if mine {
                 drive_game(&game, state);
             } else {
@@ -288,8 +345,8 @@ pub fn build() -> App<State> {
     let busy = screens::game::game::build_as("busy_game");
     app.add(busy);
 
-    // Invaders screen with the marching crab.
-    let invaders = screens::invaders::invaders::build();
+    // Invaders game: independent clone, invaders palette.
+    let invaders = screens::game::game::build_as("invaders_game");
     app.add(invaders);
 
     app
