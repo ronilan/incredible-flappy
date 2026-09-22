@@ -29,6 +29,13 @@ pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
 pub const DEAD_REST_Y: f32 = 17.0;
 pub const BIRD_X: isize = 20;
+/// Kitty bump leeway: forgiven rows on the top and bottom of the cat.
+/// Note: the cat image sits in a bigger rectangle than the bird,
+/// so the leeway keeps a "leveled playing field" between them.
+const KITTY_LEEWAY_TOP: isize = 2;
+const KITTY_LEEWAY_BOTTOM: isize = 1;
+const KITTY_LEEWAY_FRONT: isize = 2;
+const KITTY_LEEWAY_BACK: isize = 3;
 /// Pavement top row in game coordinates: the lethal ground surface.
 const GROUND_SURFACE: f32 = 21.0;
 
@@ -655,6 +662,34 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
+    /// Hit test with kitty bump leeway: one forgiven row on the
+    /// top and bottom of the cat. Birds test the full look.
+    /// Note: the cat image sits in a bigger rectangle than the bird,
+    /// so the leeway keeps a "leveled playing field" between them.
+    fn flier_hits(&self, flier: &dyn ElementTrait<S>, other: &dyn ElementTrait<S>) -> bool {
+        if self.internal_state.kitty.get() {
+            let outer = flier.get_outside();
+            let height = outer
+                .height
+                .get()
+                .saturating_sub((KITTY_LEEWAY_TOP + KITTY_LEEWAY_BOTTOM) as usize)
+                .max(1);
+            let width = outer
+                .width
+                .get()
+                .saturating_sub((KITTY_LEEWAY_FRONT + KITTY_LEEWAY_BACK) as usize)
+                .max(1);
+            let shrunk = Bounds {
+                x: Cell::new(outer.x.get() + KITTY_LEEWAY_BACK),
+                y: Cell::new(outer.y.get() + KITTY_LEEWAY_TOP),
+                width: Cell::new(width),
+                height: Cell::new(height),
+            };
+            return other.intersects(&shrunk);
+        }
+        flier.intersects_element(other)
+    }
+
     /// True when the flown creature touches any pipe, bushing or floor.
     fn flying_hits_obstacle(&self) -> bool {
         let Some(bird) = self.active_flier() else {
@@ -662,37 +697,37 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         };
         let bird = bird.as_ref();
         for pipe in self.elements.dcot_w::<Pipe<S>, _>(|_| true) {
-            if bird.intersects_element(pipe.as_ref()) {
+            if self.flier_hits(bird, pipe.as_ref()) {
                 return true;
             }
         }
         for bushing in self.elements.dcot_w::<Bushing<S>, _>(|_| true) {
-            if bird.intersects_element(bushing.as_ref()) {
+            if self.flier_hits(bird, bushing.as_ref()) {
                 return true;
             }
         }
         for flower in self.elements.dcot_w::<FlowerStem<S>, _>(|_| true) {
-            if bird.intersects_element(flower.as_ref()) {
+            if self.flier_hits(bird, flower.as_ref()) {
                 return true;
             }
         }
         for flower in self.elements.dcot_w::<FlowerBud<S>, _>(|_| true) {
-            if bird.intersects_element(flower.as_ref()) {
+            if self.flier_hits(bird, flower.as_ref()) {
                 return true;
             }
         }
         for alien in self.elements.dcot_w::<Alien<S>, _>(|_| true) {
-            if bird.intersects_element(alien.as_ref()) {
+            if self.flier_hits(bird, alien.as_ref()) {
                 return true;
             }
         }
         for pavement in self.elements.dcot_w::<Pavement<S>, _>(|_| true) {
-            if bird.intersects_element(pavement.as_ref()) {
+            if self.flier_hits(bird, pavement.as_ref()) {
                 return true;
             }
         }
         for floor in self.elements.dcot_w::<Floor<S>, _>(|_| true) {
-            if bird.intersects_element(floor.as_ref()) {
+            if self.flier_hits(bird, floor.as_ref()) {
                 return true;
             }
         }
@@ -1063,4 +1098,6 @@ impl<S: Clone + PartialEq> Default for Game<S> {
         Self::new(GameOptions::default())
     }
 }
+
+
 

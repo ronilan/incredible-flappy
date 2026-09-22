@@ -27,8 +27,7 @@ pub struct State {
     pub phase: Phase,
     pub kitty: bool,
     pub selected: SelectedGame,
-    pub hinted: SelectedGame,
-    pub focus: SelectedGame,
+    pub focus: Option<SelectedGame>,
     pub best_classic: [u32; 3],
     pub best_busy: [u32; 3],
     pub best_invaders: [u32; 3],
@@ -119,19 +118,27 @@ where
         let mine = FOCUS_ORDER
             .iter()
             .chain(IMAGE_ORDER.iter())
-            .any(|(h, g)| h == &btn.get_handle() && *g == state.focus);
+            .any(|(h, g)| h == &btn.get_handle() && Some(*g) == state.focus);
         btn.focused(mine);
     }
 }
 
-/// Moves splash focus between game buttons, wrapping around.
+/// Focus cycle order, ending out on nothing selected.
+const FOCUS_CYCLE: [Option<SelectedGame>; 4] = [
+    Some(SelectedGame::Classic),
+    Some(SelectedGame::Busy),
+    Some(SelectedGame::Invaders),
+    None,
+];
+
+/// Moves splash focus, wrapping through empty.
 fn cycle_focus(el: &App<State>, state: &mut State, dir: isize) {
-    let i = FOCUS_ORDER
+    let i = FOCUS_CYCLE
         .iter()
-        .position(|(_, g)| *g == state.focus)
-        .unwrap_or(0);
-    let n = FOCUS_ORDER.len() as isize;
-    state.focus = FOCUS_ORDER[((i as isize + dir + n) % n) as usize].1;
+        .position(|g| *g == state.focus)
+        .unwrap_or(3);
+    let n = FOCUS_CYCLE.len() as isize;
+    state.focus = FOCUS_CYCLE[((i as isize + dir + n) % n) as usize];
     apply_focus(el, state);
     sync_hint(el, state);
     el.draw();
@@ -166,7 +173,7 @@ where
                 .chain(IMAGE_ORDER.iter())
                 .find(|(h, _)| h == &btn.get_handle())
             {
-                state.focus = *game;
+                state.focus = Some(*game);
                 state.selected = *game;
                 state.phase = Phase::Ready;
                 apply_focus(el, state);
@@ -177,19 +184,15 @@ where
     false
 }
 
-/// Refreshes the splash hint from the focused button. True if changed.
-fn sync_hint(el: &App<State>, state: &mut State) -> bool {
-    if state.focus == state.hinted {
-        return false;
-    }
-    state.hinted = state.focus;
+/// Refreshes the splash hint from the focused button.
+fn sync_hint(el: &App<State>, state: &mut State) {
     for hint in el
         .elements
         .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
     {
         hint.text(screens::splash::hint::game_hint_for(&state.focus));
     }
-    true
+    el.draw();
 }
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     match (key, phase) {
@@ -332,13 +335,19 @@ pub fn build() -> App<State> {
             el.draw();
         }
         if state.phase == Phase::Splash && matches!(event.key, Key::Enter) {
-            state.selected = state.focus;
-            state.phase = Phase::Ready;
-            el.draw();
+            if let Some(game) = state.focus {
+                state.selected = game;
+                state.phase = Phase::Ready;
+                el.draw();
+            }
         } else if state.phase == Phase::Splash && matches!(event.key, Key::Left) {
             cycle_focus(el, state, -1);
         } else if state.phase == Phase::Splash && matches!(event.key, Key::Right) {
             cycle_focus(el, state, 1);
+        } else if state.phase == Phase::Splash && matches!(event.key, Key::Tab) {
+            cycle_focus(el, state, 1);
+        } else if state.phase == Phase::Splash && matches!(event.key, Key::BackTab) {
+            cycle_focus(el, state, -1);
         } else if state.phase == Phase::Score && matches!(event.key, Key::Enter | Key::Char(' ')) {
             // New games wait for the score panel slide.
             if selected_games(el, state)
@@ -360,9 +369,6 @@ pub fn build() -> App<State> {
                 game.shoot();
             }
         }
-        if state.phase == Phase::Splash && sync_hint(el, state) {
-            el.draw();
-        }
     }).on_mouse(|el, state, event| {
         // Splash clicks launch the clicked game button, never anything else.
         if state.phase == Phase::Splash {
@@ -372,9 +378,7 @@ pub fn build() -> App<State> {
                 el.draw();
                 return;
             }
-            if sync_hint(el, state) {
-                el.draw();
-            }
+            sync_hint(el, state);
             return;
         }
         if !matches!(event.mouse, Mouse::Down) {
@@ -438,12 +442,16 @@ pub fn build() -> App<State> {
         {
             rect.showed(is_splash);
         }
-        let hinted = if is_splash { state.focus } else { state.selected };
+        let for_hint = if is_splash {
+            state.focus
+        } else {
+            Some(state.selected)
+        };
         for hint in el
             .elements
             .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
         {
-            hint.text(screens::splash::hint::game_hint_for(&hinted));
+            hint.text(screens::splash::hint::game_hint_for(&for_hint));
         }
         for title in el
             .elements

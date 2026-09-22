@@ -6,13 +6,13 @@ use crate::ui::app::{SCREEN_WIDTH, State};
 use crate::ui::app::SelectedGame;
 use crate::ui::theme;
 
-pub const HINT_WIDTH: usize = 30;
+pub const HINT_WIDTH: usize = 26;
 
 /// Builds the bottom info box. Horizontally centered but floating;
 /// the composer sets its row.
 pub(crate) fn build_hint() -> FramedText<State> {
     let hint = FramedText::<State>::default();
-    hint.text(game_hint_for(&SelectedGame::Classic));
+    hint.text(game_hint_for(&None));
     hint.handle("game_hint");
     hint.width(HINT_WIDTH);
     hint.conf_unframed();
@@ -22,11 +22,12 @@ pub(crate) fn build_hint() -> FramedText<State> {
     hint
 }
 
-/// Hint text per selected game.
-pub(crate) fn game_hint_for(selected: &SelectedGame) -> &'static str {
-    match selected {
-        SelectedGame::Classic => "Avoid the pipes. Avoid the ground. Avoid the sky.",
-        SelectedGame::Busy => "Graze (but don't bump) the flowers for fame and fortune.",
-        SelectedGame::Invaders => "Pipes? Invaders? Shooting. You are Doomed...",
+/// Hint text per focused game, or the default line when empty.
+pub(crate) fn game_hint_for(focused: &Option<SelectedGame>) -> &'static str {
+    match focused {
+        Some(SelectedGame::Classic) => "Avoid the pipes. Avoid the ground. Avoid the sky. All the basics.",
+        Some(SelectedGame::Busy) => "Same, same but it sunsine and flowers. Graze (but don't bump) them.",
+        Some(SelectedGame::Invaders) => "Pipes? Invaders? Shooting?\nOh, boy...You are so, so doomed...",
+        None => "Arrows to select. Enter to start. Space to bump. Esc to back.",
     }
 }
