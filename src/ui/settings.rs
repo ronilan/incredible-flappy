@@ -6,22 +6,23 @@ use super::app::State;
 const DATA_DIR: &str = "incredible-flappy";
 const DATA_FILE: &str = ".incredible-flappy";
 
-/// Persisted settings and best scores.
+/// Persisted settings and best scores. Bests are top-3 tuples,
+/// highest first.
 #[derive(Clone, Debug)]
 pub struct Persisted {
     pub kitty: bool,
-    pub best_classic: u32,
-    pub best_busy: u32,
-    pub best_invaders: u32,
+    pub best_classic: [u32; 3],
+    pub best_busy: [u32; 3],
+    pub best_invaders: [u32; 3],
 }
 
 impl Default for Persisted {
     fn default() -> Self {
         Self {
             kitty: false,
-            best_classic: 0,
-            best_busy: 0,
-            best_invaders: 0,
+            best_classic: [0; 3],
+            best_busy: [0; 3],
+            best_invaders: [0; 3],
         }
     }
 }
@@ -29,24 +30,48 @@ impl Default for Persisted {
 impl Persisted {
     fn parse_content(content: &str) -> Self {
         let parts: Vec<&str> = content.trim().split(',').collect();
-        let num = |i: usize| {
-            parts
-                .get(i)
-                .and_then(|s| s.parse::<u32>().ok())
-                .unwrap_or(0)
+        // Backward compatibility: the old format held one best per game.
+        if parts.len() == 4 {
+            let num = |i: usize| {
+                parts
+                    .get(i)
+                    .and_then(|s| s.parse::<u32>().ok())
+                    .unwrap_or(0)
+            };
+            return Self {
+                kitty: parts.first().is_some_and(|s| *s == "true"),
+                best_classic: [num(1), 0, 0],
+                best_busy: [num(2), 0, 0],
+                best_invaders: [num(3), 0, 0],
+            };
+        }
+        let top = |at: usize| {
+            let mut scores = [0; 3];
+            for (i, slot) in scores.iter_mut().enumerate() {
+                *slot = parts
+                    .get(at + i)
+                    .and_then(|s| s.parse::<u32>().ok())
+                    .unwrap_or(0);
+            }
+            scores.sort_unstable_by(|a, b| b.cmp(a));
+            scores
         };
         Self {
             kitty: parts.first().is_some_and(|s| *s == "true"),
-            best_classic: num(1),
-            best_busy: num(2),
-            best_invaders: num(3),
+            best_classic: top(1),
+            best_busy: top(4),
+            best_invaders: top(7),
         }
     }
 
     fn content(&self) -> String {
+        let flat = |top: &[u32; 3]| format!("{},{},{}", top[0], top[1], top[2]);
         format!(
             "{},{},{},{}",
-            self.kitty, self.best_classic, self.best_busy, self.best_invaders
+            self.kitty,
+            flat(&self.best_classic),
+            flat(&self.best_busy),
+            flat(&self.best_invaders)
         )
     }
 }
@@ -109,30 +134,39 @@ mod tests {
     fn round_trip() {
         let data = Persisted {
             kitty: true,
-            best_classic: 12,
-            best_busy: 5,
-            best_invaders: 30,
+            best_classic: [12, 7, 3],
+            best_busy: [5, 0, 0],
+            best_invaders: [30, 21, 9],
         };
         let back = Persisted::parse_content(&data.content());
         assert!(back.kitty);
-        assert_eq!(back.best_classic, 12);
-        assert_eq!(back.best_busy, 5);
-        assert_eq!(back.best_invaders, 30);
+        assert_eq!(back.best_classic, [12, 7, 3]);
+        assert_eq!(back.best_busy, [5, 0, 0]);
+        assert_eq!(back.best_invaders, [30, 21, 9]);
     }
 
     #[test]
     fn short_content_defaults_missing() {
         let back = Persisted::parse_content("true,7");
         assert!(back.kitty);
-        assert_eq!(back.best_classic, 7);
-        assert_eq!(back.best_busy, 0);
-        assert_eq!(back.best_invaders, 0);
+        assert_eq!(back.best_classic, [7, 0, 0]);
+        assert_eq!(back.best_busy, [0; 3]);
+        assert_eq!(back.best_invaders, [0; 3]);
+    }
+
+    #[test]
+    fn old_single_best_format() {
+        let back = Persisted::parse_content("true,12,5,30");
+        assert!(back.kitty);
+        assert_eq!(back.best_classic, [12, 0, 0]);
+        assert_eq!(back.best_busy, [5, 0, 0]);
+        assert_eq!(back.best_invaders, [30, 0, 0]);
     }
 
     #[test]
     fn garbage_defaults_all() {
         let back = Persisted::parse_content("hello");
         assert!(!back.kitty);
-        assert_eq!(back.best_classic, 0);
+        assert_eq!(back.best_classic, [0; 3]);
     }
 }

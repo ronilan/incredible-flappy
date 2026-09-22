@@ -5,8 +5,8 @@ use incredible_macros_decl::element;
 
 use crate::ui::theme;
 
-pub const FLYING_BIRD_WIDTH: usize = 7;
-pub const FLYING_BIRD_HEIGHT: usize = 3;
+pub const FLYING_BIRD_WIDTH: usize = 5;
+pub const FLYING_BIRD_HEIGHT: usize = 2;
 
 #[derive(Clone, Debug)]
 pub struct FlyingBirdOptions {

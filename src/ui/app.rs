@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, FramedText, Image, Rectangle, Select};
+use incredible_elements::{App, Button, FramedText, Image, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -19,7 +19,7 @@ pub enum Phase {
     Splash,
     Ready,
     Flying,
-    Dead,
+    Score,
 }
 
 #[derive(Clone, PartialEq, Debug, Default)]
@@ -28,28 +28,45 @@ pub struct State {
     pub kitty: bool,
     pub selected: SelectedGame,
     pub hinted: SelectedGame,
-    pub best_classic: u32,
-    pub best_busy: u32,
-    pub best_invaders: u32,
+    pub focus: SelectedGame,
+    pub best_classic: [u32; 3],
+    pub best_busy: [u32; 3],
+    pub best_invaders: [u32; 3],
 }
 
 impl State {
-    /// Best score for the given game.
-    pub fn best_for(&self, game: SelectedGame) -> u32 {
+    fn best_mut(&mut self, game: SelectedGame) -> &mut [u32; 3] {
         match game {
-            SelectedGame::Classic => self.best_classic,
-            SelectedGame::Busy => self.best_busy,
-            SelectedGame::Invaders => self.best_invaders,
+            SelectedGame::Classic => &mut self.best_classic,
+            SelectedGame::Busy => &mut self.best_busy,
+            SelectedGame::Invaders => &mut self.best_invaders,
         }
     }
 
-    /// Records a best score for the given game.
-    pub fn set_best(&mut self, game: SelectedGame, value: u32) {
+    /// Best score for the given game.
+    pub fn best_for(&self, game: SelectedGame) -> u32 {
         match game {
-            SelectedGame::Classic => self.best_classic = value,
-            SelectedGame::Busy => self.best_busy = value,
-            SelectedGame::Invaders => self.best_invaders = value,
+            SelectedGame::Classic => self.best_classic[0],
+            SelectedGame::Busy => self.best_busy[0],
+            SelectedGame::Invaders => self.best_invaders[0],
         }
+    }
+
+    /// Records a score into the top 3. Returns the medal rank
+    /// (0 gold, 1 silver, 2 bronze) or None when it places outside.
+    /// Scoreless runs earn nothing.
+    pub fn record_score(&mut self, game: SelectedGame, score: u32) -> Option<usize> {
+        if score == 0 {
+            return None;
+        }
+        let top = self.best_mut(game);
+        let rank = top.iter().filter(|s| **s > score).count();
+        if rank >= top.len() {
+            return None;
+        }
+        top[rank..].rotate_right(1);
+        top[rank] = score;
+        Some(rank)
     }
 }
 
@@ -70,56 +87,114 @@ pub(crate) fn palette_for(selected: &SelectedGame) -> theme::Palette {
     }
 }
 
-/// Launches whichever game the splash select points at.
-fn launch_from_select(el: &App<State>, state: &mut State) {
-    if let Some(select) = el
-        .elements
-        .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
-        .first()
-    {
-        let idx = select.get_selected().or_else(|| select.get_focused_index());
-        if let Some(idx) = idx {
-            if let Some(val) = select.item_value(idx) {
-                state.selected = game_for_value(val.as_str());
+/// Game buttons in focus-cycle order with their handles.
+const FOCUS_ORDER: [(&str, SelectedGame); 3] = [
+    ("game_basic", SelectedGame::Classic),
+    ("game_graze", SelectedGame::Busy),
+    ("game_shoot", SelectedGame::Invaders),
+];
+
+/// Kitty-mode image twins of the game buttons.
+const IMAGE_ORDER: [(&str, SelectedGame); 3] = [
+    ("game_basic_image", SelectedGame::Classic),
+    ("game_graze_image", SelectedGame::Busy),
+    ("game_shoot_image", SelectedGame::Invaders),
+];
+
+/// Mirrors splash focus state onto the game buttons.
+fn apply_focus(el: &App<State>, state: &State) {
+    apply_focus_to::<Button<State>>(el, state);
+    apply_focus_to::<elements::ImageButton<State>>(el, state);
+}
+
+/// Mirrors splash focus state onto buttons of one concrete kind.
+fn apply_focus_to<E>(el: &App<State>, state: &State)
+where
+    E: ElementTrait<State> + Getters<State> + Setters<State> + 'static,
+{
+    for btn in el.elements.dcot_w::<E, _>(|e| {
+        FOCUS_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+            || IMAGE_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+    }) {
+        let mine = FOCUS_ORDER
+            .iter()
+            .chain(IMAGE_ORDER.iter())
+            .any(|(h, g)| h == &btn.get_handle() && *g == state.focus);
+        btn.focused(mine);
+    }
+}
+
+/// Moves splash focus between game buttons, wrapping around.
+fn cycle_focus(el: &App<State>, state: &mut State, dir: isize) {
+    let i = FOCUS_ORDER
+        .iter()
+        .position(|(_, g)| *g == state.focus)
+        .unwrap_or(0);
+    let n = FOCUS_ORDER.len() as isize;
+    state.focus = FOCUS_ORDER[((i as isize + dir + n) % n) as usize].1;
+    apply_focus(el, state);
+    sync_hint(el, state);
+    el.draw();
+}
+
+/// Launches the game under the given button, if any sits there.
+fn launch_clicked_button(el: &App<State>, state: &mut State, x: isize, y: isize) -> bool {
+    if launch_clicked_button_of::<Button<State>>(el, state, x, y) {
+        return true;
+    }
+    launch_clicked_button_of::<elements::ImageButton<State>>(el, state, x, y)
+}
+
+/// Launches the game under the given button of one concrete kind.
+fn launch_clicked_button_of<E>(el: &App<State>, state: &mut State, x: isize, y: isize) -> bool
+where
+    E: ElementTrait<State> + Getters<State> + 'static,
+{
+    for btn in el.elements.dcot_w::<E, _>(|e| {
+        FOCUS_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+            || IMAGE_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+    }) {
+        let bx = btn.get_x();
+        let by = btn.get_y();
+        if x >= bx
+            && x < bx + btn.visual().look.width() as isize
+            && y >= by
+            && y < by + btn.visual().look.height() as isize
+        {
+            if let Some((_, game)) = FOCUS_ORDER
+                .iter()
+                .chain(IMAGE_ORDER.iter())
+                .find(|(h, _)| h == &btn.get_handle())
+            {
+                state.focus = *game;
+                state.selected = *game;
                 state.phase = Phase::Ready;
-                el.draw();
+                apply_focus(el, state);
+                return true;
             }
         }
     }
+    false
 }
 
-/// Maps a select item value to its game.
-fn game_for_value(val: &str) -> SelectedGame {
-    match val {
-        "busy" => SelectedGame::Busy,
-        "invaders" => SelectedGame::Invaders,
-        _ => SelectedGame::Classic,
+/// Refreshes the splash hint from the focused button. True if changed.
+fn sync_hint(el: &App<State>, state: &mut State) -> bool {
+    if state.focus == state.hinted {
+        return false;
     }
-}
-
-/// Game the splash cursor points at right now.
-fn hovered_game(el: &App<State>) -> SelectedGame {
-    if let Some(select) = el
+    state.hinted = state.focus;
+    for hint in el
         .elements
-        .dcot_w::<Select<State>, _>(|e| e.get_handle() == "game_select")
-        .first()
+        .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
     {
-        let idx = select
-            .get_focused_index()
-            .or_else(|| select.get_selected());
-        if let Some(idx) = idx {
-            if let Some(val) = select.item_value(idx) {
-                return game_for_value(val.as_str());
-            }
-        }
+        hint.text(screens::splash::hint::game_hint_for(&state.focus));
     }
-    SelectedGame::Classic
+    true
 }
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     match (key, phase) {
         (Key::Escape, _) => Some(Phase::Splash),
         (Key::Enter, Phase::Splash) => Some(Phase::Ready),
-        (Key::Enter | Key::Char(' '), Phase::Dead) => Some(Phase::Ready),
         (Key::Enter | Key::Char(' '), Phase::Ready) => Some(Phase::Flying),
         _ => None,
     }
@@ -163,13 +238,31 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .elements
         .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
     {
-        score.showed((state.phase == Phase::Flying || state.phase == Phase::Dead) && !state.kitty);
+        score.showed(state.phase == Phase::Flying && !state.kitty);
     }
     for image in game
         .elements
         .dcot_w::<elements::U16Image<State>, _>(|e| e.get_handle() == "image_score")
     {
-        image.showed((state.phase == Phase::Flying || state.phase == Phase::Dead) && state.kitty);
+        image.showed(state.phase == Phase::Flying && state.kitty);
+    }
+    for panel in game
+        .elements
+        .dcot_w::<elements::ScorePanel<State>, _>(|e| e.get_handle() == "score_panel")
+    {
+        panel.showed(state.phase == Phase::Score);
+    }
+    for frame in game
+        .elements
+        .dcot_w::<incredible_elements::Frame<State>, _>(|e| e.get_handle() == "score_panel_frame")
+    {
+        frame.showed(!state.kitty);
+    }
+    for image in game
+        .elements
+        .dcot_w::<Image<State>, _>(|e| e.get_handle() == "score_panel_image")
+    {
+        image.showed(state.kitty);
     }
     let flying = game
         .elements
@@ -181,15 +274,15 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
     let ready = game
         .elements
-        .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "ready_title");
+        .dcot_w::<elements::BoxedText<State>, _>(|e| e.get_handle() == "ready_title");
     for r in ready {
         r.showed(state.phase == Phase::Ready && !state.kitty);
     }
     for over in game
         .elements
-        .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "gameover_title")
+        .dcot_w::<elements::BoxedText<State>, _>(|e| e.get_handle() == "gameover_title")
     {
-        over.showed(state.phase == Phase::Dead && !state.kitty);
+        over.showed(state.phase == Phase::Score && !state.kitty);
     }
     for img in game
         .elements
@@ -201,7 +294,7 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .elements
         .dcot_w::<Image<State>, _>(|e| e.get_handle() == "gameover_image")
     {
-        img.showed(state.phase == Phase::Dead && state.kitty);
+        img.showed(state.phase == Phase::Score && state.kitty);
     }
     let flying_cat = game
         .elements
@@ -211,7 +304,7 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     let dead_cat = game
         .elements
         .dcot_w::<elements::DeadCat<State>, _>(|e| e.get_handle() == "dead_cat");
-    let is_dead = state.phase == Phase::Dead;
+    let is_dead = state.phase == Phase::Score;
     for b in flying {
         b.showed(!is_dead && !state.kitty);
     }
@@ -239,7 +332,22 @@ pub fn build() -> App<State> {
             el.draw();
         }
         if state.phase == Phase::Splash && matches!(event.key, Key::Enter) {
-            launch_from_select(el, state);
+            state.selected = state.focus;
+            state.phase = Phase::Ready;
+            el.draw();
+        } else if state.phase == Phase::Splash && matches!(event.key, Key::Left) {
+            cycle_focus(el, state, -1);
+        } else if state.phase == Phase::Splash && matches!(event.key, Key::Right) {
+            cycle_focus(el, state, 1);
+        } else if state.phase == Phase::Score && matches!(event.key, Key::Enter | Key::Char(' ')) {
+            // New games wait for the score panel slide.
+            if selected_games(el, state)
+                .iter()
+                .all(|game| game.panel_settled())
+            {
+                state.phase = Phase::Ready;
+                el.draw();
+            }
         } else if let Some(next) = transition(&state.phase, &event.key) {
             if next != state.phase {
                 state.phase = next;
@@ -252,9 +360,21 @@ pub fn build() -> App<State> {
                 game.shoot();
             }
         }
+        if state.phase == Phase::Splash && sync_hint(el, state) {
+            el.draw();
+        }
     }).on_mouse(|el, state, event| {
-        // Splash launching is Enter-only now; clicks never start the game.
+        // Splash clicks launch the clicked game button, never anything else.
         if state.phase == Phase::Splash {
+            if matches!(event.mouse, Mouse::Down)
+                && launch_clicked_button(el, state, event.x, event.y)
+            {
+                el.draw();
+                return;
+            }
+            if sync_hint(el, state) {
+                el.draw();
+            }
             return;
         }
         if !matches!(event.mouse, Mouse::Down) {
@@ -281,30 +401,29 @@ pub fn build() -> App<State> {
 
         
     }).on_loop(|el, state, _event| {
-        if state.phase == Phase::Splash {
-            let hovered = hovered_game(el);
-            if hovered != state.hinted {
-                state.hinted = hovered;
-                for hint in el
-                    .elements
-                    .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
-                {
-                    hint.text(screens::splash::splash::game_hint_for(&hovered));
-                }
-                el.draw();
-            }
+        if state.phase != Phase::Flying && state.phase != Phase::Score {
             return;
         }
-        if state.phase != Phase::Flying {
+        if state.phase == Phase::Score {
+            let mut moving = false;
+            for game in selected_games(el, state) {
+                moving |= game.slide_panel();
+            }
+            if moving {
+                el.draw();
+            }
             return;
         }
         for game in selected_games(el, state) {
             if game.check_crash() {
                 let score = game.score_value();
-                if score > state.best_for(state.selected) {
-                    state.set_best(state.selected, score);
+                let medal = state.record_score(state.selected, score);
+                game.clear_bullets();
+                for panel in game.elements.cot::<elements::ScorePanel<State>>() {
+                    panel.set_result(score, state.best_for(state.selected), medal);
                 }
-                state.phase = Phase::Dead;
+                game.park_panel();
+                state.phase = Phase::Score;
                 settings::persist_now(state);
                 el.draw();
             }
@@ -319,22 +438,28 @@ pub fn build() -> App<State> {
         {
             rect.showed(is_splash);
         }
-        let hinted = if is_splash {
-            hovered_game(el)
-        } else {
-            state.selected
-        };
+        let hinted = if is_splash { state.focus } else { state.selected };
         for hint in el
             .elements
             .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
         {
-            hint.text(screens::splash::splash::game_hint_for(&hinted));
+            hint.text(screens::splash::hint::game_hint_for(&hinted));
         }
         for title in el
             .elements
             .dcot_w::<BlockCharsStr<State>, _>(|e| e.get_handle() == "flappy_title")
         {
             title.showed(!state.kitty);
+        }
+        for btn in el.elements.dcot_w::<Button<State>, _>(|e| {
+            FOCUS_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+        }) {
+            btn.showed(!state.kitty);
+        }
+        for btn in el.elements.dcot_w::<elements::ImageButton<State>, _>(|e| {
+            IMAGE_ORDER.iter().any(|(h, _)| h == &e.get_handle())
+        }) {
+            btn.showed(state.kitty);
         }
         for fluffy in el
             .elements

@@ -1,9 +1,9 @@
 use std::cell::Cell;
 
 use incredible::*;
-use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
-use incredible_helpers_effects::*;
 use incredible_macros_decl::element;
+
+use crate::ui::elements::BoxedText;
 
 #[derive(Clone, Debug)]
 pub struct ScoreOptions {
@@ -28,23 +28,16 @@ pub struct ScoreState {
     pub current: Cell<u32>,
 }
 
-fn score_effects<S: Clone + PartialEq + 'static>(el: &BlockCharsStr<S>) {
-    decorate_rules::<S, BlockCharsStr<S>>(el, score_effects);
-}
-
 impl<S: Clone + PartialEq + 'static> Score<S> {
     pub fn new(options: ScoreOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
         el.internal_state.current.set(el.options.value);
 
-        let display = BlockCharsStr::<S>::default();
+        let display = BoxedText::<S>::default();
         display
             .text(el.internal_state.current.get().to_string().as_str())
-            .size(BlockSize::Small)
-            .style_handle("ScoreGradient")
             .handle("score_display");
-        effect(&display, score_effects);
 
         el.look(Look::from((
             display.visual.look.width(),
@@ -65,7 +58,7 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
 
     pub fn set_value(&self, value: u32) -> &Self {
         self.internal_state.current.set(value);
-        if let Some(display) = self.elements.cot::<BlockCharsStr<S>>().first() {
+        if let Some(display) = self.elements.cot::<BoxedText<S>>().first() {
             display.text(value.to_string().as_str());
             self.look(Look::from((
                 display.visual.look.width(),

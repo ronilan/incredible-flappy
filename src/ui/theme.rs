@@ -101,42 +101,58 @@ pub const INVADERS_PALETTE: Palette = Palette {
 };
 
 // Title gradients (start, end).
-pub const FLAPPY_GRADIENT: (u8, u8) = (156, 46);
-pub const SCORE_GRADIENT: (u8, u8) = (15, 250);
-
-// Flat title color: orange end of the old ready gradient.
-pub const TITLE_ORANGE: u8 = 214;
+pub const FLAPPY_GRADIENT: (u8, u8,u8, u8, u8, u8) = (229, 229, 229, 46, 46, 46);
 
 // Selected game: dark gray.
 pub const SELECTED_ITEM_COLOR: u8 = 240;
 
+// Splash hint: white box, near-black text.
+pub const HINT_BACKGROUND: u8 = 15;
+pub const HINT_TEXT: u8 = 232;
+
+// Game buttons: burnt orange, white text.
+pub const BUTTON_BACKGROUND: u8 = 166;
+pub const BUTTON_TEXT: u8 = 15;
+
 pub(crate) fn theme_all() {
-
-    theme_rule::<Style>("Select", |s| {
-        s.base.decor.color.set(Some(Color::ansi(SELECTED_ITEM_COLOR)));
-    });
-
-    theme_rule::<Style>("TitleOrange", |s| {
-        s.base.decor.color.set(Some(Color::ansi(TITLE_ORANGE)));
-    });
-
     transform_rule("FlappyGradient", |flattened, progress| {
         gradient_color(
             &[
                 Color::ansi(FLAPPY_GRADIENT.0),
                 Color::ansi(FLAPPY_GRADIENT.1),
+                Color::ansi(FLAPPY_GRADIENT.2),
+                Color::ansi(FLAPPY_GRADIENT.3),
+                Color::ansi(FLAPPY_GRADIENT.4),
+                Color::ansi(FLAPPY_GRADIENT.5),
             ],
             GradientDirection::Vertical,
             flattened,
             progress,
         )
     });
-    transform_rule("ScoreGradient", |flattened, progress| {
-        gradient_color(
-            &[Color::ansi(SCORE_GRADIENT.0), Color::ansi(SCORE_GRADIENT.1)],
-            GradientDirection::Vertical,
-            flattened,
-            progress,
-        )
-    });
 }
+
+// Normal-mode score: black box, white text.
+pub const SCORE_BACKGROUND: u8 = 16;
+pub const SCORE_TEXT: u8 = 15;
+
+// Score panel: cream box, black text.
+pub const SCORE_PANEL_BACKGROUND: u8 = 229;
+/// Flip the panel box to exact RGB by commenting one line:
+pub const SCORE_PANEL_BACKGROUND_RGB: Option<(u8, u8, u8)> =
+    //None;
+    Some((219, 218, 150));
+pub const SCORE_PANEL_LABEL_BACKGROUND: (u8, u8, u8) = (219, 218, 150);
+pub const SCORE_PANEL_TEXT: u8 = 16;
+
+/// Panel box color: exact RGB when set, otherwise the ANSI cream.
+pub fn score_panel_background() -> Color {
+    match SCORE_PANEL_BACKGROUND_RGB {
+        Some((r, g, b)) => Color::Rgba(Rgba::new(r, g, b, 255)),
+        None => Color::Ansi(SCORE_PANEL_BACKGROUND),
+    }
+}
+
+// Game titles: orange box, black text.
+pub const TITLE_BACKGROUND: u8 = 214;
+pub const TITLE_TEXT: u8 = 16;

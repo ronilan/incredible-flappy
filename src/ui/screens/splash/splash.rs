@@ -1,21 +1,18 @@
 use incredible::*;
-use incredible_elements::{FrameKind, FramedText, Image, Label, LabelOptions, Rectangle, Select};
-use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
-use incredible_helpers_effects::*;
+use incredible_elements::Rectangle;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
-use crate::ui::app::SelectedGame;
-use crate::ui::assets::decode_png;
-use crate::ui::elements::Scenery;
 use crate::ui::theme;
 
-fn title_effects(el: &BlockCharsStr<State>) {
-    decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);
-}
+use super::{buttons, fluffy, hint, image_buttons, kicker, lift, scenery, title};
 
 /// Builds the whole splash screen.
+///
+/// Layout lives here so x/y can be tuned per screen: kicker above
+/// the title, fluffy over it in kitty mode, buttons and their image
+/// twins sharing one row, hint floating near the bottom.
 pub(crate) fn build() -> Rectangle<State> {
     let splash = Rectangle::<State>::new();
     splash
@@ -30,98 +27,70 @@ pub(crate) fn build() -> Rectangle<State> {
         el.draw();
     });
 
-    let kicker = Label::<State>::new(LabelOptions::default());
-    kicker.text("The Incredible");
-    kicker.color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
-    let kicker_h = kicker.visual.look.height() as isize;
-    kicker.handle("incredible_kicker");
+    let (kicker_the, kicker_link) = kicker::build_kicker();
+    let kicker_the_w = kicker_the.visual.look.width() as isize;
+    let kicker_link_w = kicker_link.visual.look.width() as isize;
+    let kicker_h = kicker_the.visual.look.height() as isize;
+    let kicker_x = (SCREEN_WIDTH as isize - (kicker_the_w + kicker_link_w)) / 2;
 
-    let title = BlockCharsStr::<State>::default();
-    title
-        .text("Flappy")
-        .size(BlockSize::Small)
-        .style_handle("FlappyGradient");
+    let title = title::build_title();
     title.y((16 - title.visual.look.height() as isize) / 2);
-    title.handle("flappy_title");
-    effect(&title, title_effects);
-    let title_h = title.visual.look.height();
-    kicker.y(title.get_y() - kicker_h - 1);
-    let top_gap = kicker.get_y();
-    splash.add(kicker);
+    let title_w = title.visual.look.width();
+    let title_y = title.get_y();
+    kicker_the.y(title_y - kicker_h - 1);
+    kicker_the.x(kicker_x);
+    kicker_link.y(title_y - kicker_h - 1);
+    kicker_link.x(kicker_x + kicker_the_w);
+    let top_gap = kicker_the.get_y();
+    splash.add(kicker_the);
+    splash.add(kicker_link);
     splash.add(title);
-    splash.elements_to_center_x_of_type::<BlockCharsStr<State>>();
-    splash.elements_to_center_x_of_type::<Label<State>>();
+    splash.elements_to_center_x_of_type::<incredible_elements_text_fonts::BlockCharsStr<State>>();
 
-    let fluffy = Image::<State>::new();
-    fluffy.height(title_h * 3 / 2);
-    fluffy.data(decode_png(include_bytes!("../../../../assets/fluffy.png")));
-    fluffy.handle("fluffy_title");
-    fluffy.showed(false);
-    fluffy.y((16 - fluffy.visual.look.height() as isize) / 2);
+    let fluffy = fluffy::build_fluffy(title_w);
+    fluffy.y(title_y);
     splash.add(fluffy);
-    splash.elements_to_center_x_of_type::<Image<State>>();
+    splash.elements_to_center_x_of_type::<incredible_elements::Image<State>>();
 
-    let left = Scenery::<State>::default();
+    let [left, right] = scenery::build_scenery();
     left.x(0).y(16);
     splash.add(left);
-
-    let right = Scenery::<State>::default();
     right.x(40).y(16);
     splash.add(right);
 
-    let select = Select::<State>::new();
-    select
-        .add_item("Classic", "classic")
-        .add_item("Busy", "busy")
-        .add_item("Invaders", "invaders");
-    select.width(20).height(5);
-    select.allow_unselect(false);
-    select.frame_kind(Some(FrameKind::Double));
-    select.selected_color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
-    select.handle("game_select");
-    select.y(11);
-    select.select_action(0);
-    select.focused(true);
-    splash.add(select);
-    splash.elements_to_center_x_of_type::<Select<State>>();
+    let [basic, graze, shoot] = buttons::build_buttons();
+    let (basic_w, graze_w, shoot_w) = (
+        basic.visual.look.width() as isize,
+        graze.visual.look.width() as isize,
+        shoot.visual.look.width() as isize,
+    );
+    let row_x = (SCREEN_WIDTH as isize - (basic_w + graze_w + shoot_w + 2)) / 2;
+    basic.x(row_x).y(11);
+    splash.add(basic);
+    graze.x(row_x + basic_w + 1).y(11);
+    splash.add(graze);
+    shoot.x(row_x + basic_w + 1 + graze_w + 1).y(11);
+    splash.add(shoot);
 
-    let hint = FramedText::<State>::default();
-    hint.text(game_hint_for(&SelectedGame::Classic));
-    hint.handle("game_hint");
-    hint.width(30);
-    hint.color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
-    hint.x((SCREEN_WIDTH as isize - 30) / 2);
+    let [basic_img, graze_img, shoot_img] = image_buttons::build_image_buttons();
+    let (bw0, bw1, bw2) = (
+        basic_img.visual.look.width() as isize,
+        graze_img.visual.look.width() as isize,
+        shoot_img.visual.look.width() as isize,
+    );
+    let img_x = (SCREEN_WIDTH as isize - (bw0 + bw1 + bw2 + 2)) / 2;
+    basic_img.x(img_x).y(12);
+    splash.add(basic_img);
+    graze_img.x(img_x + bw0 + 1).y(12);
+    splash.add(graze_img);
+    shoot_img.x(img_x + bw0 + 1 + bw1 + 1).y(12);
+    splash.add(shoot_img);
+
+    let hint = hint::build_hint();
     hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 2);
     splash.add(hint);
 
-    // Lift everything but the ground to leave one row at the top.
-    let dy = top_gap - 1;
-    if dy != 0 {
-        for el in splash.elements.cot::<Label<State>>() {
-            el.y(el.get_y() - dy);
-        }
-        for el in splash.elements.cot::<BlockCharsStr<State>>() {
-            el.y(el.get_y() - dy);
-        }
-        for el in splash.elements.cot::<Image<State>>() {
-            el.y(el.get_y() - dy);
-        }
-        for el in splash.elements.cot::<Select<State>>() {
-            el.y(el.get_y() - dy);
-        }
-        for el in splash.elements.cot::<FramedText<State>>() {
-            el.y(el.get_y() - dy);
-        }
-    }
+    lift::lift_content(&splash, top_gap);
 
     splash
-}
-
-/// Hint text per selected game.
-pub(crate) fn game_hint_for(selected: &SelectedGame) -> &'static str {
-    match selected {
-        SelectedGame::Classic => "Avoid the pipes. Avoid the ground. Avoid the sky.",
-        SelectedGame::Busy => "Graze (but don't bump) the flowers for fame and fortune.",
-        SelectedGame::Invaders => "Pipes? Invaders? Shooting. You are Doomed...",
-    }
 }

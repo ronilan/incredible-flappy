@@ -5,7 +5,7 @@ use incredible::*;
 use incredible_elements::Image;
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
-use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
+use crate::ui::elements::{BoxedText, BoxedTextOptions};
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
@@ -18,6 +18,7 @@ use crate::ui::elements::{
     Bushing, BushingOptions, DeadBird,
     DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
     FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score, U16Image,
+    SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -160,48 +161,63 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         image_score.showed(false);
         el.add(image_score);
 
-        let ready = BlockCharsStr::<S>::default();
-        ready.text("Get Ready").size(BlockSize::Small);
-        ready.style_handle("TitleOrange");
+        // Game-over score panel in the middle of the screen.
+        let panel = ScorePanel::<S>::new();
+        panel
+            .x((GAME_WIDTH as isize - SCORE_PANEL_WIDTH as isize) / 2)
+            .y(SCORE_PANEL_REST_Y);
+        panel.handle("score_panel");
+        panel.showed(false);
+        el.add(panel);
+
+        let ready = BoxedText::<S>::new(BoxedTextOptions {
+            background: crate::ui::theme::TITLE_BACKGROUND,
+            foreground: crate::ui::theme::TITLE_TEXT,
+        });
+        ready.text("Get Ready");
         ready
             .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
-            .y(5);
+            .y(1);
         ready.handle("ready_title");
         ready.showed(false);
+        ready.focused(false);
         let ready_w = ready.visual.look.width();
         el.add(ready);
 
-        let over = BlockCharsStr::<S>::default();
-        over.text("Game Over").size(BlockSize::Small);
-        over.style_handle("TitleOrange");
+        let over = BoxedText::<S>::new(BoxedTextOptions {
+            background: crate::ui::theme::TITLE_BACKGROUND,
+            foreground: crate::ui::theme::TITLE_TEXT,
+        });
+        over.text("Game Over");
         over
             .x((GAME_WIDTH as isize - over.visual.look.width() as isize) / 2)
-            .y(5);
+            .y(1);
         over.handle("gameover_title");
         over.showed(false);
+        over.focused(false);
         let over_w = over.visual.look.width();
         el.add(over);
 
         // Kitty-mode images replacing the text titles, title height
         // with width derived from the image aspect ratio.
         let ready_img = Image::<S>::new();
-        ready_img.width(ready_w * 2 / 3);
+        ready_img.width(ready_w);
         ready_img.data(decode_png(include_bytes!("../../../assets/get_ready.png")));
         ready_img.handle("ready_image");
         ready_img.showed(false);
         ready_img
             .x((GAME_WIDTH as isize - ready_img.visual.look.width() as isize) / 2)
-            .y(5);
+            .y(2);
         el.add(ready_img);
 
         let over_img = Image::<S>::new();
-        over_img.width(over_w * 2 / 3 + 2);
+        over_img.width(over_w + 2);
         over_img.data(decode_png(include_bytes!("../../../assets/game_over.png")));
         over_img.handle("gameover_image");
         over_img.showed(false);
         over_img
             .x((GAME_WIDTH as isize - over_img.visual.look.width() as isize) / 2)
-            .y(5);
+            .y(2);
         el.add(over_img);
 
         let dead_bird = DeadBird::<S>::default();
@@ -259,6 +275,13 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Mirrors the kitty toggle from app state.
     pub fn set_kitty(&self, kitty: bool) -> &Self {
         self.internal_state.kitty.set(kitty);
+        for panel in self.elements.cot::<ScorePanel<S>>() {
+            panel.background(if kitty {
+                None
+            } else {
+                Some(crate::ui::theme::score_panel_background())
+            });
+        }
         self
     }
 
@@ -389,6 +412,43 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .y(self.internal_state.bird_y.get() as isize + h / 2);
         self.add(bullet);
         self
+    }
+
+    /// Removes all bullets, e.g. so none freeze over the game-over panel.
+    pub fn clear_bullets(&self) -> &Self {
+        while self.elements.sot::<Bullet<S>>().is_some() {}
+        self
+    }
+
+    /// Parks the score panel below the screen for the slide-in.
+    pub fn park_panel(&self) -> &Self {
+        let y = self.get_y() + SCORE_PANEL_PARK_Y;
+        for panel in self.elements.cot::<ScorePanel<S>>() {
+            panel.y(y);
+        }
+        self
+    }
+
+    /// Slides the score panel one row toward rest. True while moving.
+    pub fn slide_panel(&self) -> bool {
+        let rest = self.get_y() + SCORE_PANEL_REST_Y;
+        let mut moving = false;
+        for panel in self.elements.cot::<ScorePanel<S>>() {
+            if panel.get_y() > rest {
+                panel.y(panel.get_y() - 1);
+                moving = true;
+            }
+        }
+        moving
+    }
+
+    /// True once the score panel slide-in finished.
+    pub fn panel_settled(&self) -> bool {
+        let rest = self.get_y() + SCORE_PANEL_REST_Y;
+        self.elements
+            .cot::<ScorePanel<S>>()
+            .first()
+            .is_some_and(|panel| panel.get_y() <= rest)
     }
 
     /// True once when the bird has hit the ground.
@@ -799,9 +859,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 std::ptr::eq(i as *const _, ptr)
             });
         }
-        for title in self.elements.cot::<BlockCharsStr<S>>() {
+        for panel in self.elements.cot::<ScorePanel<S>>() {
+            let ptr = Rc::as_ptr(&panel);
+            self.to_front_of_type_where::<ScorePanel<S>, _>(|p| {
+                std::ptr::eq(p as *const _, ptr)
+            });
+        }
+        for title in self.elements.cot::<BoxedText<S>>() {
             let ptr = Rc::as_ptr(&title);
-            self.to_front_of_type_where::<BlockCharsStr<S>, _>(|t| {
+            self.to_front_of_type_where::<BoxedText<S>, _>(|t| {
                 std::ptr::eq(t as *const _, ptr)
             });
         }
