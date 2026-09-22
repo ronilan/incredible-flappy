@@ -16,6 +16,7 @@ pub mod pavement;
 pub mod pipe;
 pub mod scenery;
 pub mod score;
+pub mod u16_image;
 
 pub use alien::*;
 pub use buildings::*;
@@ -34,3 +35,4 @@ pub use game::*;
 pub use pavement::*;
 pub use scenery::*;
 pub use score::*;
+pub use u16_image::*;

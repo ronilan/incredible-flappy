@@ -7,6 +7,7 @@ use incredible_helpers_layout::*;
 
 use crate::ui::elements;
 use crate::ui::screens;
+use crate::ui::settings;
 use crate::ui::theme;
 
 pub const SCREEN_WIDTH: usize = 80;
@@ -27,6 +28,29 @@ pub struct State {
     pub kitty: bool,
     pub selected: SelectedGame,
     pub hinted: SelectedGame,
+    pub best_classic: u32,
+    pub best_busy: u32,
+    pub best_invaders: u32,
+}
+
+impl State {
+    /// Best score for the given game.
+    pub fn best_for(&self, game: SelectedGame) -> u32 {
+        match game {
+            SelectedGame::Classic => self.best_classic,
+            SelectedGame::Busy => self.best_busy,
+            SelectedGame::Invaders => self.best_invaders,
+        }
+    }
+
+    /// Records a best score for the given game.
+    pub fn set_best(&mut self, game: SelectedGame, value: u32) {
+        match game {
+            SelectedGame::Classic => self.best_classic = value,
+            SelectedGame::Busy => self.best_busy = value,
+            SelectedGame::Invaders => self.best_invaders = value,
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
@@ -139,7 +163,13 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .elements
         .dcot_w::<elements::Score<State>, _>(|e| e.get_handle() == "score")
     {
-        score.showed(state.phase == Phase::Flying || state.phase == Phase::Dead);
+        score.showed((state.phase == Phase::Flying || state.phase == Phase::Dead) && !state.kitty);
+    }
+    for image in game
+        .elements
+        .dcot_w::<elements::U16Image<State>, _>(|e| e.get_handle() == "image_score")
+    {
+        image.showed((state.phase == Phase::Flying || state.phase == Phase::Dead) && state.kitty);
     }
     let flying = game
         .elements
@@ -198,12 +228,14 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
 
 pub fn build() -> App<State> {
     let app = App::default();
+    app.showed(false);
 
     theme::theme_all();
 
     app.on_key(|el, state: &mut State, event| {
         if matches!(event.key, Key::Char('k') | Key::Char('K')) {
             state.kitty = !state.kitty;
+            settings::persist_now(state);
             el.draw();
         }
         if state.phase == Phase::Splash && matches!(event.key, Key::Enter) {
@@ -240,8 +272,14 @@ pub fn build() -> App<State> {
                 game.shoot();
             }
         }
-    }).on_window(|el, _state, _event| {
-        el.elements_to_center();
+    }).on_window(|el, _state, event| {
+        if event.window == Window::Resize {
+            el.showed(true);
+            el.elements_to_center();
+            el.draw();
+        }
+
+        
     }).on_loop(|el, state, _event| {
         if state.phase == Phase::Splash {
             let hovered = hovered_game(el);
@@ -262,7 +300,12 @@ pub fn build() -> App<State> {
         }
         for game in selected_games(el, state) {
             if game.check_crash() {
+                let score = game.score_value();
+                if score > state.best_for(state.selected) {
+                    state.set_best(state.selected, score);
+                }
                 state.phase = Phase::Dead;
+                settings::persist_now(state);
                 el.draw();
             }
         }

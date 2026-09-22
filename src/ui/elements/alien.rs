@@ -177,12 +177,14 @@ fn alien_frame(rows: &[&str], color: u8) -> Look {
 #[derive(Clone, Debug)]
 pub struct AlienOptions {
     pub kind: AlienKind,
+    pub roam: bool,
 }
 
 impl Default for AlienOptions {
     fn default() -> Self {
         Self {
             kind: AlienKind::Crab,
+            roam: true,
         }
     }
 }
@@ -241,9 +243,13 @@ impl<S: Clone + PartialEq> Alien<S> {
     }
 
     /// One vertical step within the given absolute band,
-    /// bouncing at its edges. The caller owns the band because
+    /// bouncing at its edges. Fixed formations hold still.
+    /// The caller owns the band because
     /// only the game knows where it sits on screen.
     pub fn step_vertical(&self, min_y: isize, max_y: isize) -> &Self {
+        if !self.options.roam {
+            return self;
+        }
         let mut dy = self.internal_state.dy.get();
         let mut y = self.get_y() + dy;
         if y <= min_y {

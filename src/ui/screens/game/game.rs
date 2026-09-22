@@ -9,7 +9,7 @@ pub(crate) fn build_as(handle: &str) -> Game<State> {
         handle: handle.to_string(),
         ..Default::default()
     });
-    game.x(0).y(0).showed(false);
+    game.x(0).y(0).showed(false).draw_override(Some(DrawOverride::default()));
 
     game
 }

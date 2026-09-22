@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::{FrameKind, FramedText, Image, Rectangle, Select};
+use incredible_elements::{FrameKind, FramedText, Image, Label, LabelOptions, Rectangle, Select};
 use incredible_elements_text_fonts::{BlockCharsStr, BlockSize};
 use incredible_helpers_effects::*;
 use incredible_helpers_layout::*;
@@ -23,14 +23,18 @@ pub(crate) fn build() -> Rectangle<State> {
         .height(SCREEN_HEIGHT)
         .fill(Some(' '))
         .background(Some(Color::Ansi(theme::SKY_BACKGROUND)))
-        .handle("splash");
-       
-    //TODO: look at this again.
-    // splash.draw_override(Some(DrawOverride::default()));
+        .handle("splash")
+        .draw_override(Some(DrawOverride::default()));
 
-    // splash.on_key(|el, state, event|{
-    //     el.draw();
-    // });
+    splash.on_key(|el, state, event|{
+        el.draw();
+    });
+
+    let kicker = Label::<State>::new(LabelOptions::default());
+    kicker.text("The Incredible");
+    kicker.color(Some(Color::Ansi(theme::SELECTED_ITEM_COLOR)));
+    let kicker_h = kicker.visual.look.height() as isize;
+    kicker.handle("incredible_kicker");
 
     let title = BlockCharsStr::<State>::default();
     title
@@ -40,12 +44,16 @@ pub(crate) fn build() -> Rectangle<State> {
     title.y((16 - title.visual.look.height() as isize) / 2);
     title.handle("flappy_title");
     effect(&title, title_effects);
-    let title_w = title.visual.look.width();
+    let title_h = title.visual.look.height();
+    kicker.y(title.get_y() - kicker_h - 1);
+    let top_gap = kicker.get_y();
+    splash.add(kicker);
     splash.add(title);
     splash.elements_to_center_x_of_type::<BlockCharsStr<State>>();
+    splash.elements_to_center_x_of_type::<Label<State>>();
 
     let fluffy = Image::<State>::new();
-    fluffy.width(title_w);
+    fluffy.height(title_h * 3 / 2);
     fluffy.data(decode_png(include_bytes!("../../../../assets/fluffy.png")));
     fluffy.handle("fluffy_title");
     fluffy.showed(false);
@@ -86,14 +94,34 @@ pub(crate) fn build() -> Rectangle<State> {
     hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 2);
     splash.add(hint);
 
+    // Lift everything but the ground to leave one row at the top.
+    let dy = top_gap - 1;
+    if dy != 0 {
+        for el in splash.elements.cot::<Label<State>>() {
+            el.y(el.get_y() - dy);
+        }
+        for el in splash.elements.cot::<BlockCharsStr<State>>() {
+            el.y(el.get_y() - dy);
+        }
+        for el in splash.elements.cot::<Image<State>>() {
+            el.y(el.get_y() - dy);
+        }
+        for el in splash.elements.cot::<Select<State>>() {
+            el.y(el.get_y() - dy);
+        }
+        for el in splash.elements.cot::<FramedText<State>>() {
+            el.y(el.get_y() - dy);
+        }
+    }
+
     splash
 }
 
 /// Hint text per selected game.
 pub(crate) fn game_hint_for(selected: &SelectedGame) -> &'static str {
     match selected {
-        SelectedGame::Classic => "Avoid the pipes. Avoid the ground.",
+        SelectedGame::Classic => "Avoid the pipes. Avoid the ground. Avoid the sky.",
         SelectedGame::Busy => "Graze (but don't bump) the flowers for fame and fortune.",
-        SelectedGame::Invaders => "Shoot the invaders",
+        SelectedGame::Invaders => "Pipes? Invaders? Shooting. You are Doomed...",
     }
 }

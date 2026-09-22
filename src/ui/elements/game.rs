@@ -17,7 +17,7 @@ use crate::ui::elements::{
     ALIEN_MAX_Y, ALIEN_MIN_Y, Alien, AlienKind, AlienOptions, BULLET_SPEED, BUSHING_WIDTH, Bullet,
     Bushing, BushingOptions, DeadBird,
     DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
-    FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score,
+    FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score, U16Image,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -28,6 +28,17 @@ pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
 pub const DEAD_REST_Y: f32 = 17.0;
 pub const BIRD_X: isize = 20;
+/// Pavement top row in game coordinates: the lethal ground surface.
+const GROUND_SURFACE: f32 = 21.0;
+
+/// True when a fall from prev_top to new_top of the given height sweeps
+/// past the ground surface. Discrete overlap misses fast falls that hop
+/// clean over the thin ground band in one step.
+fn swept_ground(prev_top: f32, height: f32, new_top: f32) -> bool {
+    new_top >= prev_top
+        && prev_top + height <= GROUND_SURFACE
+        && new_top + height >= GROUND_SURFACE
+}
 
 #[derive(Clone, Debug)]
 pub struct GameOptions {
@@ -66,9 +77,9 @@ pub struct BirdPhysics {
 impl Default for BirdPhysics {
     fn default() -> Self {
         Self {
-            gravity: 0.5,
-            flap: 2.5,
-            max_fall: 3.0,
+            gravity: 1.0,
+            flap: 4.0,
+            max_fall: 6.0,
             start_y: 10.0,
         }
     }
@@ -140,6 +151,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .y(1);
         el.add(score);
 
+        // Kitty-mode image score in the same slot.
+        let image_score = U16Image::<S>::default();
+        image_score
+            .x((GAME_WIDTH as isize - image_score.visual.look.width() as isize) / 2)
+            .y(1);
+        image_score.handle("image_score");
+        image_score.showed(false);
+        el.add(image_score);
+
         let ready = BlockCharsStr::<S>::default();
         ready.text("Get Ready").size(BlockSize::Small);
         ready.style_handle("TitleOrange");
@@ -162,9 +182,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let over_w = over.visual.look.width();
         el.add(over);
 
-        // Kitty-mode images replacing the text titles.
+        // Kitty-mode images replacing the text titles, title height
+        // with width derived from the image aspect ratio.
         let ready_img = Image::<S>::new();
-        ready_img.width(ready_w);
+        ready_img.width(ready_w * 2 / 3);
         ready_img.data(decode_png(include_bytes!("../../../assets/get_ready.png")));
         ready_img.handle("ready_image");
         ready_img.showed(false);
@@ -174,7 +195,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         el.add(ready_img);
 
         let over_img = Image::<S>::new();
-        over_img.width(over_w);
+        over_img.width(over_w * 2 / 3 + 2);
         over_img.data(decode_png(include_bytes!("../../../assets/game_over.png")));
         over_img.handle("gameover_image");
         over_img.showed(false);
@@ -284,6 +305,10 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             score.set_value(0);
             self.center_score(score.as_ref());
         }
+        for image in self.elements.cot::<U16Image<S>>() {
+            image.value(0);
+            self.center_image_score(image.as_ref());
+        }
         self
     }
 
@@ -293,11 +318,29 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             score.set_value(score.get_value() + points);
             self.center_score(score.as_ref());
         }
+        for image in self.elements.cot::<U16Image<S>>() {
+            image.value(image.get_value() + points as u16);
+            self.center_image_score(image.as_ref());
+        }
+    }
+
+    /// Current score value.
+    pub fn score_value(&self) -> u32 {
+        self.elements
+            .cot::<Score<S>>()
+            .first()
+            .map(|score| score.get_value())
+            .unwrap_or(0)
     }
 
     /// Centers the score display across the window.
     fn center_score(&self, score: &Score<S>) {
         score.x(self.get_x() + (GAME_WIDTH as isize - score.visual.look.width() as isize) / 2);
+    }
+
+    /// Centers the image score display across the window.
+    fn center_image_score(&self, image: &U16Image<S>) {
+        image.x(self.get_x() + (GAME_WIDTH as isize - image.visual.look.width() as isize) / 2);
     }
 
     /// Lays the dead bird where the flight ended, on top of the scenery.
@@ -362,8 +405,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     fn fall(&self) {
         let phys = &self.options.physics;
         let v = (self.internal_state.velocity.get() + phys.gravity).min(phys.max_fall);
-        self.internal_state.velocity.set(v);
-        for cat in self.elements.cot::<FlyingCat<S>>() {
+        self.internal_state.velocity.set(v);        for cat in self.elements.cot::<FlyingCat<S>>() {
             if self.internal_state.landed.get() && self.over_bud() {
                 cat.show_ready();
             } else {
@@ -371,13 +413,24 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             }
         }
         if self.internal_state.dying.get() {
-            let y = self.internal_state.bird_y.get() + v;
+            let prev = self.internal_state.bird_y.get();
+            let y = prev + v;
             self.internal_state.bird_y.set(y);
             self.place_dead(y);
             if self.dead_hits_ground() {
                 self.internal_state.bird_y.set(DEAD_REST_Y);
                 self.place_dead(DEAD_REST_Y);
                 self.internal_state.crashed.set(true);
+            } else if v >= 0.0 {
+                // Fast falls can hop the thin ground band: snap on sweep.
+                if let Some(dead) = self.active_dead() {
+                    let dh = dead.visual().look.height() as f32;
+                    if swept_ground(prev, dh, y) {
+                        self.internal_state.bird_y.set(DEAD_REST_Y);
+                        self.place_dead(DEAD_REST_Y);
+                        self.internal_state.crashed.set(true);
+                    }
+                }
             }
         } else if self.internal_state.landed.get() && self.over_bud() {
             // Perched: hold position, no gravity. Pipes can still kill.
@@ -401,6 +454,19 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                         self.internal_state.bird_y.set(top - fh);
                         self.place_bird(top - fh);
                         self.add_score(1);
+                        return;
+                    }
+                    // Fast falls can hop the thin ground band: die on sweep.
+                    if swept_ground(prev, fh, y) {
+                        let gy = GROUND_SURFACE - fh;
+                        self.internal_state.bird_y.set(gy);
+                        self.place_bird(gy);
+                        self.start_dying(gy);
+                        if self.dead_hits_ground() {
+                            self.internal_state.bird_y.set(DEAD_REST_Y);
+                            self.place_dead(DEAD_REST_Y);
+                            self.internal_state.crashed.set(true);
+                        }
                         return;
                     }
                 }
@@ -627,15 +693,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.send_scenery_to_back();
     }
 
-    /// Single alien: random kind, random starting height.
+    /// Two aliens side by side, each random kind and height. Roam.
     fn spawn_alien_at(&self, x: isize) {
-        let alien = Alien::<S>::new(AlienOptions {
-            kind: AlienKind::random(),
-        });
-        alien
-            .x(x)
-            .y(rng().random_range(ALIEN_MIN_Y as i32..=ALIEN_MAX_Y as i32) as isize);
-        self.add(alien);
+        let mut ax = x;
+        for _ in 0..2 {
+            let alien = Alien::<S>::new(AlienOptions {
+                kind: AlienKind::random(),
+                roam: true,
+            });
+            alien
+                .x(ax)
+                .y(rng().random_range(ALIEN_MIN_Y as i32..=ALIEN_MAX_Y as i32) as isize);
+            ax += alien.width() as isize + 2;
+            self.add(alien);
+        }
         self.send_scenery_to_back();
     }
 
@@ -710,6 +781,36 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 std::ptr::eq(t as *const _, ptr)
             });
         }
+        self.send_overlays_to_front();
+    }
+
+    /// Brings scores and titles in front of everything else so they
+    /// always stay on top of freshly spawned obstacles.
+    fn send_overlays_to_front(&self) {
+        for score in self.elements.cot::<Score<S>>() {
+            let ptr = Rc::as_ptr(&score);
+            self.to_front_of_type_where::<Score<S>, _>(|s| {
+                std::ptr::eq(s as *const _, ptr)
+            });
+        }
+        for image in self.elements.cot::<U16Image<S>>() {
+            let ptr = Rc::as_ptr(&image);
+            self.to_front_of_type_where::<U16Image<S>, _>(|i| {
+                std::ptr::eq(i as *const _, ptr)
+            });
+        }
+        for title in self.elements.cot::<BlockCharsStr<S>>() {
+            let ptr = Rc::as_ptr(&title);
+            self.to_front_of_type_where::<BlockCharsStr<S>, _>(|t| {
+                std::ptr::eq(t as *const _, ptr)
+            });
+        }
+        for image in self.elements.cot::<Image<S>>() {
+            let ptr = Rc::as_ptr(&image);
+            self.to_front_of_type_where::<Image<S>, _>(|i| {
+                std::ptr::eq(i as *const _, ptr)
+            });
+        }
     }
 
     /// Flies bullets right, killing aliens, dying on pipes,
@@ -754,6 +855,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 .find(|a| bullet.intersects_element(a.as_ref()));
             if let Some(hit) = alien_hit {
                 let (ax, ay, aw) = (hit.get_x(), hit.get_y(), hit.width() as isize);
+                self.add_score(1);
                 while self
                     .elements
                     .sot_w::<Alien<S>, _>(|a| {
@@ -844,14 +946,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             }
         }
 
-        // Flower passed: stem right edge reaches the bird.
-        for stem in self.elements.cot::<FlowerStem<S>>() {
-            if stem.get_x() + 3 == self.get_x() + BIRD_X
-            {
-                self.add_score(1);
-            }
-        }
-
         // Alien passed: right edge reaches the bird.
         for alien in self.elements.cot::<Alien<S>>() {
             if alien.get_x() + alien.width() as isize == self.get_x() + BIRD_X {
@@ -903,3 +997,4 @@ impl<S: Clone + PartialEq> Default for Game<S> {
         Self::new(GameOptions::default())
     }
 }
+

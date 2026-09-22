@@ -29,7 +29,7 @@ impl<S: Clone + PartialEq> Bullet<S> {
         let mut el = Self::blank();
         el.options = options;
 
-        let look = Look::from(">");
+        let look = Look::from("▄");
         for row in look.blocks().iter() {
             for block in row.iter() {
                 block.decor.color.set(Some(Color::Ansi(el.options.color)));

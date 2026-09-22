@@ -6,7 +6,7 @@ use incredible_macros_decl::element;
 use crate::ui::theme;
 
 pub const DEAD_BIRD_WIDTH: usize = 2;
-pub const DEAD_BIRD_HEIGHT: usize = 4;
+pub const DEAD_BIRD_HEIGHT: usize = 5;
 
 #[derive(Clone, Debug)]
 pub struct DeadBirdOptions {
