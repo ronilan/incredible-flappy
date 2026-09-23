@@ -93,7 +93,7 @@ pub const BUSY_PALETTE: Palette = Palette {
 };
 
 pub const INVADERS_PALETTE: Palette = Palette {
-    sky: 152,
+    sky: 45,
     floor: 191,
     bush_bg: 148,
     bush_color: 24,
@@ -109,12 +109,23 @@ pub const SELECTED_ITEM_COLOR: u8 = 240;
 // Splash hint: white box, near-black text.
 pub const HINT_BACKGROUND: u8 = 15;
 pub const HINT_TEXT: u8 = 232;
+pub const KITTY_HINT_TEXT: u8 = 15;
 
 // Game buttons: burnt orange, white text.
 pub const BUTTON_BACKGROUND: u8 = 166;
 pub const BUTTON_TEXT: u8 = 15;
 
 pub(crate) fn theme_all() {
+    theme_rule::<Style>("Crab", |s| {
+        s.base.decor.color.set(Some(Color::ansi(CRAB_COLOR)));
+    });
+    theme_rule::<Style>("Squid", |s| {
+        s.base.decor.color.set(Some(Color::ansi(SQUID_COLOR)));
+    });
+    theme_rule::<Style>("Octopus", |s| {
+        s.base.decor.color.set(Some(Color::ansi(OCTOPUS_COLOR)));
+    });
+
     transform_rule("FlappyGradient", |flattened, progress| {
         gradient_color(
             &[
@@ -156,6 +167,7 @@ pub fn score_panel_background() -> Color {
     }
 }
 
-// Game titles: orange box, black text.
+// Game titles: orange box, black text. Get Ready runs lighter.
 pub const TITLE_BACKGROUND: u8 = 214;
 pub const TITLE_TEXT: u8 = 16;
+pub const GET_READY_BACKGROUND: u8 = 215;

@@ -1,13 +1,13 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Button, FramedText, Image, Rectangle};
+use incredible_elements::{App, Button, FramedText, Image, Label, Rectangle, TextButton};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
+use crate::settings;
 use crate::ui::elements;
 use crate::ui::screens;
-use crate::ui::settings;
 use crate::ui::theme;
 
 pub const SCREEN_WIDTH: usize = 80;
@@ -144,6 +144,25 @@ fn cycle_focus(el: &App<State>, state: &mut State, dir: isize) {
     el.draw();
 }
 
+/// Back-to-splash button hit on the selected game.
+fn clicked_back_button(el: &App<State>, state: &State, x: isize, y: isize) -> bool {
+    for game in selected_games(el, state) {
+        for btn in game.elements.dcot_w::<TextButton<State>, _>(|e| {
+            e.get_handle() == "back_button"
+        }) {
+            let (bx, by) = (btn.get_x(), btn.get_y());
+            if x >= bx
+                && x < bx + btn.visual.look.width() as isize
+                && y >= by
+                && y < by + btn.visual.look.height() as isize
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Launches the game under the given button, if any sits there.
 fn launch_clicked_button(el: &App<State>, state: &mut State, x: isize, y: isize) -> bool {
     if launch_clicked_button_of::<Button<State>>(el, state, x, y) {
@@ -249,6 +268,12 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     {
         image.showed(state.phase == Phase::Flying && state.kitty);
     }
+    for back in game
+        .elements
+        .dcot_w::<TextButton<State>, _>(|e| e.get_handle() == "back_button")
+    {
+        back.showed(state.phase != Phase::Flying);
+    }
     for panel in game
         .elements
         .dcot_w::<elements::ScorePanel<State>, _>(|e| e.get_handle() == "score_panel")
@@ -277,13 +302,13 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
         .dcot_w::<elements::DeadBird<State>, _>(|e| e.get_handle() == "dead_bird");
     let ready = game
         .elements
-        .dcot_w::<elements::BoxedText<State>, _>(|e| e.get_handle() == "ready_title");
+        .dcot_w::<elements::BoxedTextFont<State>, _>(|e| e.get_handle() == "ready_title");
     for r in ready {
         r.showed(state.phase == Phase::Ready && !state.kitty);
     }
     for over in game
         .elements
-        .dcot_w::<elements::BoxedText<State>, _>(|e| e.get_handle() == "gameover_title")
+        .dcot_w::<elements::BoxedTextFont<State>, _>(|e| e.get_handle() == "gameover_title")
     {
         over.showed(state.phase == Phase::Score && !state.kitty);
     }
@@ -329,7 +354,9 @@ pub fn build() -> App<State> {
     theme::theme_all();
 
     app.on_key(|el, state: &mut State, event| {
-        if matches!(event.key, Key::Char('k') | Key::Char('K')) {
+        if matches!(event.key, Key::Char('k') | Key::Char('K'))
+            && Platform::output_provider().images()
+        {
             state.kitty = !state.kitty;
             settings::persist_now(state);
             el.draw();
@@ -382,6 +409,11 @@ pub fn build() -> App<State> {
             return;
         }
         if !matches!(event.mouse, Mouse::Click) {
+            return;
+        }
+        if state.phase != Phase::Splash && clicked_back_button(el, state, event.x, event.y) {
+            state.phase = Phase::Splash;
+            el.draw();
             return;
         }
         if state.phase == Phase::Score {
@@ -466,6 +498,13 @@ pub fn build() -> App<State> {
             .dcot_w::<FramedText<State>, _>(|e| e.get_handle() == "game_hint")
         {
             hint.text(screens::splash::hint::game_hint_for(&for_hint));
+        }
+        // Kitty needs images; hide its teaser where unsupported.
+        for line in el
+            .elements
+            .dcot_w::<Label<State>, _>(|e| e.get_handle() == "kitty_hint")
+        {
+            line.showed(Platform::output_provider().images());
         }
         for title in el
             .elements

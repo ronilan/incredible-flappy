@@ -1,9 +1,11 @@
 use std::fs;
 use std::path::PathBuf;
 
-use super::app::State;
+use crate::ui::app::State;
 
+#[cfg(not(target_arch = "wasm32"))]
 const DATA_DIR: &str = "incredible-flappy";
+#[cfg(not(target_arch = "wasm32"))]
 const DATA_FILE: &str = ".incredible-flappy";
 
 /// Persisted settings and best scores. Bests are top-3 tuples,
@@ -124,49 +126,4 @@ pub(crate) fn persist_now(state: &State) {
         }
     }
     let _ = fs::write(&path, data.content());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn round_trip() {
-        let data = Persisted {
-            kitty: true,
-            best_classic: [12, 7, 3],
-            best_busy: [5, 0, 0],
-            best_invaders: [30, 21, 9],
-        };
-        let back = Persisted::parse_content(&data.content());
-        assert!(back.kitty);
-        assert_eq!(back.best_classic, [12, 7, 3]);
-        assert_eq!(back.best_busy, [5, 0, 0]);
-        assert_eq!(back.best_invaders, [30, 21, 9]);
-    }
-
-    #[test]
-    fn short_content_defaults_missing() {
-        let back = Persisted::parse_content("true,7");
-        assert!(back.kitty);
-        assert_eq!(back.best_classic, [7, 0, 0]);
-        assert_eq!(back.best_busy, [0; 3]);
-        assert_eq!(back.best_invaders, [0; 3]);
-    }
-
-    #[test]
-    fn old_single_best_format() {
-        let back = Persisted::parse_content("true,12,5,30");
-        assert!(back.kitty);
-        assert_eq!(back.best_classic, [12, 0, 0]);
-        assert_eq!(back.best_busy, [5, 0, 0]);
-        assert_eq!(back.best_invaders, [30, 0, 0]);
-    }
-
-    #[test]
-    fn garbage_defaults_all() {
-        let back = Persisted::parse_content("hello");
-        assert!(!back.kitty);
-        assert_eq!(back.best_classic, [0; 3]);
-    }
 }

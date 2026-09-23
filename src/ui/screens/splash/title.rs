@@ -13,8 +13,8 @@ pub(crate) fn build_title() -> BlockCharsStr<State> {
     let title = BlockCharsStr::<State>::default();
     title
         .text("Flappy")
-        .style_handle("FlappyGradient");
-    title.handle("flappy_title");
+        .style_handle("FlappyGradient")
+        .handle("flappy_title");
     effect(&title, title_effects);
     title
 }

@@ -4,6 +4,8 @@ Flappy Bird for your terminal (that also works on the web), with three ways to p
 
 It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework.
 
+It is inspired (a.k.a parts were lifted verbitim) by [Impossible Flappy](https://asciinema.org/a/370006).
+
 # Install
 
 ## Pre Built Binaries

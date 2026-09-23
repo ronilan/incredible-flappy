@@ -141,6 +141,15 @@ impl AlienKind {
         }
     }
 
+    fn style_name(self) -> &'static str {
+        match self {
+            AlienKind::Crab => "Crab",
+            AlienKind::Squid => "Squid",
+            AlienKind::Octopus => "Octopus",
+            AlienKind::Grok | AlienKind::Claude | AlienKind::Gemini | AlienKind::ChatGpt => "Crab",
+        }
+    }
+
     fn frames(self) -> ([&'static str; 8], [&'static str; 8]) {
         match self {
             AlienKind::Crab => (CRAB_A, CRAB_B),
@@ -261,8 +270,8 @@ impl<S: Clone + PartialEq> Alien<S> {
                 .x(el.get_x())
                 .y(el.get_y())
                 .capture(Capture::all())
-                .fused(true);
-            img.handle("alien_image");
+                .fused(true)
+                .handle("alien_image");
             el.look(Look::from((
                 el.options.kind.width(),
                 ALIEN_HEIGHT,
@@ -282,6 +291,7 @@ impl<S: Clone + PartialEq> Alien<S> {
         ])
         .interval(ALIEN_INTERVAL_MS)
         .handle("alien_rotator")
+        .style_handle(el.options.kind.style_name())
         .x(el.get_x())
         .y(el.get_y());
         // Hold the first frame: the march starts once fully on-screen.

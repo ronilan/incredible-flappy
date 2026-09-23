@@ -1,5 +1,5 @@
 pub mod alien;
-pub mod boxed_text;
+pub mod boxed_text_font;
 pub mod buildings;
 pub mod bullet;
 pub mod bush;
@@ -23,7 +23,7 @@ pub mod sparkle;
 pub mod u16_image;
 
 pub use alien::*;
-pub use boxed_text::*;
+pub use boxed_text_font::*;
 pub use buildings::*;
 pub use bullet::*;
 pub use bush::*;

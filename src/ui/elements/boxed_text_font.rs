@@ -13,12 +13,12 @@ pub const BOXED_CELL_WIDTH: usize = 3;
 /// Boxed letters: framed text in the score theme (black box,
 /// white text), sized to its content. For titles and labels.
 #[derive(Clone, Debug)]
-pub struct BoxedTextOptions {
+pub struct BoxedTextFontOptions {
     pub background: u8,
     pub foreground: u8,
 }
 
-impl Default for BoxedTextOptions {
+impl Default for BoxedTextFontOptions {
     fn default() -> Self {
         Self {
             background: theme::SCORE_BACKGROUND,
@@ -28,23 +28,23 @@ impl Default for BoxedTextOptions {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct BoxedTextState {
+pub struct BoxedTextFontState {
     pub text: RefCell<String>,
 }
 
 element! {
-  pub struct BoxedText<S> {
-      options: BoxedTextOptions = BoxedTextOptions::default(),
-      internal_state: BoxedTextState = BoxedTextState::default(),
+  pub struct BoxedTextFont<S> {
+      options: BoxedTextFontOptions = BoxedTextFontOptions::default(),
+      internal_state: BoxedTextFontState = BoxedTextFontState::default(),
   }
 }
 
-impl<S: Clone + PartialEq> BoxedText<S> {
-    pub fn new(options: BoxedTextOptions) -> Self {
+impl<S: Clone + PartialEq> BoxedTextFont<S> {
+    pub fn new(options: BoxedTextFontOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
         el.refresh();
-        el.handle("boxed_text");
+        el.handle("boxed_text_font");
         el
     }
 
@@ -82,7 +82,7 @@ impl<S: Clone + PartialEq> BoxedText<S> {
     }
 }
 
-impl<S: Clone + PartialEq> BoxedText<S> {
+impl<S: Clone + PartialEq> BoxedTextFont<S> {
     /// Sets the displayed text.
     pub fn text(&self, raw: &str) -> &Self {
         self.internal_state.text.replace(raw.to_string());
@@ -91,8 +91,8 @@ impl<S: Clone + PartialEq> BoxedText<S> {
     }
 }
 
-impl<S: Clone + PartialEq> Default for BoxedText<S> {
+impl<S: Clone + PartialEq> Default for BoxedTextFont<S> {
     fn default() -> Self {
-        Self::new(BoxedTextOptions::default())
+        Self::new(BoxedTextFontOptions::default())
     }
 }

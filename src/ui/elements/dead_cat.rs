@@ -33,10 +33,10 @@ impl<S: Clone + PartialEq> DeadCat<S> {
         el.options = options;
 
         let img = Image::<S>::new();
-        img.width(el.options.width_cells);
-        img.height(el.options.height_cells);
-        img.data(decode_png(DEAD_CAT_PNG));
-        img.handle("dead_cat_image");
+        img.width(el.options.width_cells)
+            .height(el.options.height_cells)
+            .data(decode_png(DEAD_CAT_PNG))
+            .handle("dead_cat_image");
 
         el.look(Look::from((
             img.visual.look.width(),

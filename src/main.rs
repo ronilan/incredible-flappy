@@ -24,6 +24,13 @@ mod runtime;
     all(target_os = "macos", feature = "macos-native"),
     all(target_os = "windows", feature = "windows-native"),
 )))]
+mod settings;
+
+#[cfg(not(any(
+    target_arch = "wasm32",
+    all(target_os = "macos", feature = "macos-native"),
+    all(target_os = "windows", feature = "windows-native"),
+)))]
 fn main() {
     runtime::run();
 }

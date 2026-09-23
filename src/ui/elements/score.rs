@@ -3,7 +3,7 @@ use std::cell::Cell;
 use incredible::*;
 use incredible_macros_decl::element;
 
-use crate::ui::elements::BoxedText;
+use crate::ui::elements::BoxedTextFont;
 
 #[derive(Clone, Debug)]
 pub struct ScoreOptions {
@@ -34,7 +34,7 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
         el.options = options;
         el.internal_state.current.set(el.options.value);
 
-        let display = BoxedText::<S>::default();
+        let display = BoxedTextFont::<S>::default();
         display
             .text(el.internal_state.current.get().to_string().as_str())
             .handle("score_display");
@@ -58,7 +58,7 @@ impl<S: Clone + PartialEq + 'static> Score<S> {
 
     pub fn set_value(&self, value: u32) -> &Self {
         self.internal_state.current.set(value);
-        if let Some(display) = self.elements.cot::<BoxedText<S>>().first() {
+        if let Some(display) = self.elements.cot::<BoxedTextFont<S>>().first() {
             display.text(value.to_string().as_str());
             self.look(Look::from((
                 display.visual.look.width(),

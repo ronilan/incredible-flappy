@@ -7,11 +7,12 @@ use crate::ui::theme;
 
 fn game_button(text: &str, handle: &str, game: SelectedGame) -> Button<State> {
     let btn = Button::<State>::new();
-    btn.text(text);
-    btn.background(Some(Color::Ansi(theme::BUTTON_BACKGROUND)));
-    btn.color(Some(Color::Ansi(theme::BUTTON_TEXT)));
-    btn.handle(handle);
-    btn.focused(false);
+    btn.text(text)
+        .background(Some(Color::Ansi(theme::BUTTON_BACKGROUND)))
+        .color(Some(Color::Ansi(theme::BUTTON_TEXT)))
+        .handle(handle)
+        .focused(false)
+        .pointer(Some(PointerShape::Pointer));
     // Hovering steers splash focus; on_state paints the hint from it.
     btn.on_change(move |_el, state: &mut State, event| {
         if state.phase == Phase::Splash && event.changes.contains(&Change::Hovered(true)) {

@@ -35,24 +35,25 @@ impl<S: Clone + PartialEq> FlyingCat<S> {
         el.options = options;
 
         let up = Image::<S>::new();
-        up.width(el.options.width_cells);
-        up.height(el.options.height_cells);
-        up.data(decode_png(FLYING_CAT_UP_PNG));
-        up.handle("flying_cat_up");
-        up.showed(false);
+        up.width(el.options.width_cells)
+            .height(el.options.height_cells)
+            .data(decode_png(FLYING_CAT_UP_PNG))
+            .handle("flying_cat_up")
+            .showed(false);
 
         let down = Image::<S>::new();
-        down.width(el.options.width_cells);
-        down.height(el.options.height_cells);
-        down.data(decode_png(FLYING_CAT_DOWN_PNG));
-        down.handle("flying_cat_down");
-        down.showed(false);
+        down.width(el.options.width_cells)
+            .height(el.options.height_cells)
+            .data(decode_png(FLYING_CAT_DOWN_PNG))
+            .handle("flying_cat_down")
+            .showed(false);
 
         let ready = Image::<S>::new();
-        ready.width(el.options.width_cells);
-        ready.height(el.options.height_cells);
-        ready.data(decode_png(READY_CAT_PNG));
-        ready.handle("flying_cat_ready");
+        ready
+            .width(el.options.width_cells)
+            .height(el.options.height_cells)
+            .data(decode_png(READY_CAT_PNG))
+            .handle("flying_cat_ready");
 
         el.look(Look::from((
             el.options.width_cells,

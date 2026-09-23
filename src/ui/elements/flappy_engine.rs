@@ -2,10 +2,10 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::Image;
+use incredible_elements::{Image, TextButton};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
-use crate::ui::elements::{BoxedText, BoxedTextOptions};
+use crate::ui::elements::{BoxedTextFont, BoxedTextFontOptions};
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
@@ -153,6 +153,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         flying_cat.showed(false);
         el.add(flying_cat);
 
+        // Back to splash, top-left corner. Clicks handled in app.
+        let back = TextButton::<S>::new();
+        back.text("←");
+        back.color(Some(Color::Ansi(crate::ui::theme::HINT_TEXT)));
+        back.pointer(Some(PointerShape::Pointer));
+        back.handle("back_button");
+        back.x(1).y(1);
+        el.add(back);
+
         let score = Score::<S>::default();
         score
             .x((GAME_WIDTH as isize - score.visual.look.width() as isize) / 2)
@@ -163,65 +172,67 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let image_score = U16Image::<S>::default();
         image_score
             .x((GAME_WIDTH as isize - image_score.visual.look.width() as isize) / 2)
-            .y(1);
-        image_score.handle("image_score");
-        image_score.showed(false);
+            .y(1)
+            .handle("image_score")
+            .showed(false);
         el.add(image_score);
 
         // Game-over score panel in the middle of the screen.
         let panel = ScorePanel::<S>::new();
         panel
             .x((GAME_WIDTH as isize - SCORE_PANEL_WIDTH as isize) / 2)
-            .y(SCORE_PANEL_REST_Y);
-        panel.handle("score_panel");
-        panel.showed(false);
+            .y(SCORE_PANEL_REST_Y)
+            .handle("score_panel")
+            .showed(false);
         el.add(panel);
 
-        let ready = BoxedText::<S>::new(BoxedTextOptions {
-            background: crate::ui::theme::TITLE_BACKGROUND,
+        let ready = BoxedTextFont::<S>::new(BoxedTextFontOptions {
+            background: crate::ui::theme::GET_READY_BACKGROUND,
             foreground: crate::ui::theme::TITLE_TEXT,
         });
         ready.text("Get Ready");
         ready
             .x((GAME_WIDTH as isize - ready.visual.look.width() as isize) / 2)
-            .y(1);
-        ready.handle("ready_title");
-        ready.showed(false);
-        ready.focused(false);
+            .y(1)
+            .handle("ready_title")
+            .showed(false)
+            .focused(false);
         let ready_w = ready.visual.look.width();
         el.add(ready);
 
-        let over = BoxedText::<S>::new(BoxedTextOptions {
+        let over = BoxedTextFont::<S>::new(BoxedTextFontOptions {
             background: crate::ui::theme::TITLE_BACKGROUND,
             foreground: crate::ui::theme::TITLE_TEXT,
         });
         over.text("Game Over");
         over
             .x((GAME_WIDTH as isize - over.visual.look.width() as isize) / 2)
-            .y(1);
-        over.handle("gameover_title");
-        over.showed(false);
-        over.focused(false);
+            .y(1)
+            .handle("gameover_title")
+            .showed(false)
+            .focused(false);
         let over_w = over.visual.look.width();
         el.add(over);
 
         // Kitty-mode images replacing the text titles, title height
         // with width derived from the image aspect ratio.
         let ready_img = Image::<S>::new();
-        ready_img.width(ready_w);
-        ready_img.data(decode_png(include_bytes!("../../../assets/get_ready.png")));
-        ready_img.handle("ready_image");
-        ready_img.showed(false);
+        ready_img
+            .width(ready_w)
+            .data(decode_png(include_bytes!("../../../assets/get_ready.png")))
+            .handle("ready_image")
+            .showed(false);
         ready_img
             .x((GAME_WIDTH as isize - ready_img.visual.look.width() as isize) / 2)
             .y(2);
         el.add(ready_img);
 
         let over_img = Image::<S>::new();
-        over_img.width(over_w + 2);
-        over_img.data(decode_png(include_bytes!("../../../assets/game_over.png")));
-        over_img.handle("gameover_image");
-        over_img.showed(false);
+        over_img
+            .width(over_w + 2)
+            .data(decode_png(include_bytes!("../../../assets/game_over.png")))
+            .handle("gameover_image")
+            .showed(false);
         over_img
             .x((GAME_WIDTH as isize - over_img.visual.look.width() as isize) / 2)
             .y(2);
@@ -475,9 +486,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let fy = flier.get_y() - self.get_y();
         let h = flier.visual().look.height() as isize;
         for _ in 0..2 {
-            // Exhaust puffs off the tail; the scrolling world trails them.
-            let dx = -1 - rng().random_range(0..2) as isize;
-            let dy = rng().random_range(0..h as i32) as isize;
+            // Exhaust scattered behind the tail; the scroll trails them.
+            let dx = -1 - rng().random_range(0..4) as isize;
+            let dy = rng().random_range(-1..h as i32 + 1) as isize;
             let sparkle: Rc<dyn ElementTrait<S>> =
                 Rc::new(Sparkle::<S>::new(crate::ui::elements::SparkleOptions {
                     color,
@@ -933,9 +944,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 std::ptr::eq(p as *const _, ptr)
             });
         }
-        for title in self.elements.cot::<BoxedText<S>>() {
+        for title in self.elements.cot::<BoxedTextFont<S>>() {
             let ptr = Rc::as_ptr(&title);
-            self.to_front_of_type_where::<BoxedText<S>, _>(|t| {
+            self.to_front_of_type_where::<BoxedTextFont<S>, _>(|t| {
                 std::ptr::eq(t as *const _, ptr)
             });
         }

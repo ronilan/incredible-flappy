@@ -1,12 +1,13 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{Label, Rectangle};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
 use crate::ui::theme;
 
-use super::{buttons, fluffy, hint, image_buttons, kicker, lift, scenery, title};
+use super::{buttons, fluffy, hint, image_buttons, kicker, scenery, title};
+use crate::ui::layout::lift_content;
 
 /// Builds the whole splash screen.
 ///
@@ -37,10 +38,10 @@ pub(crate) fn build() -> Rectangle<State> {
     title.y((16 - title.visual.look.height() as isize) / 2);
     let title_w = title.visual.look.width();
     let title_y = title.get_y();
-    kicker_the.y(title_y - kicker_h - 1);
-    kicker_the.x(kicker_x);
-    kicker_link.y(title_y - kicker_h - 1);
-    kicker_link.x(kicker_x + kicker_the_w);
+    kicker_the.y(title_y - kicker_h - 1).x(kicker_x);
+    kicker_link
+        .y(title_y - kicker_h - 1)
+        .x(kicker_x + kicker_the_w);
     let top_gap = kicker_the.get_y();
     splash.add(kicker_the);
     splash.add(kicker_link);
@@ -87,10 +88,23 @@ pub(crate) fn build() -> Rectangle<State> {
     splash.add(shoot_img);
 
     let hint = hint::build_hint();
-    hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 2);
+    hint.y(SCREEN_HEIGHT as isize - hint.visual.look.height() as isize - 4);
     splash.add(hint);
 
-    lift::lift_content(&splash, top_gap);
+    let kitty_hint = hint::build_kitty_hint();
+    kitty_hint.x(
+        (SCREEN_WIDTH as isize - kitty_hint.visual.look.width() as isize) / 2,
+    );
+    splash.add(kitty_hint);
+
+    lift_content(&splash, top_gap);
+
+    // Kitty line on the pavement row.
+    for line in splash.elements.dcot_w::<Label<State>, _>(|e| {
+        e.get_handle() == "kitty_hint"
+    }) {
+        line.y(21);
+    }
 
     splash
 }

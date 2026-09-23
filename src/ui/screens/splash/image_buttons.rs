@@ -1,4 +1,5 @@
 use incredible::*;
+use incredible_helpers_styling::*;
 
 use crate::ui::app::{Phase, SelectedGame, State};
 use crate::ui::elements::{ImageButton, ImageButtonKind, ImageButtonOptions};
@@ -8,9 +9,10 @@ fn image_button(kind: ImageButtonKind, handle: &str, game: SelectedGame) -> Imag
         kind,
         ..Default::default()
     });
-    btn.handle(handle);
-    btn.showed(false);
-    btn.focused(false);
+    btn.handle(handle)
+        .showed(false)
+        .pointer(Some(PointerShape::Pointer))
+        .focused(false);
     // Hovering steers splash focus; on_state paints the hint from it.
     btn.on_change(move |_el, state: &mut State, event| {
         if state.phase == Phase::Splash && event.changes.contains(&Change::Hovered(true)) {
