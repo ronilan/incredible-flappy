@@ -2,8 +2,8 @@ use incredible::*;
 use incredible_elements::{Image, ImageData};
 use incredible_macros_decl::element;
 
-pub const FLYING_CAT_WIDTH_CELLS: usize = 10;
-pub const FLYING_CAT_HEIGHT_CELLS: usize = 4;
+pub const FLYING_CAT_WIDTH_CELLS: usize = 9;
+pub const FLYING_CAT_HEIGHT_CELLS: usize = 3;
 const FLYING_CAT_UP_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_up.png");
 const FLYING_CAT_DOWN_PNG: &[u8] = include_bytes!("../../../assets/flying_cat_down.png");
 const READY_CAT_PNG: &[u8] = include_bytes!("../../../assets/cat.png");

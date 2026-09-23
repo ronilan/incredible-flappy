@@ -4,6 +4,8 @@ mod ui;
 mod platform;
 #[cfg(target_arch = "wasm32")]
 mod runtime;
+#[cfg(target_arch = "wasm32")]
+mod settings;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]

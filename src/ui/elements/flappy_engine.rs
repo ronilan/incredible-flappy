@@ -32,10 +32,10 @@ pub const BIRD_X: isize = 20;
 /// Kitty bump leeway: forgiven rows on the top and bottom of the cat.
 /// Note: the cat image sits in a bigger rectangle than the bird,
 /// so the leeway keeps a "leveled playing field" between them.
-const KITTY_LEEWAY_TOP: isize = 2;
+const KITTY_LEEWAY_TOP: isize = 0;
 const KITTY_LEEWAY_BOTTOM: isize = 1;
 const KITTY_LEEWAY_FRONT: isize = 0;
-const KITTY_LEEWAY_BACK: isize = 5;
+const KITTY_LEEWAY_BACK: isize = 4;
 /// Pavement top row in game coordinates: the lethal ground surface.
 const GROUND_SURFACE: f32 = 21.0;
 

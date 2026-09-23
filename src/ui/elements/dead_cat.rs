@@ -2,8 +2,8 @@ use incredible::*;
 use incredible_elements::{Image, ImageData};
 use incredible_macros_decl::element;
 
-pub const DEAD_CAT_WIDTH_CELLS: usize = 10;
-pub const DEAD_CAT_HEIGHT_CELLS: usize = 4;
+pub const DEAD_CAT_WIDTH_CELLS: usize = 9;
+pub const DEAD_CAT_HEIGHT_CELLS: usize = 3;
 const DEAD_CAT_PNG: &[u8] = include_bytes!("../../../assets/dead_cat.png");
 
 #[derive(Clone, Debug)]

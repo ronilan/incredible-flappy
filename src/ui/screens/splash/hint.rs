@@ -30,12 +30,21 @@ pub(crate) fn build_hint() -> FramedText<State> {
 }
 
 /// Kitty toggle line above the pavement. White, no background.
+/// Kitty toggle line above the pavement. White, no background.
+/// Clicking toggles kitty mode, same as K.
 pub(crate) fn build_kitty_hint() -> Label<State> {
     let label = Label::<State>::new(LabelOptions::default());
     label
         .text("K is for kitty")
         .color(Some(Color::Ansi(theme::KITTY_HINT_TEXT)))
-        .handle("kitty_hint");
+        .handle("kitty_hint")
+        .interactive(true);
+    label.on_mouse(|_el, state, event| {
+        if matches!(event.mouse, Mouse::Click) && Platform::output_provider().images() {
+            state.kitty = !state.kitty;
+            crate::settings::persist_now(state);
+        }
+    });
     label
 }
 
