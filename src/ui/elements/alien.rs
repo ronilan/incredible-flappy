@@ -1,11 +1,12 @@
 use std::cell::Cell;
 
 use incredible::*;
-use incredible_elements::Rotator;
+use incredible_elements::{Image, Rotator};
 use incredible_macros_decl::element;
 use rand::Rng;
 use rand::rng;
 
+use crate::ui::assets::decode_png;
 use crate::ui::theme;
 
 pub const ALIEN_HEIGHT: usize = 4;
@@ -83,11 +84,20 @@ const OCTOPUS_B: [&str; 8] = [
     "..X......X..",
 ];
 
+const GROK_PNG: &[u8] = include_bytes!("../../../assets/grok.png");
+const CLAUDE_PNG: &[u8] = include_bytes!("../../../assets/claude.png");
+const GEMINI_PNG: &[u8] = include_bytes!("../../../assets/gemini.png");
+const CHATGPT_PNG: &[u8] = include_bytes!("../../../assets/chatgpt.png");
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum AlienKind {
     Crab,
     Squid,
     Octopus,
+    Grok,
+    Claude,
+    Gemini,
+    ChatGpt,
 }
 
 impl AlienKind {
@@ -100,11 +110,23 @@ impl AlienKind {
         }
     }
 
-    /// Look width in cells: 12px bitmaps render 6 wide, 8px renders 4.
+    /// Random logo kind for kitty spawning.
+    pub fn random_logo() -> Self {
+        match rng().random_range(0..4) {
+            0 => AlienKind::Grok,
+            1 => AlienKind::Claude,
+            2 => AlienKind::Gemini,
+            _ => AlienKind::ChatGpt,
+        }
+    }
+
+    /// Look width in cells: 12px bitmaps render 6 wide, 8px renders 4,
+    /// logos render 6 wide like the crab.
     pub fn width(self) -> usize {
         match self {
             AlienKind::Crab | AlienKind::Octopus => 6,
             AlienKind::Squid => 4,
+            AlienKind::Grok | AlienKind::Claude | AlienKind::Gemini | AlienKind::ChatGpt => 6,
         }
     }
 
@@ -113,6 +135,9 @@ impl AlienKind {
             AlienKind::Crab => theme::CRAB_COLOR,
             AlienKind::Squid => theme::SQUID_COLOR,
             AlienKind::Octopus => theme::OCTOPUS_COLOR,
+            AlienKind::Grok | AlienKind::Claude | AlienKind::Gemini | AlienKind::ChatGpt => {
+                theme::CRAB_COLOR
+            }
         }
     }
 
@@ -121,6 +146,19 @@ impl AlienKind {
             AlienKind::Crab => (CRAB_A, CRAB_B),
             AlienKind::Squid => (SQUID_A, SQUID_B),
             AlienKind::Octopus => (OCTOPUS_A, OCTOPUS_B),
+            AlienKind::Grok | AlienKind::Claude | AlienKind::Gemini | AlienKind::ChatGpt => {
+                (CRAB_A, CRAB_B)
+            }
+        }
+    }
+
+    fn png(self) -> Option<&'static [u8]> {
+        match self {
+            AlienKind::Grok => Some(GROK_PNG),
+            AlienKind::Claude => Some(CLAUDE_PNG),
+            AlienKind::Gemini => Some(GEMINI_PNG),
+            AlienKind::ChatGpt => Some(CHATGPT_PNG),
+            AlienKind::Crab | AlienKind::Squid | AlienKind::Octopus => None,
         }
     }
 }
@@ -213,6 +251,28 @@ impl<S: Clone + PartialEq> Alien<S> {
     pub fn new(options: AlienOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
+
+        if let Some(png) = el.options.kind.png() {
+            // Logo kind: static image, same footprint as the crab.
+            let img = Image::<S>::new();
+            img.width(el.options.kind.width())
+                .height(ALIEN_HEIGHT)
+                .data(decode_png(png))
+                .x(el.get_x())
+                .y(el.get_y())
+                .capture(Capture::all())
+                .fused(true);
+            img.handle("alien_image");
+            el.look(Look::from((
+                el.options.kind.width(),
+                ALIEN_HEIGHT,
+                ' ',
+            )))
+            .handle("alien");
+            el.add(img);
+
+            return el;
+        }
 
         let (a, b) = el.options.kind.frames();
         let rot = Rotator::<S>::new();

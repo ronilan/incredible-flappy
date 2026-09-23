@@ -792,10 +792,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     fn spawn_alien_at(&self, x: isize) {
         let mut ax = x;
         for _ in 0..2 {
-            let alien = Alien::<S>::new(AlienOptions {
-                kind: AlienKind::random(),
-                roam: true,
-            });
+            let kind = if self.internal_state.kitty.get() {
+                AlienKind::random_logo()
+            } else {
+                AlienKind::random()
+            };
+            let alien = Alien::<S>::new(AlienOptions { kind, roam: true });
             alien
                 .x(ax)
                 .y(rng().random_range(ALIEN_MIN_Y as i32..=ALIEN_MAX_Y as i32) as isize);

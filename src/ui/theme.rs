@@ -60,10 +60,10 @@ pub const FLOWER_LEAF: u8 = 40;
 pub const FLOWER_BUD_COLORS: [u8; 4] = [129, 208, 162, 207];
 pub const FLOWER_BUD_FG: u8 = 255;
 
-// Invaders.
-pub const CRAB_COLOR: u8 = 46;
-pub const SQUID_COLOR: u8 = 46;
-pub const OCTOPUS_COLOR: u8 = 46;
+// Invaders: basic colors in normal mode, logos in kitty mode.
+pub const CRAB_COLOR: u8 = 9;
+pub const SQUID_COLOR: u8 = 11;
+pub const OCTOPUS_COLOR: u8 = 12;
 pub const BULLET_COLOR: u8 = 231;
 
 // Per-game palettes. Classic is the default everywhere.
