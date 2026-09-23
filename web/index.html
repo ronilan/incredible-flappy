@@ -23,7 +23,10 @@
           if (cw > devW) s = Math.min(s, devW / cw);
         }
         if (rows) {
-          var ch = rows * LINE_HEIGHT;
+          // Fake extra rows: forces earlier shrinking where browser chrome
+          // eats space the device metrics don't report.
+          var FAKE_ROWS = 50;
+          var ch = (rows + FAKE_ROWS) * LINE_HEIGHT;
           var dh = window.screen.height;
           if (ch > dh) s = Math.min(s, dh / ch);
         }
