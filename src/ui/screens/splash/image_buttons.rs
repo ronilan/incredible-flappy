@@ -1,15 +1,22 @@
 use incredible::*;
 
-use crate::ui::app::State;
+use crate::ui::app::{Phase, SelectedGame, State};
 use crate::ui::elements::{ImageButton, ImageButtonKind, ImageButtonOptions};
 
-fn image_button(kind: ImageButtonKind, handle: &str) -> ImageButton<State> {
+fn image_button(kind: ImageButtonKind, handle: &str, game: SelectedGame) -> ImageButton<State> {
     let btn = ImageButton::<State>::new(ImageButtonOptions {
         kind,
         ..Default::default()
     });
     btn.handle(handle);
     btn.showed(false);
+    btn.focused(false);
+    // Hovering steers splash focus; on_state paints the hint from it.
+    btn.on_change(move |_el, state: &mut State, event| {
+        if state.phase == Phase::Splash && event.changes.contains(&Change::Hovered(true)) {
+            state.focus = Some(game);
+        }
+    });
     btn
 }
 
@@ -17,8 +24,8 @@ fn image_button(kind: ImageButtonKind, handle: &str) -> ImageButton<State> {
 /// Unpositioned; the composer lays out the row.
 pub(crate) fn build_image_buttons() -> [ImageButton<State>; 3] {
     [
-        image_button(ImageButtonKind::Basic, "game_basic_image"),
-        image_button(ImageButtonKind::Graze, "game_graze_image"),
-        image_button(ImageButtonKind::Shoot, "game_shoot_image"),
+        image_button(ImageButtonKind::Basic, "game_basic_image", SelectedGame::Classic),
+        image_button(ImageButtonKind::Graze, "game_graze_image", SelectedGame::Busy),
+        image_button(ImageButtonKind::Shoot, "game_shoot_image", SelectedGame::Invaders),
     ]
 }

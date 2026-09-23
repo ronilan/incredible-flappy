@@ -23,7 +23,7 @@ pub(crate) fn build() -> Rectangle<State> {
         .handle("splash")
         .draw_override(Some(DrawOverride::default()));
 
-    splash.on_key(|el, state, event|{
+    splash.on_key(|el, _state, _event|{
         el.draw();
     });
 

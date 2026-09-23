@@ -86,7 +86,7 @@ impl<S: Clone + PartialEq> ScorePanel<S> {
             format!("Best: {}", self.internal_state.best.get()),
             match self.internal_state.medal.get() {
                 Some(rank) => format!("Medal: {}", MEDALS[rank.min(2)]),
-                None => "Medal: ".to_string(),
+                None => "Medal: 💩".to_string(),
             },
         ];
         for (i, row) in rows.iter().enumerate() {

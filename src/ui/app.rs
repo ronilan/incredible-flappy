@@ -372,7 +372,7 @@ pub fn build() -> App<State> {
     }).on_mouse(|el, state, event| {
         // Splash clicks launch the clicked game button, never anything else.
         if state.phase == Phase::Splash {
-            if matches!(event.mouse, Mouse::Down)
+            if matches!(event.mouse, Mouse::Click)
                 && launch_clicked_button(el, state, event.x, event.y)
             {
                 el.draw();
@@ -381,7 +381,18 @@ pub fn build() -> App<State> {
             sync_hint(el, state);
             return;
         }
-        if !matches!(event.mouse, Mouse::Down) {
+        if !matches!(event.mouse, Mouse::Click) {
+            return;
+        }
+        if state.phase == Phase::Score {
+            // Click restarts like Enter, gated on the panel slide.
+            if selected_games(el, state)
+                .iter()
+                .all(|game| game.panel_settled())
+            {
+                state.phase = Phase::Ready;
+                el.draw();
+            }
             return;
         }
         if let Some(next) = transition(&state.phase, &Key::Enter) {
@@ -436,6 +447,9 @@ pub fn build() -> App<State> {
         let is_splash = state.phase == Phase::Splash;
         let classic = state.selected == SelectedGame::Classic;
         let busy = state.selected == SelectedGame::Busy;
+        if is_splash {
+            apply_focus(el, state);
+        }
         for rect in el
             .elements
             .dcot_w::<Rectangle<State>, _>(|e| e.get_handle() == "splash")

@@ -145,6 +145,9 @@ pub const SCORE_PANEL_BACKGROUND_RGB: Option<(u8, u8, u8)> =
 pub const SCORE_PANEL_LABEL_BACKGROUND: (u8, u8, u8) = (219, 218, 150);
 pub const SCORE_PANEL_TEXT: u8 = 16;
 
+// Graze sparkles fall back to bright white.
+pub const SPARKLE_COLOR: u8 = 231;
+
 /// Panel box color: exact RGB when set, otherwise the ANSI cream.
 pub fn score_panel_background() -> Color {
     match SCORE_PANEL_BACKGROUND_RGB {

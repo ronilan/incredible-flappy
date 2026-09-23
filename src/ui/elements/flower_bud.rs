@@ -34,17 +34,26 @@ element! {
 }
 
 impl<S: Clone + PartialEq> FlowerBud<S> {
+    /// The bud's base color, resolved at construction.
+    pub fn base_color(&self) -> u8 {
+        self.options
+            .color
+            .unwrap_or(theme::FLOWER_BUD_COLORS[0])
+    }
+
     pub fn new(options: FlowerBudOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
 
         let width = el.options.width;
         let height = el.options.height;
-        let color = el.options.color.unwrap_or_else(|| {
+        let base = el.options.color.unwrap_or_else(|| {
             *theme::FLOWER_BUD_COLORS
                 .choose(&mut rng())
                 .unwrap_or(&theme::FLOWER_BUD_COLORS[0])
-        }) as i16;
+        });
+        el.options.color = Some(base);
+        let color = base as i16;
 
         el.look(Look::from((width, height, ' ')))
             .handle("flower_bud");

@@ -18,7 +18,7 @@ use crate::ui::elements::{
     Bushing, BushingOptions, DeadBird,
     DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
     FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score, U16Image,
-    SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel,
+    SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel, Sparkle,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -34,8 +34,8 @@ pub const BIRD_X: isize = 20;
 /// so the leeway keeps a "leveled playing field" between them.
 const KITTY_LEEWAY_TOP: isize = 2;
 const KITTY_LEEWAY_BOTTOM: isize = 1;
-const KITTY_LEEWAY_FRONT: isize = 2;
-const KITTY_LEEWAY_BACK: isize = 3;
+const KITTY_LEEWAY_FRONT: isize = 0;
+const KITTY_LEEWAY_BACK: isize = 5;
 /// Pavement top row in game coordinates: the lethal ground surface.
 const GROUND_SURFACE: f32 = 21.0;
 
@@ -318,6 +318,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<FlowerBud<S>>().is_some() {}
         while self.elements.sot::<Alien<S>>().is_some() {}
         while self.elements.sot::<Bullet<S>>().is_some() {}
+        while self.elements.sot::<Sparkle<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.internal_state.distance.set(0);
@@ -458,6 +459,35 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .is_some_and(|panel| panel.get_y() <= rest)
     }
 
+    /// Sparkles shimmering off the flier's look box while grazing,
+    /// tinted by the bud under it. The bigger kitty box throws them
+    /// further out. Positions are game-relative; add() folds in
+    /// the game offset.
+    fn emit_sparkles(&self) {
+        let Some(flier) = self.active_flier() else {
+            return;
+        };
+        let color = self
+            .perched_bud()
+            .map(|bud| bud.base_color())
+            .unwrap_or(crate::ui::theme::SPARKLE_COLOR);
+        let fx = flier.get_x() - self.get_x();
+        let fy = flier.get_y() - self.get_y();
+        let h = flier.visual().look.height() as isize;
+        for _ in 0..2 {
+            // Exhaust puffs off the tail; the scrolling world trails them.
+            let dx = -1 - rng().random_range(0..2) as isize;
+            let dy = rng().random_range(0..h as i32) as isize;
+            let sparkle: Rc<dyn ElementTrait<S>> =
+                Rc::new(Sparkle::<S>::new(crate::ui::elements::SparkleOptions {
+                    color,
+                }));
+            sparkle.x(fx + dx).y(fy + dy);
+            self.add_any(sparkle.clone());
+            self.to_back_where(|e| Rc::ptr_eq(e, &sparkle));
+        }
+    }
+
     /// True once when the bird has hit the ground.
     pub fn check_crash(&self) -> bool {
         if self.internal_state.crashed.get() {
@@ -503,6 +533,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             // Perched: hold position, no gravity. Pipes can still kill.
             self.internal_state.velocity.set(0.0);
             self.place_bird(self.internal_state.bird_y.get());
+            self.emit_sparkles();
             if self.flying_hits_obstacle() {
                 self.start_dying(self.internal_state.bird_y.get());
             }
@@ -552,18 +583,18 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
     /// True while the flier sits over a bud top.
     fn over_bud(&self) -> bool {
-        let Some(flier) = self.active_flier() else {
-            return false;
-        };
+        self.perched_bud().is_some()
+    }
+
+    /// The bud top under the flier, if any.
+    fn perched_bud(&self) -> Option<Rc<FlowerBud<S>>> {
+        let flier = self.active_flier()?;
         let fx0 = flier.get_x();
         let fx1 = fx0 + flier.visual().look.width() as isize;
-        for bud in self.elements.cot::<FlowerBud<S>>() {
+        self.elements.cot::<FlowerBud<S>>().into_iter().find(|bud| {
             let w = bud.visual.look.width() as isize;
-            if fx0 < bud.get_x() + w && bud.get_x() < fx1 {
-                return true;
-            }
-        }
-        false
+            fx0 < bud.get_x() + w && bud.get_x() < fx1
+        })
     }
 
     /// Bud top crossed falling from prev_bottom to new_bottom, if any.
@@ -881,8 +912,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.send_overlays_to_front();
     }
 
-    /// Brings scores and titles in front of everything else so they
-    /// always stay on top of freshly spawned obstacles.
+    /// Brings scores, titles and fliers in front of everything else
+    /// so they always stay on top of freshly spawned obstacles.
     fn send_overlays_to_front(&self) {
         for score in self.elements.cot::<Score<S>>() {
             let ptr = Rc::as_ptr(&score);
@@ -912,6 +943,30 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             let ptr = Rc::as_ptr(&image);
             self.to_front_of_type_where::<Image<S>, _>(|i| {
                 std::ptr::eq(i as *const _, ptr)
+            });
+        }
+        for bird in self.elements.cot::<FlyingBird<S>>() {
+            let ptr = Rc::as_ptr(&bird);
+            self.to_front_of_type_where::<FlyingBird<S>, _>(|b| {
+                std::ptr::eq(b as *const _, ptr)
+            });
+        }
+        for cat in self.elements.cot::<FlyingCat<S>>() {
+            let ptr = Rc::as_ptr(&cat);
+            self.to_front_of_type_where::<FlyingCat<S>, _>(|c| {
+                std::ptr::eq(c as *const _, ptr)
+            });
+        }
+        for bird in self.elements.cot::<DeadBird<S>>() {
+            let ptr = Rc::as_ptr(&bird);
+            self.to_front_of_type_where::<DeadBird<S>, _>(|b| {
+                std::ptr::eq(b as *const _, ptr)
+            });
+        }
+        for cat in self.elements.cot::<DeadCat<S>>() {
+            let ptr = Rc::as_ptr(&cat);
+            self.to_front_of_type_where::<DeadCat<S>, _>(|c| {
+                std::ptr::eq(c as *const _, ptr)
             });
         }
     }
@@ -1057,6 +1112,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
 
         // Drop fully off-screen pipes.
+        while self
+            .elements
+            .sot_w::<Sparkle<S>, _>(|s| !s.is_live())
+            .is_some()
+        {}
         while self
             .elements
             .sot_w::<Pipe<S>, _>(|p| {

@@ -19,6 +19,7 @@ pub mod pipe;
 pub mod scenery;
 pub mod score;
 pub mod score_panel;
+pub mod sparkle;
 pub mod u16_image;
 
 pub use alien::*;
@@ -41,4 +42,5 @@ pub use pavement::*;
 pub use scenery::*;
 pub use score::*;
 pub use score_panel::*;
+pub use sparkle::*;
 pub use u16_image::*;
