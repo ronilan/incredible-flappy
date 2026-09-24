@@ -53,6 +53,6 @@ pub(crate) fn game_hint_for(focused: &Option<SelectedGame>) -> &'static str {   
         Some(SelectedGame::Classic) => "Avoid the pipes. Avoid the ground. Avoid the sky. All the basics.",
         Some(SelectedGame::Busy) => "Same, same but it sunsine and flowers. Graze (but don't bump) them.",
         Some(SelectedGame::Invaders) => "Pipes? Invaders? Shooting?\nOh, boy...You are so, so doomed...",
-        None => "Tab to select. Enter to start. Any key bumps bird.",
+        None => "Tab to select. Enter to start. Space/Enter to bump. Esc to pause.",
     }
 }

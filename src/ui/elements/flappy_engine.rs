@@ -153,6 +153,35 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         flying_cat.showed(false);
         el.add(flying_cat);
 
+        // Pause on top, resume twin for kitty. Clicks handled in app.
+        let pause = Button::<S>::new();
+        pause.text("II");
+        pause.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
+        pause.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
+        pause.pointer(Some(PointerShape::Pointer));
+        pause.handle("pause_button");
+        pause.showed(false);
+        pause.x(1).y(1);
+        el.add(pause);
+
+        let pause_img = ImageButton::<S>::new(ImageButtonOptions {
+            kind: ImageButtonKind::Pause,
+            ..Default::default()
+        });
+        pause_img.handle("pause_image_button");
+        pause_img.showed(false);
+        pause_img.x(1).y(1);
+        el.add(pause_img);
+
+        let resume_img = ImageButton::<S>::new(ImageButtonOptions {
+            kind: ImageButtonKind::Play,
+            ..Default::default()
+        });
+        resume_img.handle("resume_image_button");
+        resume_img.showed(false);
+        resume_img.x(1).y(1);
+        el.add(resume_img);
+
         // Back and play, bottom row. Clicks handled in app.
         let back = Button::<S>::new();
         back.text("←");
@@ -362,10 +391,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     }
 
     /// Starts (or stops) pipe spawning. Starting spawns the first duo.
+    /// Starts (or stops) pipe spawning. Starting spawns the first duo,
+    /// but only into an empty sky: resuming mid-run must not inject one.
     pub fn set_spawning(&self, spawning: bool) -> &Self {
         let was = self.internal_state.spawning.get();
         self.internal_state.spawning.set(spawning);
-        if spawning && !was {
+        let fresh_sky = self.elements.cot::<Pipe<S>>().is_empty()
+            && self.elements.cot::<FlowerBud<S>>().is_empty()
+            && self.elements.cot::<Alien<S>>().is_empty();
+        if spawning && !was && fresh_sky {
             self.spawn_obstacle_at(GAME_SPAWN_X);
             self.internal_state.distance.set(0);
         }

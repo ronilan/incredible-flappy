@@ -19,6 +19,7 @@ pub enum Phase {
     Splash,
     Ready,
     Flying,
+    Paused,
     Score,
 }
 
@@ -250,6 +251,46 @@ fn set_game_focus(game: &elements::Game<State>, play: bool) {
     }
 }
 
+/// Pause slot hit (top-left): text, pause art or resume art.
+fn clicked_pause_slot(el: &App<State>, state: &State, x: isize, y: isize) -> bool {
+    for game in selected_games(el, state) {
+        for btn in game.elements.dcot_w::<Button<State>, _>(|e| {
+            e.get_handle() == "pause_button"
+        }) {
+            if !btn.status().showed.get() {
+                continue;
+            }
+            let (bx, by) = (btn.get_x(), btn.get_y());
+            if x >= bx
+                && x < bx + btn.visual.look.width() as isize
+                && y >= by
+                && y < by + btn.visual.look.height() as isize
+            {
+                return true;
+            }
+        }
+        for btn in game
+            .elements
+            .dcot_w::<elements::ImageButton<State>, _>(|e| {
+                e.get_handle() == "pause_image_button" || e.get_handle() == "resume_image_button"
+            })
+        {
+            if !btn.status().showed.get() {
+                continue;
+            }
+            let (bx, by) = (btn.get_x(), btn.get_y());
+            if x >= bx
+                && x < bx + btn.visual.look.width() as isize
+                && y >= by
+                && y < by + btn.visual.look.height() as isize
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Play button hit on the selected game.
 fn clicked_play_button(el: &App<State>, state: &State, x: isize, y: isize) -> bool {
     for game in selected_games(el, state) {
@@ -292,11 +333,12 @@ fn clicked_play_button(el: &App<State>, state: &State, x: isize, y: isize) -> bo
 
 /// Starts the Ready countdown on the selected game.
 fn start_countdown(el: &App<State>, state: &mut State) {
+    for game in selected_games(el, state) {
+        game.reset();
+    }
     state.countdown = 3;
     state.countdown_at = Globals::now();
     for game in selected_games(el, state) {
-        game.set_kind(state.selected);
-        game.reset();
         for light in game.elements.dcot_w::<elements::Stoplight<State>, _>(|e| {
             e.get_handle() == "stoplight"
         }) {
@@ -433,6 +475,34 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     {
         play.showed(state.phase == Phase::Score && state.kitty);
     }
+    for pause in game
+        .elements
+        .dcot_w::<Button<State>, _>(|e| e.get_handle() == "pause_button")
+    {
+        pause.showed(
+            (state.phase == Phase::Flying || state.phase == Phase::Paused) && !state.kitty,
+        );
+        pause.text(if state.phase == Phase::Paused {
+            ">"
+        } else {
+            "II"
+        });
+        pause.focused(state.phase == Phase::Flying);
+    }
+    for pause in game
+        .elements
+        .dcot_w::<elements::ImageButton<State>, _>(|e| e.get_handle() == "pause_image_button")
+    {
+        pause.showed(state.phase == Phase::Flying && state.kitty);
+        pause.focused(state.phase == Phase::Flying);
+    }
+    for resume in game
+        .elements
+        .dcot_w::<elements::ImageButton<State>, _>(|e| e.get_handle() == "resume_image_button")
+    {
+        resume.showed(state.phase == Phase::Paused && state.kitty);
+        resume.focused(state.phase == Phase::Paused);
+    }
     for panel in game
         .elements
         .dcot_w::<elements::ScorePanel<State>, _>(|e| e.get_handle() == "score_panel")
@@ -562,6 +632,13 @@ pub fn build() -> App<State> {
                 game.shoot();
             }
             el.draw();
+        } else if state.phase == Phase::Flying && matches!(event.key, Key::Escape) {
+            state.phase = Phase::Paused;
+            el.draw();
+        } else if state.phase == Phase::Paused && matches!(event.key, Key::Enter) {
+            state.phase = Phase::Flying;
+            el.draw();
+            return;
         } else if state.phase == Phase::Score && matches!(event.key, Key::Tab) {
             cycle_game_focus(el, state);
             el.draw();
@@ -624,11 +701,15 @@ pub fn build() -> App<State> {
             }
             return;
         }
-        if let Some(next) = transition(&state.phase, &Key::Enter) {
-            if next != state.phase {
-                state.phase = next;
-                el.draw();
-            }
+        if state.phase == Phase::Flying && clicked_pause_slot(el, state, event.x, event.y) {
+            state.phase = Phase::Paused;
+            el.draw();
+            return;
+        }
+        if state.phase == Phase::Paused && clicked_pause_slot(el, state, event.x, event.y) {
+            state.phase = Phase::Flying;
+            el.draw();
+            return;
         }
         if state.phase == Phase::Flying {
             for game in selected_games(el, state) {
