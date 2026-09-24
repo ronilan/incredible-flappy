@@ -18,12 +18,17 @@ const SHOOT_ACTIVATED_PNG: &[u8] = include_bytes!("../../../assets/shoot_activat
 const BASIC_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/basic_focused.png");
 const GRAZE_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/graze_focused.png");
 const SHOOT_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/shoot_focused.png");
+const BACK_PNG: &[u8] = include_bytes!("../../../assets/back.png");
+const BACK_HOVERED_PNG: &[u8] = include_bytes!("../../../assets/back_hovered.png");
+const BACK_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/back_focused.png");
+const BACK_ACTIVATED_PNG: &[u8] = include_bytes!("../../../assets/back_activated.png");
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ImageButtonKind {
     Basic,
     Graze,
     Shoot,
+    Back,
 }
 
 impl ImageButtonKind {
@@ -32,6 +37,7 @@ impl ImageButtonKind {
             ImageButtonKind::Basic => BASIC_PNG,
             ImageButtonKind::Graze => GRAZE_PNG,
             ImageButtonKind::Shoot => SHOOT_PNG,
+            ImageButtonKind::Back => BACK_PNG,
         }
     }
 
@@ -40,6 +46,7 @@ impl ImageButtonKind {
             ImageButtonKind::Basic => BASIC_HOVERED_PNG,
             ImageButtonKind::Graze => GRAZE_HOVERED_PNG,
             ImageButtonKind::Shoot => SHOOT_HOVERED_PNG,
+            ImageButtonKind::Back => BACK_HOVERED_PNG,
         }
     }
 
@@ -48,6 +55,7 @@ impl ImageButtonKind {
             ImageButtonKind::Basic => BASIC_ACTIVATED_PNG,
             ImageButtonKind::Graze => GRAZE_ACTIVATED_PNG,
             ImageButtonKind::Shoot => SHOOT_ACTIVATED_PNG,
+            ImageButtonKind::Back => BACK_ACTIVATED_PNG,
         }
     }
 
@@ -56,6 +64,7 @@ impl ImageButtonKind {
             ImageButtonKind::Basic => BASIC_FOCUSED_PNG,
             ImageButtonKind::Graze => GRAZE_FOCUSED_PNG,
             ImageButtonKind::Shoot => SHOOT_FOCUSED_PNG,
+            ImageButtonKind::Back => BACK_FOCUSED_PNG,
         }
     }
 }

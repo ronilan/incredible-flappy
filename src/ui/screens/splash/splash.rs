@@ -53,11 +53,9 @@ pub(crate) fn build() -> Rectangle<State> {
     splash.add(fluffy);
     splash.elements_to_center_x_of_type::<incredible_elements::Image<State>>();
 
-    let [left, right] = scenery::build_scenery();
-    left.x(0).y(16);
-    splash.add(left);
-    right.x(40).y(16);
-    splash.add(right);
+    let ground = scenery::build_scenery();
+    ground.x(0).y(16);
+    splash.add(ground);
 
     let [basic, graze, shoot] = buttons::build_buttons();
     let (basic_w, graze_w, shoot_w) = (

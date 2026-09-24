@@ -5,7 +5,7 @@ use incredible_macros_decl::element;
 
 use crate::ui::theme;
 
-pub const PAVEMENT_WIDTH: usize = 40;
+pub const PAVEMENT_WIDTH: usize = 81;
 pub const PAVEMENT_HEIGHT: usize = 1;
 
 #[derive(Clone, Debug)]

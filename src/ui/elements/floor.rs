@@ -4,7 +4,7 @@ use incredible_macros_decl::element;
 
 use crate::ui::theme;
 
-pub const FLOOR_WIDTH: usize = 40;
+pub const FLOOR_WIDTH: usize = 80;
 pub const FLOOR_HEIGHT: usize = 2;
 
 #[derive(Clone, Debug)]

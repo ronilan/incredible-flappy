@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{Image, TextButton};
+use incredible_elements::{Button, Image};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use crate::ui::elements::{BoxedTextFont, BoxedTextFontOptions};
@@ -17,7 +17,7 @@ use crate::ui::elements::{
     ALIEN_MAX_Y, ALIEN_MIN_Y, Alien, AlienKind, AlienOptions, BULLET_SPEED, BUSHING_WIDTH, Bullet,
     Bushing, BushingOptions, DeadBird,
     DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
-    FlyingBird, FlyingCat, Pavement, SCENERY_WIDTH, Scenery, SceneryOptions, Score, U16Image,
+    FlyingBird, FlyingCat, ImageButton, ImageButtonKind, ImageButtonOptions, PAVEMENT_WIDTH, Pavement, PavementOptions, Scenery, SceneryOptions, Score, U16Image,
     SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel, Sparkle,
 };
 
@@ -28,7 +28,7 @@ pub const GAME_SPAWN_X: isize = 80;
 pub const GAME_GAP_ROWS: isize = 11;
 pub const GAME_GROUND_TOP_ROW: isize = 20;
 pub const DEAD_REST_Y: f32 = 17.0;
-pub const BIRD_X: isize = 20;
+pub const BIRD_X: isize = 21;
 /// Kitty bump leeway: forgiven rows on the top and bottom of the cat.
 /// Note: the cat image sits in a bigger rectangle than the bird,
 /// so the leeway keeps a "leveled playing field" between them.
@@ -154,13 +154,23 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         el.add(flying_cat);
 
         // Back to splash, top-left corner. Clicks handled in app.
-        let back = TextButton::<S>::new();
+        let back = Button::<S>::new();
         back.text("←");
-        back.color(Some(Color::Ansi(crate::ui::theme::HINT_TEXT)));
+        back.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
+        back.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
         back.pointer(Some(PointerShape::Pointer));
         back.handle("back_button");
         back.x(1).y(1);
         el.add(back);
+
+        let back_img = ImageButton::<S>::new(ImageButtonOptions {
+            kind: ImageButtonKind::Back,
+            ..Default::default()
+        });
+        back_img.handle("back_image_button");
+        back_img.showed(false);
+        back_img.x(1).y(1);
+        el.add(back_img);
 
         let score = Score::<S>::default();
         score
@@ -330,6 +340,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         while self.elements.sot::<Alien<S>>().is_some() {}
         while self.elements.sot::<Bullet<S>>().is_some() {}
         while self.elements.sot::<Sparkle<S>>().is_some() {}
+        while self.elements.sot::<Pavement<S>>().is_some() {}
         while self.elements.sot::<Scenery<S>>().is_some() {}
         self.add_ground();
         self.internal_state.distance.set(0);
@@ -514,7 +525,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let phys = &self.options.physics;
         let v = (self.internal_state.velocity.get() + phys.gravity).min(phys.max_fall);
         self.internal_state.velocity.set(v);        for cat in self.elements.cot::<FlyingCat<S>>() {
-            if self.internal_state.landed.get() && self.over_bud() {
+            if self.internal_state.landed.get() && self.over_perch() {
                 cat.show_ready();
             } else {
                 cat.set_rising(v < 0.0);
@@ -540,7 +551,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                     }
                 }
             }
-        } else if self.internal_state.landed.get() && self.over_bud() {
+        } else if self.internal_state.landed.get() && self.over_perch() {
             // Perched: hold position, no gravity. Pipes can still kill.
             self.internal_state.velocity.set(0.0);
             self.place_bird(self.internal_state.bird_y.get());
@@ -553,17 +564,21 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             let prev = self.internal_state.bird_y.get();
             let y = prev + v;
             self.internal_state.bird_y.set(y);
-            // Touching down onto a bud top while falling = land, not kill.
+            // Touching down onto a bud or bushing top while falling
+            // = land, not kill.
             if v >= 0.0 {
                 if let Some(flier) = self.active_flier() {
                     let fh = flier.visual().look.height() as f32;
-                    if let Some(top) = self.bud_top_under(prev + fh, y + fh) {
-                        self.internal_state.landed.set(true);
-                        self.internal_state.velocity.set(0.0);
-                        self.internal_state.bird_y.set(top - fh);
-                        self.place_bird(top - fh);
-                        self.add_score(1);
-                        return;
+                    // Cats never land: they die instead.
+                    if !self.internal_state.kitty.get() {
+                        if let Some(top) = self.perch_top_under(prev + fh, y + fh) {
+                            self.internal_state.landed.set(true);
+                            self.internal_state.velocity.set(0.0);
+                            self.internal_state.bird_y.set(top - fh);
+                            self.place_bird(top - fh);
+                            self.add_score(1);
+                            return;
+                        }
                     }
                     // Fast falls can hop the thin ground band: die on sweep.
                     if swept_ground(prev, fh, y) {
@@ -592,9 +607,23 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// True while the flier sits over a bud top.
-    fn over_bud(&self) -> bool {
-        self.perched_bud().is_some()
+    /// True while the flier sits over a bud or bushing top.
+    fn over_perch(&self) -> bool {
+        if self.perched_bud().is_some() {
+            return true;
+        }
+        let Some(flier) = self.active_flier() else {
+            return false;
+        };
+        let fx0 = flier.get_x();
+        let fx1 = fx0 + flier.visual().look.width() as isize;
+        self.elements.cot::<Bushing<S>>().into_iter().any(|b| {
+            if b.is_top() {
+                return false;
+            }
+            let w = b.visual.look.width() as isize;
+            fx0 < b.get_x() + w && b.get_x() < fx1
+        })
     }
 
     /// The bud top under the flier, if any.
@@ -608,8 +637,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         })
     }
 
-    /// Bud top crossed falling from prev_bottom to new_bottom, if any.
-    fn bud_top_under(&self, prev_bottom: f32, new_bottom: f32) -> Option<f32> {
+    /// Bud or bushing top crossed falling from prev_bottom to
+    /// new_bottom, if any. Touching down = land, not kill.
+    fn perch_top_under(&self, prev_bottom: f32, new_bottom: f32) -> Option<f32> {
         let Some(flier) = self.active_flier() else {
             return None;
         };
@@ -622,6 +652,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 && top <= new_bottom
                 && fx0 < bud.get_x() + w
                 && bud.get_x() < fx1
+            {
+                return Some(top);
+            }
+        }
+        for bushing in self.elements.cot::<Bushing<S>>() {
+            if bushing.is_top() {
+                continue;
+            }
+            let w = bushing.visual.look.width() as isize;
+            let top = (bushing.get_y() - self.get_y()) as f32;
+            if prev_bottom <= top
+                && top <= new_bottom
+                && fx0 < bushing.get_x() + w
+                && bushing.get_x() < fx1
             {
                 return Some(top);
             }
@@ -796,18 +840,22 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     }
 
     /// Three 40-wide tiles across and past the window.
+    /// Static ground tile plus one scrolling pavement marquee.
     fn add_ground(&self) {
-
-        for x in [0, SCENERY_WIDTH as isize, SCENERY_WIDTH as isize * 2] {
-            let tile = Scenery::<S>::new(SceneryOptions {
-                pavement_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
-                floor_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).floor,
-                bush_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_bg,
-                bush_color: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_color,
-            });
-            tile.x(x).y(GAME_GROUND_Y);
-            self.add(tile);
-        }
+        let tile = Scenery::<S>::new(SceneryOptions {
+            floor_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).floor,
+            bush_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_bg,
+            bush_color: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_color,
+        });
+        tile.x(0).y(GAME_GROUND_Y);
+        self.add(tile);
+        let pavement = Pavement::<S>::new(PavementOptions {
+            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            width: PAVEMENT_WIDTH,
+        });
+        pavement.x(0).y(GAME_GROUND_Y + 5);
+        self.add(pavement);
+        self.send_scenery_to_back();
     }
 
     /// Single flower on the ground: random stem height with the
@@ -874,7 +922,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Places a top + bottom pipe duo at the given x. Top pipe starts
     /// at row 0, bottom pipe ends at row 20, 11-row gap between bushings.
     fn spawn_pipe_at(&self, x: isize) {
-        let top_height = rng().random_range(2..=5) as isize;
+        let top_height = rng().random_range(2i32..=5) as isize;
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
@@ -886,12 +934,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
             background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            top: true,
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
             background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            top: false,
         });
         bottom_bushing
             .x(x - 1)
@@ -1050,9 +1100,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         if self.internal_state.dying.get() {
             return;
         }
-        for tile in self.elements.cot::<Scenery<S>>() {
-            tile.x(tile.get_x() - 1);
-        }
         for pipe in self.elements.cot::<Pipe<S>>() {
             pipe.x(pipe.get_x() - 1);
         }
@@ -1088,10 +1135,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
         self.step_bullets();
 
-        // Leftmost at -40 wraps past the right edge, relative to self.
-        for tile in self.elements.cot::<Scenery<S>>() {
-            if tile.get_x() <= self.get_x() - SCENERY_WIDTH as isize {
-                tile.x(tile.get_x() + SCENERY_WIDTH as isize * 3);
+        // Pavement marquee: one cell left per step, wrapping by its
+        // 2-wide stripe period for a seamless scroll illusion.
+        for pavement in self.elements.cot::<Pavement<S>>() {
+            let x = pavement.get_x() - 1;
+            if x - self.get_x() <= -2 {
+                pavement.x(x + 2);
+            } else {
+                pavement.x(x);
             }
         }
 
@@ -1171,6 +1222,3 @@ impl<S: Clone + PartialEq> Default for Game<S> {
         Self::new(GameOptions::default())
     }
 }
-
-
-

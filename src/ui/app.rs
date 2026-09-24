@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{App, Button, FramedText, Image, Label, Rectangle, TextButton};
+use incredible_elements::{App, Button, FramedText, Image, Label, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_layout::*;
 
@@ -147,9 +147,24 @@ fn cycle_focus(el: &App<State>, state: &mut State, dir: isize) {
 /// Back-to-splash button hit on the selected game.
 fn clicked_back_button(el: &App<State>, state: &State, x: isize, y: isize) -> bool {
     for game in selected_games(el, state) {
-        for btn in game.elements.dcot_w::<TextButton<State>, _>(|e| {
+        for btn in game.elements.dcot_w::<Button<State>, _>(|e| {
             e.get_handle() == "back_button"
         }) {
+            let (bx, by) = (btn.get_x(), btn.get_y());
+            if x >= bx
+                && x < bx + btn.visual.look.width() as isize
+                && y >= by
+                && y < by + btn.visual.look.height() as isize
+            {
+                return true;
+            }
+        }
+        for btn in game
+            .elements
+            .dcot_w::<elements::ImageButton<State>, _>(|e| {
+                e.get_handle() == "back_image_button"
+            })
+        {
             let (bx, by) = (btn.get_x(), btn.get_y());
             if x >= bx
                 && x < bx + btn.visual.look.width() as isize
@@ -215,7 +230,6 @@ fn sync_hint(el: &App<State>, state: &mut State) {
 }
 pub fn transition(phase: &Phase, key: &Key) -> Option<Phase> {
     match (key, phase) {
-        (Key::Escape, _) => Some(Phase::Splash),
         (Key::Enter, Phase::Splash) => Some(Phase::Ready),
         (Key::Enter | Key::Char(' '), Phase::Ready) => Some(Phase::Flying),
         _ => None,
@@ -270,9 +284,15 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     }
     for back in game
         .elements
-        .dcot_w::<TextButton<State>, _>(|e| e.get_handle() == "back_button")
+        .dcot_w::<Button<State>, _>(|e| e.get_handle() == "back_button")
     {
-        back.showed(state.phase != Phase::Flying);
+        back.showed(state.phase != Phase::Flying && !state.kitty);
+    }
+    for back in game
+        .elements
+        .dcot_w::<elements::ImageButton<State>, _>(|e| e.get_handle() == "back_image_button")
+    {
+        back.showed(state.phase != Phase::Flying && state.kitty);
     }
     for panel in game
         .elements
@@ -367,10 +387,6 @@ pub fn build() -> App<State> {
                 state.phase = Phase::Ready;
                 el.draw();
             }
-        } else if state.phase == Phase::Splash && matches!(event.key, Key::Left) {
-            cycle_focus(el, state, -1);
-        } else if state.phase == Phase::Splash && matches!(event.key, Key::Right) {
-            cycle_focus(el, state, 1);
         } else if state.phase == Phase::Splash && matches!(event.key, Key::Tab) {
             cycle_focus(el, state, 1);
         } else if state.phase == Phase::Splash && matches!(event.key, Key::BackTab) {
