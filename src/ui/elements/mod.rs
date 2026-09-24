@@ -20,6 +20,7 @@ pub mod scenery;
 pub mod score;
 pub mod score_panel;
 pub mod sparkle;
+pub mod stoplight;
 pub mod u16_image;
 
 pub use alien::*;
@@ -43,4 +44,5 @@ pub use scenery::*;
 pub use score::*;
 pub use score_panel::*;
 pub use sparkle::*;
+pub use stoplight::*;
 pub use u16_image::*;

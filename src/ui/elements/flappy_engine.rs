@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{Button, Image, Label, LabelOptions};
+use incredible_elements::{Button, Image};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use crate::ui::elements::{BoxedTextFont, BoxedTextFontOptions};
@@ -18,7 +18,7 @@ use crate::ui::elements::{
     Bushing, BushingOptions, DeadBird,
     DeadCat, Floor, FLOWER_BUD_HEIGHT, FlowerBud, FlowerStem, FlowerStemOptions,
     FlyingBird, FlyingCat, ImageButton, ImageButtonKind, ImageButtonOptions, PAVEMENT_WIDTH, Pavement, PavementOptions, Scenery, SceneryOptions, Score, U16Image,
-    SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel, Sparkle,
+    SCORE_PANEL_PARK_Y, SCORE_PANEL_WIDTH, SCORE_PANEL_REST_Y, ScorePanel, Sparkle, Stoplight,
 };
 
 pub const GAME_WIDTH: usize = 80;
@@ -206,17 +206,15 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             .y(1);
         el.add(score);
 
-        // Countdown label, center screen. Shown in Ready only.
-        let countdown = Label::<S>::new(LabelOptions::default());
-        countdown.text("3");
-        countdown.color(Some(Color::Ansi(crate::ui::theme::SCORE_PANEL_TEXT)));
-        countdown.bold(Some(true));
-        countdown.handle("countdown_label");
-        countdown.showed(false);
-        countdown
-            .x((GAME_WIDTH as isize - countdown.visual.look.width() as isize) / 2)
-            .y((GAME_HEIGHT as isize - countdown.visual.look.height() as isize) / 2);
-        el.add(countdown);
+        // Countdown stoplight, center screen. Shown in Ready only.
+        let stoplight = Stoplight::<S>::default();
+        stoplight.set_lit(1);
+        stoplight.handle("stoplight");
+        stoplight.showed(false);
+        stoplight
+            .x((GAME_WIDTH as isize - stoplight.visual.look.width() as isize) / 2)
+            .y((GAME_HEIGHT as isize - stoplight.visual.look.height() as isize) / 2);
+        el.add(stoplight);
 
         // Kitty-mode image score in the same slot.
         let image_score = U16Image::<S>::default();
@@ -357,6 +355,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn set_kind(&self, kind: crate::ui::app::SelectedGame) -> &Self {
         self.internal_state.kind.set(kind);
         self.background(Some(Color::Ansi(crate::ui::app::palette_for(&kind).sky)));
+        for light in self.elements.cot::<Stoplight<S>>() {
+            light.set_lit_color(crate::ui::app::palette_for(&kind).pipe_base);
+        }
         self
     }
 
@@ -647,23 +648,9 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
     }
 
-    /// True while the flier sits over a bud or bushing top.
+    /// True while the flier sits over a bud top.
     fn over_perch(&self) -> bool {
-        if self.perched_bud().is_some() {
-            return true;
-        }
-        let Some(flier) = self.active_flier() else {
-            return false;
-        };
-        let fx0 = flier.get_x();
-        let fx1 = fx0 + flier.visual().look.width() as isize;
-        self.elements.cot::<Bushing<S>>().into_iter().any(|b| {
-            if b.is_top() {
-                return false;
-            }
-            let w = b.visual.look.width() as isize;
-            fx0 < b.get_x() + w && b.get_x() < fx1
-        })
+        self.perched_bud().is_some()
     }
 
     /// The bud top under the flier, if any.
@@ -677,8 +664,8 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         })
     }
 
-    /// Bud or bushing top crossed falling from prev_bottom to
-    /// new_bottom, if any. Touching down = land, not kill.
+    /// Bud top crossed falling from prev_bottom to new_bottom, if any.
+    /// Touching down = land, not kill.
     fn perch_top_under(&self, prev_bottom: f32, new_bottom: f32) -> Option<f32> {
         let Some(flier) = self.active_flier() else {
             return None;
@@ -692,20 +679,6 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
                 && top <= new_bottom
                 && fx0 < bud.get_x() + w
                 && bud.get_x() < fx1
-            {
-                return Some(top);
-            }
-        }
-        for bushing in self.elements.cot::<Bushing<S>>() {
-            if bushing.is_top() {
-                continue;
-            }
-            let w = bushing.visual.look.width() as isize;
-            let top = (bushing.get_y() - self.get_y()) as f32;
-            if prev_bottom <= top
-                && top <= new_bottom
-                && fx0 < bushing.get_x() + w
-                && bushing.get_x() < fx1
             {
                 return Some(top);
             }
@@ -974,14 +947,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
             background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
-            top: true,
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
             background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
-            top: false,
         });
         bottom_bushing
             .x(x - 1)

@@ -156,6 +156,10 @@ pub const SCORE_PANEL_BACKGROUND_RGB: Option<(u8, u8, u8)> =
 pub const SCORE_PANEL_LABEL_BACKGROUND: (u8, u8, u8) = (219, 218, 150);
 pub const SCORE_PANEL_TEXT: u8 = 16;
 
+// Stoplight: pavement dark burns, dim gray rests.
+pub const STOPLIGHT_LIT: u8 = PAVEMENT_BASE;
+pub const STOPLIGHT_DIM: u8 = 240;
+
 // Graze sparkles fall back to bright white.
 pub const SPARKLE_COLOR: u8 = 231;
 

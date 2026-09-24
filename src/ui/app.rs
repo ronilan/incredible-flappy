@@ -295,10 +295,12 @@ fn start_countdown(el: &App<State>, state: &mut State) {
     state.countdown = 3;
     state.countdown_at = Globals::now();
     for game in selected_games(el, state) {
-        for label in game.elements.dcot_w::<Label<State>, _>(|e| {
-            e.get_handle() == "countdown_label"
+        game.set_kind(state.selected);
+        game.reset();
+        for light in game.elements.dcot_w::<elements::Stoplight<State>, _>(|e| {
+            e.get_handle() == "stoplight"
         }) {
-            label.text("3");
+            light.set_lit(1);
         }
     }
     state.phase = Phase::Ready;
@@ -381,7 +383,6 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     match state.phase {
         Phase::Ready => {
             game.set_kind(state.selected);
-            game.reset();
             game.set_running(true);
             game.set_spawning(false);
             set_game_focus(game, true);
@@ -438,13 +439,13 @@ fn drive_game(game: &elements::Game<State>, state: &State) {
     {
         panel.showed(state.phase == Phase::Score);
     }
-    for label in game
+    for light in game
         .elements
-        .dcot_w::<Label<State>, _>(|e| e.get_handle() == "countdown_label")
+        .dcot_w::<elements::Stoplight<State>, _>(|e| e.get_handle() == "stoplight")
     {
-        label.showed(state.phase == Phase::Ready);
+        light.showed(state.phase == Phase::Ready);
         if state.phase == Phase::Ready {
-            label.text(state.countdown.to_string().as_str());
+            light.set_lit(4 - state.countdown.min(3));
         }
     }
     for frame in game
@@ -653,11 +654,6 @@ pub fn build() -> App<State> {
                 } else {
                     state.countdown = 0;
                     state.phase = Phase::Flying;
-                    if state.kitty {
-                        for game in selected_games(el, state) {
-                            game.flap();
-                        }
-                    }
                 }
                 el.draw();
             }

@@ -11,15 +11,12 @@ pub const BUSHING_HEIGHT: usize = 1;
 #[derive(Clone, Debug)]
 pub struct BushingOptions {
     pub background: u8,
-    /// Top bushings cap pipes from below; only bottom ones perch.
-    pub top: bool,
 }
 
 impl Default for BushingOptions {
     fn default() -> Self {
         Self {
             background: theme::BUSHING_BACKGROUND,
-            top: false,
         }
     }
 }
@@ -31,10 +28,6 @@ element! {
 }
 
 impl<S: Clone + PartialEq> Bushing<S> {
-    /// True for caps hanging under top pipes, which never perch.
-    pub fn is_top(&self) -> bool {
-        self.options.top
-    }
     pub fn new(options: BushingOptions) -> Self {
         let mut el = Self::blank();
         el.options = options;
