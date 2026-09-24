@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use incredible::*;
-use incredible_elements::{Button, Image};
+use incredible_elements::{Button, Image, Label, LabelOptions};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 use crate::ui::elements::{BoxedTextFont, BoxedTextFontOptions};
@@ -153,15 +153,29 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         flying_cat.showed(false);
         el.add(flying_cat);
 
-        // Back to splash, top-left corner. Clicks handled in app.
+        // Back and play, bottom row. Clicks handled in app.
         let back = Button::<S>::new();
         back.text("←");
         back.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
         back.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
         back.pointer(Some(PointerShape::Pointer));
         back.handle("back_button");
-        back.x(1).y(1);
+        let back_w = back.visual.look.width() as isize;
+
+        let play = Button::<S>::new();
+        play.text("PLAY");
+        play.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
+        play.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
+        play.pointer(Some(PointerShape::Pointer));
+        play.handle("play_button");
+        play.focused(true);
+        let play_w = play.visual.look.width() as isize;
+
+        let row_x = (GAME_WIDTH as isize - (back_w + play_w + 1)) / 2;
+        back.x(row_x).y(14);
         el.add(back);
+        play.x(row_x + back_w + 1).y(14);
+        el.add(play);
 
         let back_img = ImageButton::<S>::new(ImageButtonOptions {
             kind: ImageButtonKind::Back,
@@ -169,14 +183,40 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
         back_img.handle("back_image_button");
         back_img.showed(false);
-        back_img.x(1).y(1);
+        let back_img_w = back_img.visual.look.width() as isize;
+
+        let play_img = ImageButton::<S>::new(ImageButtonOptions {
+            kind: ImageButtonKind::Play,
+            ..Default::default()
+        });
+        play_img.handle("play_image_button");
+        play_img.showed(false);
+        play_img.focused(true);
+        let play_img_w = play_img.visual.look.width() as isize;
+
+        let img_x = (GAME_WIDTH as isize - (back_img_w + play_img_w + 1)) / 2;
+        back_img.x(img_x).y(14);
         el.add(back_img);
+        play_img.x(img_x + back_img_w + 1).y(14);
+        el.add(play_img);
 
         let score = Score::<S>::default();
         score
             .x((GAME_WIDTH as isize - score.visual.look.width() as isize) / 2)
             .y(1);
         el.add(score);
+
+        // Countdown label, center screen. Shown in Ready only.
+        let countdown = Label::<S>::new(LabelOptions::default());
+        countdown.text("3");
+        countdown.color(Some(Color::Ansi(crate::ui::theme::SCORE_PANEL_TEXT)));
+        countdown.bold(Some(true));
+        countdown.handle("countdown_label");
+        countdown.showed(false);
+        countdown
+            .x((GAME_WIDTH as isize - countdown.visual.look.width() as isize) / 2)
+            .y((GAME_HEIGHT as isize - countdown.visual.look.height() as isize) / 2);
+        el.add(countdown);
 
         // Kitty-mode image score in the same slot.
         let image_score = U16Image::<S>::default();
@@ -1028,6 +1068,18 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             let ptr = Rc::as_ptr(&cat);
             self.to_front_of_type_where::<DeadCat<S>, _>(|c| {
                 std::ptr::eq(c as *const _, ptr)
+            });
+        }
+        for btn in self.elements.cot::<Button<S>>() {
+            let ptr = Rc::as_ptr(&btn);
+            self.to_front_of_type_where::<Button<S>, _>(|b| {
+                std::ptr::eq(b as *const _, ptr)
+            });
+        }
+        for btn in self.elements.cot::<ImageButton<S>>() {
+            let ptr = Rc::as_ptr(&btn);
+            self.to_front_of_type_where::<ImageButton<S>, _>(|b| {
+                std::ptr::eq(b as *const _, ptr)
             });
         }
     }

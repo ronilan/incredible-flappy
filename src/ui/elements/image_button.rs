@@ -22,6 +22,10 @@ const BACK_PNG: &[u8] = include_bytes!("../../../assets/back.png");
 const BACK_HOVERED_PNG: &[u8] = include_bytes!("../../../assets/back_hovered.png");
 const BACK_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/back_focused.png");
 const BACK_ACTIVATED_PNG: &[u8] = include_bytes!("../../../assets/back_activated.png");
+const PLAY_PNG: &[u8] = include_bytes!("../../../assets/play.png");
+const PLAY_HOVERED_PNG: &[u8] = include_bytes!("../../../assets/play_hovered.png");
+const PLAY_FOCUSED_PNG: &[u8] = include_bytes!("../../../assets/play_focused.png");
+const PLAY_ACTIVATED_PNG: &[u8] = include_bytes!("../../../assets/play_activated.png");
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ImageButtonKind {
@@ -29,6 +33,7 @@ pub enum ImageButtonKind {
     Graze,
     Shoot,
     Back,
+    Play,
 }
 
 impl ImageButtonKind {
@@ -38,6 +43,7 @@ impl ImageButtonKind {
             ImageButtonKind::Graze => GRAZE_PNG,
             ImageButtonKind::Shoot => SHOOT_PNG,
             ImageButtonKind::Back => BACK_PNG,
+            ImageButtonKind::Play => PLAY_PNG,
         }
     }
 
@@ -47,6 +53,7 @@ impl ImageButtonKind {
             ImageButtonKind::Graze => GRAZE_HOVERED_PNG,
             ImageButtonKind::Shoot => SHOOT_HOVERED_PNG,
             ImageButtonKind::Back => BACK_HOVERED_PNG,
+            ImageButtonKind::Play => PLAY_HOVERED_PNG,
         }
     }
 
@@ -56,6 +63,7 @@ impl ImageButtonKind {
             ImageButtonKind::Graze => GRAZE_ACTIVATED_PNG,
             ImageButtonKind::Shoot => SHOOT_ACTIVATED_PNG,
             ImageButtonKind::Back => BACK_ACTIVATED_PNG,
+            ImageButtonKind::Play => PLAY_ACTIVATED_PNG,
         }
     }
 
@@ -65,6 +73,7 @@ impl ImageButtonKind {
             ImageButtonKind::Graze => GRAZE_FOCUSED_PNG,
             ImageButtonKind::Shoot => SHOOT_FOCUSED_PNG,
             ImageButtonKind::Back => BACK_FOCUSED_PNG,
+            ImageButtonKind::Play => PLAY_FOCUSED_PNG,
         }
     }
 }

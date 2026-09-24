@@ -4,6 +4,7 @@ use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
 use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
+use crate::ui::elements::{Pavement, PavementOptions};
 use crate::ui::theme;
 
 use super::{buttons, fluffy, hint, image_buttons, kicker, scenery, title};
@@ -56,6 +57,13 @@ pub(crate) fn build() -> Rectangle<State> {
     let ground = scenery::build_scenery();
     ground.x(0).y(16);
     splash.add(ground);
+
+    let pavement = Pavement::<State>::new(PavementOptions {
+        background: theme::PAVEMENT_BASE,
+        width: SCREEN_WIDTH,
+    });
+    pavement.x(0).y(16 + 5);
+    splash.add(pavement);
 
     let [basic, graze, shoot] = buttons::build_buttons();
     let (basic_w, graze_w, shoot_w) = (
