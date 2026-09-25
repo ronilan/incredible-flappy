@@ -7,6 +7,7 @@ Inspired by Impossible Flappy (parts lifted verbatim).
 It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework.
 
 <p align=center><img src="./media/social.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
+<p align=center><img src="./media/social-kitty.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
 
 # Install
 
