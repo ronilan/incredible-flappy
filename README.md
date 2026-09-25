@@ -2,9 +2,7 @@
 
 Flappy Bird for your terminal, with three ways to play: dodge the pipes, graze the flowers, or shoot the invaders.
 
-Inspired by Impossible Flappy (parts lifted verbatim).
-
-It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework.
+It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework. Inspired (meaning parts lifted verbatim) by [Impossible Flappy](https://asciinema.org/a/370006).
 
 <p align=center><img src="./media/social.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
 <p align=center><img src="./media/social-kitty.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
