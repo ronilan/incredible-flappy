@@ -2,7 +2,7 @@
 
 Flappy Bird for your terminal, with three ways to play: dodge the pipes, graze the flowers, or shoot the invaders.
 
-It can be be played in the terminal, using native macOS and Windows app or [right here in the browser](https://ronilan.github.io/incredible-flappy/).
+It can be played in the terminal, using native macOS and Windows app or [right here in the browser](https://ronilan.github.io/incredible-flappy/).
 
 It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework. Inspired (meaning parts lifted verbatim) by [Impossible Flappy](https://asciinema.org/a/370006).
 
@@ -15,7 +15,7 @@ It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https:
 
 No install needed: https://ronilan.github.io/incredible-flappy/
 
-## Pre Built Binaries
+## Prebuilt Binaries
 
 Pre built binaries are provided for each [release](https://github.com/ronilan/incredible-flappy/releases).
 

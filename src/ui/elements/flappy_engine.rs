@@ -651,16 +651,13 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
             if v >= 0.0 {
                 if let Some(flier) = self.active_flier() {
                     let fh = flier.visual().look.height() as f32;
-                    // Cats never land: they die instead.
-                    if !self.internal_state.kitty.get() {
-                        if let Some(top) = self.perch_top_under(prev + fh, y + fh) {
-                            self.internal_state.landed.set(true);
-                            self.internal_state.velocity.set(0.0);
-                            self.internal_state.bird_y.set(top - fh);
-                            self.place_bird(top - fh);
-                            self.add_score(1);
-                            return;
-                        }
+                    if let Some(top) = self.perch_top_under(prev + fh, y + fh) {
+                        self.internal_state.landed.set(true);
+                        self.internal_state.velocity.set(0.0);
+                        self.internal_state.bird_y.set(top - fh);
+                        self.place_bird(top - fh);
+                        self.add_score(1);
+                        return;
                     }
                     // Fast falls can hop the thin ground band: die on sweep.
                     if swept_ground(prev, fh, y) {
