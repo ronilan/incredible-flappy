@@ -1,7 +1,7 @@
 use incredible::*;
 use incredible_elements::Image;
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 use crate::ui::assets::decode_png;
 
 /// Builds the kitty-mode fluffy title at two thirds of the given

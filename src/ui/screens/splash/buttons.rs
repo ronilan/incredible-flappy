@@ -2,14 +2,12 @@ use incredible::*;
 use incredible_helpers_styling::*;
 use incredible_elements::Button;
 
-use crate::ui::app::{Phase, SelectedGame, State};
-use crate::ui::theme;
+use crate::ui::state::{Phase, SelectedGame, State};
 
 fn game_button(text: &str, handle: &str, game: SelectedGame) -> Button<State> {
     let btn = Button::<State>::new();
     btn.text(text)
-        .background(Some(Color::Ansi(theme::BUTTON_BACKGROUND)))
-        .color(Some(Color::Ansi(theme::BUTTON_TEXT)))
+        .style_handle("GameButton")
         .handle(handle)
         .focused(false)
         .pointer(Some(PointerShape::Pointer));

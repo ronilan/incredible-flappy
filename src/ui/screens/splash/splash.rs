@@ -3,7 +3,8 @@ use incredible_elements::{Label, Rectangle};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
-use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH, State};
+use crate::ui::app::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::ui::state::State;
 use crate::ui::elements::{Pavement, PavementOptions};
 use crate::ui::theme;
 

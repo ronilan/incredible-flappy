@@ -1,7 +1,7 @@
 use incredible::*;
 use incredible_helpers_styling::*;
 
-use crate::ui::app::{Phase, SelectedGame, State};
+use crate::ui::state::{Phase, SelectedGame, State};
 use crate::ui::elements::{ImageButton, ImageButtonKind, ImageButtonOptions};
 
 fn image_button(kind: ImageButtonKind, handle: &str, game: SelectedGame) -> ImageButton<State> {

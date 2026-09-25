@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 
 #[cfg(not(target_arch = "wasm32"))]
 const DATA_DIR: &str = "incredible-flappy";

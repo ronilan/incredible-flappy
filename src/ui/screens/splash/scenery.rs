@@ -1,4 +1,4 @@
-use crate::ui::app::State;
+use crate::ui::state::State;
 use crate::ui::elements::Scenery;
 
 /// Builds the ground tile. Unpositioned; the composer places it.

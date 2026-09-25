@@ -2,7 +2,7 @@ use incredible::*;
 use incredible_elements::{Button, FramedText, Image, Label, Link, Rectangle};
 use incredible_elements_text_fonts::BlockCharsStr;
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 use crate::ui::elements::ImageButton;
 
 /// Lifts everything but the ground to leave one row at the top.

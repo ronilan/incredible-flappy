@@ -116,6 +116,11 @@ pub const BUTTON_BACKGROUND: u8 = 166;
 pub const BUTTON_TEXT: u8 = 15;
 
 pub(crate) fn theme_all() {
+    theme_rule::<Style>("GameButton", |s| {
+        s.base.decor.background
+            .set(Some(Color::ansi(BUTTON_BACKGROUND)));
+        s.base.decor.color.set(Some(Color::ansi(BUTTON_TEXT)));
+    });
     theme_rule::<Style>("Crab", |s| {
         s.base.decor.color.set(Some(Color::ansi(CRAB_COLOR)));
     });

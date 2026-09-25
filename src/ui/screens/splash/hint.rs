@@ -2,8 +2,9 @@ use incredible::*;
 use incredible_elements::{FrameKind, FrameStyle, FramedText, Label, LabelOptions};
 use incredible_helpers_styling::*;
 
-use crate::ui::app::{SCREEN_WIDTH, State};
-use crate::ui::app::SelectedGame;
+use crate::ui::app::SCREEN_WIDTH;
+use crate::ui::state::State;
+use crate::ui::state::SelectedGame;
 use crate::ui::theme;
 
 pub const HINT_WIDTH: usize = 28;

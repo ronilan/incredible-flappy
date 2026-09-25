@@ -2,12 +2,18 @@
 
 Flappy Bird for your terminal, with three ways to play: dodge the pipes, graze the flowers, or shoot the invaders.
 
+It can be be played in the terminal, using native macOS and Windows app or [right here in the browser](https://ronilan.github.io/incredible-flappy/).
+
 It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework. Inspired (meaning parts lifted verbatim) by [Impossible Flappy](https://asciinema.org/a/370006).
 
 <p align=center><img src="./media/social.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
 <p align=center><img src="./media/social-kitty.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
 
 # Install
+
+## Web
+
+No install needed: https://ronilan.github.io/incredible-flappy/
 
 ## Pre Built Binaries
 
@@ -36,7 +42,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ronilan/i
 irm https://raw.githubusercontent.com/ronilan/incredible-flappy/main/install.ps1 | iex
 ```
 
-Uninstall the same way with `uninstall.sh` / `uninstall.ps1`. If the release lookup fails, pass the binary name explicitly: `bash uninstall.sh <binary-name>` / `uninstall.ps1 -BinName <name>`.
+Uninstall the same way with `uninstall.sh` / `uninstall.ps1`. 
 
 # Play
 
@@ -48,13 +54,11 @@ Pick a game on the splash screen with Tab, then Enter to start. Clicking a game 
 
 ## Controls
 
-- Enter / Space / click — flap (and shoot in SHOOT)
-- K — kitty mode (cats instead of birds, all titles and buttons swap to art)
+- Tab to select
+- Enter / Space / click — flap
+- K — kitty mode
 - Esc — pause in flight, Enter resumes
-
-## Game over
-
-The score panel slides up with your score, your all-time best, and a medal (🥇🥈🥉) if the run placed top 3 — 💩 otherwise.
+- Mouse works
 
 ## Files
 

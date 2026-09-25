@@ -53,7 +53,7 @@ pub struct GameOptions {
     pub interval_ms: u128,
     pub spawn_gap: usize,
     pub physics: BirdPhysics,
-    pub kind: crate::ui::app::SelectedGame,
+    pub kind: crate::ui::state::SelectedGame,
     pub handle: String,
 }
 
@@ -63,7 +63,7 @@ impl Default for GameOptions {
             interval_ms: 100,
             spawn_gap: 30,
             physics: BirdPhysics::default(),
-            kind: crate::ui::app::SelectedGame::Classic,
+            kind: crate::ui::state::SelectedGame::Classic,
             handle: "game".to_string(),
         }
     }
@@ -107,7 +107,7 @@ element! {
 pub struct GameState {
     pub running: Cell<bool>,
     pub spawning: Cell<bool>,
-    pub kind: Cell<crate::ui::app::SelectedGame>,
+    pub kind: Cell<crate::ui::state::SelectedGame>,
     pub kitty: Cell<bool>,
     pub distance: Cell<usize>,
     pub bird_y: Cell<f32>,
@@ -122,7 +122,7 @@ impl Default for GameState {
         Self {
             running: Cell::new(false),
             spawning: Cell::new(false),
-            kind: Cell::new(crate::ui::app::SelectedGame::Classic),
+            kind: Cell::new(crate::ui::state::SelectedGame::Classic),
             kitty: Cell::new(false),
             distance: Cell::new(0),
             bird_y: Cell::new(10.0),
@@ -141,7 +141,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         el.internal_state.kind.set(el.options.kind);
 
         el.look(Look::from((GAME_WIDTH, GAME_HEIGHT, ' ')))
-            .background(Some(Color::Ansi(crate::ui::app::palette_for(&el.options.kind).sky)))
+            .background(Some(Color::Ansi(crate::ui::state::palette_for(&el.options.kind).sky)))
             .handle(el.options.handle.clone());
 
         let flying_bird = FlyingBird::<S>::default();
@@ -156,8 +156,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         // Pause on top, resume twin for kitty. Clicks handled in app.
         let pause = Button::<S>::new();
         pause.text("II");
-        pause.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
-        pause.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
+        pause.style_handle("GameButton");
         pause.pointer(Some(PointerShape::Pointer));
         pause.handle("pause_button");
         pause.showed(false);
@@ -187,16 +186,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         // Back and play, bottom row. Clicks handled in app.
         let back = Button::<S>::new();
         back.text("←");
-        back.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
-        back.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
+        back.style_handle("GameButton");
         back.pointer(Some(PointerShape::Pointer));
         back.handle("back_button");
         let back_w = back.visual.look.width() as isize;
 
         let play = Button::<S>::new();
         play.text("PLAY");
-        play.background(Some(Color::Ansi(crate::ui::theme::BUTTON_BACKGROUND)));
-        play.color(Some(Color::Ansi(crate::ui::theme::BUTTON_TEXT)));
+        play.style_handle("GameButton");
         play.pointer(Some(PointerShape::Pointer));
         play.handle("play_button");
         play.focused(true);
@@ -385,11 +382,11 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     }
 
     /// Switches the game kind. Sky applies now, rest on next reset/spawn.
-    pub fn set_kind(&self, kind: crate::ui::app::SelectedGame) -> &Self {
+    pub fn set_kind(&self, kind: crate::ui::state::SelectedGame) -> &Self {
         self.internal_state.kind.set(kind);
-        self.background(Some(Color::Ansi(crate::ui::app::palette_for(&kind).sky)));
+        self.background(Some(Color::Ansi(crate::ui::state::palette_for(&kind).sky)));
         for light in self.elements.cot::<Stoplight<S>>() {
-            light.set_lit_color(crate::ui::app::palette_for(&kind).pipe_base);
+            light.set_lit_color(crate::ui::state::palette_for(&kind).pipe_base);
         }
         self
     }
@@ -505,7 +502,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     pub fn shoot(&self) -> &Self {
         if !matches!(
             self.internal_state.kind.get(),
-            crate::ui::app::SelectedGame::Invaders
+            crate::ui::state::SelectedGame::Invaders
         ) || self.internal_state.dying.get()
         {
             return self;
@@ -900,14 +897,14 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Static ground tile plus one scrolling pavement marquee.
     fn add_ground(&self) {
         let tile = Scenery::<S>::new(SceneryOptions {
-            floor_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).floor,
-            bush_background: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_bg,
-            bush_color: crate::ui::app::palette_for(&self.internal_state.kind.get()).bush_color,
+            floor_background: crate::ui::state::palette_for(&self.internal_state.kind.get()).floor,
+            bush_background: crate::ui::state::palette_for(&self.internal_state.kind.get()).bush_bg,
+            bush_color: crate::ui::state::palette_for(&self.internal_state.kind.get()).bush_color,
         });
         tile.x(0).y(GAME_GROUND_Y);
         self.add(tile);
         let pavement = Pavement::<S>::new(PavementOptions {
-            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            background: crate::ui::state::palette_for(&self.internal_state.kind.get()).pipe_base,
             width: PAVEMENT_WIDTH,
         });
         pavement.x(0).y(GAME_GROUND_Y + 5);
@@ -959,7 +956,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Busy games swap the duo for a flower half the time,
     /// invaders games for an alien.
     fn spawn_obstacle_at(&self, x: isize) {
-        if matches!(self.internal_state.kind.get(), crate::ui::app::SelectedGame::Busy)
+        if matches!(self.internal_state.kind.get(), crate::ui::state::SelectedGame::Busy)
             && rng().random_bool(0.5)
         {
             self.spawn_flower_at(x);
@@ -967,7 +964,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         }
         if matches!(
             self.internal_state.kind.get(),
-            crate::ui::app::SelectedGame::Invaders
+            crate::ui::state::SelectedGame::Invaders
         ) && rng().random_bool(0.5)
         {
             self.spawn_alien_at(x);
@@ -983,20 +980,20 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         let bottom_height = GAME_GROUND_TOP_ROW - (top_height + 1 + GAME_GAP_ROWS + 1) + 1;
 
         let top_pipe = Pipe::<S>::new(PipeOptions {
-            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            background: crate::ui::state::palette_for(&self.internal_state.kind.get()).pipe_base,
             height: top_height as usize,
         });
         top_pipe.x(x).y(0);
         self.add(top_pipe);
 
         let top_bushing = Bushing::<S>::new(BushingOptions {
-            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            background: crate::ui::state::palette_for(&self.internal_state.kind.get()).pipe_base,
         });
         top_bushing.x(x - 1).y(top_height);
         self.add(top_bushing);
 
         let bottom_bushing = Bushing::<S>::new(BushingOptions {
-            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            background: crate::ui::state::palette_for(&self.internal_state.kind.get()).pipe_base,
         });
         bottom_bushing
             .x(x - 1)
@@ -1004,7 +1001,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self.add(bottom_bushing);
 
         let bottom_pipe = Pipe::<S>::new(PipeOptions {
-            background: crate::ui::app::palette_for(&self.internal_state.kind.get()).pipe_base,
+            background: crate::ui::state::palette_for(&self.internal_state.kind.get()).pipe_base,
             height: bottom_height as usize,
         });
         bottom_pipe

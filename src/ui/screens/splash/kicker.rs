@@ -2,7 +2,7 @@ use incredible::*;
 use incredible_helpers_styling::*;
 use incredible_elements::{Label, LabelOptions, Link};
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 use crate::ui::theme;
 
 /// Builds the kicker pair: "The " label and "Incredible" link,

@@ -2,7 +2,7 @@ use incredible::*;
 use incredible_elements_text_fonts::BlockCharsStr;
 use incredible_helpers_effects::*;
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 
 fn title_effects(el: &BlockCharsStr<State>) {
     decorate_rules::<State, BlockCharsStr<State>>(el, title_effects);

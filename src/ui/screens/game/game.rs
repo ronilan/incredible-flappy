@@ -1,6 +1,6 @@
 use incredible::*;
 
-use crate::ui::app::State;
+use crate::ui::state::State;
 use crate::ui::elements::{Game, GameOptions};
 
 /// Builds a whole game screen with the given handle.
