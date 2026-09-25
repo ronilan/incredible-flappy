@@ -170,6 +170,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
         pause_img.handle("pause_image_button");
         pause_img.showed(false);
+        pause_img.pointer(Some(PointerShape::Pointer));
         pause_img.x(1).y(1);
         el.add(pause_img);
 
@@ -179,6 +180,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
         resume_img.handle("resume_image_button");
         resume_img.showed(false);
+        resume_img.pointer(Some(PointerShape::Pointer));
         resume_img.x(1).y(1);
         el.add(resume_img);
 
@@ -212,6 +214,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
         back_img.handle("back_image_button");
         back_img.showed(false);
+        back_img.pointer(Some(PointerShape::Pointer));
         let back_img_w = back_img.visual.look.width() as isize;
 
         let play_img = ImageButton::<S>::new(ImageButtonOptions {
@@ -220,6 +223,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         });
         play_img.handle("play_image_button");
         play_img.showed(false);
+        play_img.pointer(Some(PointerShape::Pointer));
         play_img.focused(true);
         let play_img_w = play_img.visual.look.width() as isize;
 
@@ -522,6 +526,12 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Removes all bullets, e.g. so none freeze over the game-over panel.
     pub fn clear_bullets(&self) -> &Self {
         while self.elements.sot::<Bullet<S>>().is_some() {}
+        self
+    }
+
+    /// Stills the bird: zero velocity, e.g. on pause.
+    pub fn still(&self) -> &Self {
+        self.internal_state.velocity.set(0.0);
         self
     }
 

@@ -633,6 +633,9 @@ pub fn build() -> App<State> {
             }
             el.draw();
         } else if state.phase == Phase::Flying && matches!(event.key, Key::Escape) {
+            for game in selected_games(el, state) {
+                game.still();
+            }
             state.phase = Phase::Paused;
             el.draw();
         } else if state.phase == Phase::Paused && matches!(event.key, Key::Enter) {
@@ -702,6 +705,9 @@ pub fn build() -> App<State> {
             return;
         }
         if state.phase == Phase::Flying && clicked_pause_slot(el, state, event.x, event.y) {
+            for game in selected_games(el, state) {
+                game.still();
+            }
             state.phase = Phase::Paused;
             el.draw();
             return;

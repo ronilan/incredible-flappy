@@ -100,7 +100,8 @@ impl<S: Clone + PartialEq> Default for FlyingCat<S> {
 }
 
 fn decode_png(bytes: &[u8]) -> ImageData {
-    let img = image::load_from_memory(bytes).expect("cat asset decodes");
+    let img = image::load_from_memory_with_format(bytes, image::ImageFormat::Png)
+        .expect("cat asset decodes");
     let rgba = img.to_rgba8();
     let (width_px, height_px) = (rgba.width(), rgba.height());
     ImageData {

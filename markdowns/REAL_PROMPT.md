@@ -16,5 +16,3 @@ Before implementing, understand the requirements, identify edge cases and risks,
 Write code that could pass a rigorous code review. Avoid hacks, unnecessary complexity, premature optimization, duplicated logic, hidden state, and insecure shortcuts. When modifying existing code, preserve compatibility unless a breaking change is explicitly required.
 
 For every implementation, consider failure modes, performance, testing, and future maintenance.
-
-Dropped as inapplicable to this codebase: scalability design, retries/idempotency/transactions/backups, metrics/traces/health checks, comprehensive tests and CI/CD.
