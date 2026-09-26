@@ -520,6 +520,36 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
         self
     }
 
+    /// Re-skins all aliens for the kitty flag: logos in kitty,
+    /// marchers out. Keeps positions, roam and bob direction.
+    pub fn reskin_aliens(&self) -> &Self {
+        let kitty = self.internal_state.kitty.get();
+        for alien in self.elements.cot::<Alien<S>>() {
+            let kind = if kitty {
+                AlienKind::random_logo()
+            } else {
+                AlienKind::random()
+            };
+            let (x, y) = (
+                alien.get_x() - self.get_x(),
+                alien.get_y() - self.get_y(),
+            );
+            let (roam, dy) = (alien.options.roam, alien.internal_state.dy.get());
+            let ptr = Rc::as_ptr(&alien);
+            while self
+                .elements
+                .sot_w::<Alien<S>, _>(|a| std::ptr::eq(a as *const _, ptr))
+                .is_some()
+            {}
+            let fresh = Alien::<S>::new(AlienOptions { kind, roam });
+            fresh.internal_state.dy.set(dy);
+            fresh.x(x).y(y);
+            self.add(fresh);
+        }
+        self.send_scenery_to_back();
+        self
+    }
+
     /// Removes all bullets, e.g. so none freeze over the game-over panel.
     pub fn clear_bullets(&self) -> &Self {
         while self.elements.sot::<Bullet<S>>().is_some() {}

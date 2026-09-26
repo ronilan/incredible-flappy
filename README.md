@@ -6,8 +6,7 @@ It can be played in the terminal, using native macOS and Windows app or [right h
 
 It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https://www.incredible.rs/) TUI framework. Inspired (meaning parts lifted verbatim) by [Impossible Flappy](https://asciinema.org/a/370006).
 
-<p align=center><img src="./media/social.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
-<p align=center><img src="./media/social-kitty.png" alt="banner" width="640" style="border: 1px solid #999; border-radius: 5px"/></p>
+<p align=center><img src="./media/splash.png" alt="splash" width="401"/><img src="./media/classic.png" alt="splash" width="401"/><img src="./media/graze.png" alt="graze" width="401"><img src="./media/shoot.png" alt="shoot" width="401"></p>
 
 # Install
 
@@ -15,9 +14,9 @@ It's written in [Rust](https://www.rust-lang.org/) using the [Incredible](https:
 
 No install needed: https://ronilan.github.io/incredible-flappy/
 
-## Prebuilt Binaries
+## Native binaries
 
-Pre built binaries are provided for each [release](https://github.com/ronilan/incredible-flappy/releases).
+Prebuilt binaries are provided for each [release](https://github.com/ronilan/incredible-flappy/releases).
 
 ## Linux via Docker
 

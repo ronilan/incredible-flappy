@@ -521,6 +521,10 @@ pub fn build() -> App<State> {
             && Platform::output_provider().images()
         {
             state.kitty = !state.kitty;
+            for game in selected_games(el, state) {
+                game.set_kitty(state.kitty);
+                game.reskin_aliens();
+            }
             settings::persist_now(state);
             el.draw();
         }
