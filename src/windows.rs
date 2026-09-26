@@ -6,6 +6,8 @@ mod ui;
 mod platform;
 #[cfg(all(target_os = "windows", feature = "windows-native"))]
 mod runtime;
+#[cfg(all(target_os = "windows", feature = "windows-native"))]
+mod settings;
 
 #[cfg(all(target_os = "windows", feature = "windows-native"))]
 fn main() {

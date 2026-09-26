@@ -4,6 +4,8 @@ mod ui;
 mod platform;
 #[cfg(all(target_os = "macos", feature = "macos-native"))]
 mod runtime;
+#[cfg(all(target_os = "macos", feature = "macos-native"))]
+mod settings;
 
 #[cfg(all(target_os = "macos", feature = "macos-native"))]
 fn main() {
