@@ -97,7 +97,7 @@ impl<S: Clone + PartialEq> ScorePanel<S> {
             label
                 .text(row.as_str())
                 .color(Some(Color::Ansi(theme::SCORE_PANEL_TEXT)))
-                .background(Some(Color::Rgba(Rgba::new(r, g, b, 255))))
+                .background(Some(Color::rgb(r, g, b)))
                 .x(2)
                 .y(1 + i as isize)
                 .capture(Capture::all().set_style(false))

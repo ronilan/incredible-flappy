@@ -162,9 +162,9 @@ dependencies = [
 
 [[package]]
 name = "crc32fast"
-version = "1.5.2"
+version = "1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
+checksum = "5f97d3416d5337d15c4b0d78c8c91df922ca143f57ec20e2d1c188333047ef04"
 dependencies = [
  "cfg-if",
 ]
@@ -226,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "flate2"
-version = "1.1.10"
+version = "1.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+checksum = "626d4928326b646e70f65ed36fc7cf9f206bdb68a0019ee7c6b4709da4e084c4"
 dependencies = [
  "crc32fast",
  "miniz_oxide 0.9.1",
@@ -282,7 +282,7 @@ checksum = "ea5190182e6915eb873ddbc16e23b711b6eb1f9c00a0d0a3a91b5f6228475225"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.6",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -347,7 +347,7 @@ checksum = "9fb9654ba8355388abeb8dcb4fc62f511300867002afc858860463bdd9fe0c44"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.6",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -435,7 +435,7 @@ checksum = "edcd27d72f2f071c64249075f42e205ff93c9a4c5f6c6da53e79ed9f9832c285"
 [[package]]
 name = "incredible"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "unicode-segmentation",
@@ -445,7 +445,7 @@ dependencies = [
 [[package]]
 name = "incredible_clipboard_browser"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "wasm-bindgen",
@@ -456,7 +456,7 @@ dependencies = [
 [[package]]
 name = "incredible_clipboard_macos"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_window_macos",
@@ -465,7 +465,7 @@ dependencies = [
 [[package]]
 name = "incredible_clipboard_terminal"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "libc",
@@ -474,7 +474,7 @@ dependencies = [
 [[package]]
 name = "incredible_clipboard_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_window_windows",
@@ -483,7 +483,7 @@ dependencies = [
 [[package]]
 name = "incredible_dev_tools"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "wasm-bindgen",
  "web-sys",
@@ -492,7 +492,7 @@ dependencies = [
 [[package]]
 name = "incredible_elements"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_clipboard_browser",
@@ -526,19 +526,17 @@ dependencies = [
 [[package]]
 name = "incredible_elements_text_fonts"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_helpers_effects",
  "incredible_macros_decl",
- "unicode-width",
- "web-sys",
 ]
 
 [[package]]
 name = "incredible_event_loop_browser"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "js-sys",
@@ -549,7 +547,7 @@ dependencies = [
 [[package]]
 name = "incredible_event_loop_macos"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "futures-core",
@@ -562,7 +560,7 @@ dependencies = [
 [[package]]
 name = "incredible_event_loop_terminal"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "incredible",
@@ -571,7 +569,7 @@ dependencies = [
 [[package]]
 name = "incredible_event_loop_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "futures-core",
@@ -606,7 +604,7 @@ dependencies = [
 [[package]]
 name = "incredible_helpers_effects"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_helpers_layout",
@@ -615,7 +613,7 @@ dependencies = [
 [[package]]
 name = "incredible_helpers_layout"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
 ]
@@ -623,7 +621,7 @@ dependencies = [
 [[package]]
 name = "incredible_helpers_styling"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
 ]
@@ -631,7 +629,7 @@ dependencies = [
 [[package]]
 name = "incredible_input_browser"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "wasm-bindgen",
@@ -641,7 +639,7 @@ dependencies = [
 [[package]]
 name = "incredible_input_macos"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "incredible",
@@ -654,7 +652,7 @@ dependencies = [
 [[package]]
 name = "incredible_input_terminal_nix"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "incredible",
@@ -664,7 +662,7 @@ dependencies = [
 [[package]]
 name = "incredible_input_terminal_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "incredible",
@@ -674,7 +672,7 @@ dependencies = [
 [[package]]
 name = "incredible_input_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "futures",
  "incredible",
@@ -685,7 +683,7 @@ dependencies = [
 [[package]]
 name = "incredible_macros_decl"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible_macros_proc",
 ]
@@ -693,7 +691,7 @@ dependencies = [
 [[package]]
 name = "incredible_macros_proc"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -703,7 +701,7 @@ dependencies = [
 [[package]]
 name = "incredible_output_html"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "console_error_panic_hook",
  "incredible",
@@ -716,7 +714,7 @@ dependencies = [
 [[package]]
 name = "incredible_output_macos"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_window_macos",
@@ -728,7 +726,7 @@ dependencies = [
 [[package]]
 name = "incredible_output_terminal"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "libc",
@@ -741,7 +739,7 @@ dependencies = [
 [[package]]
 name = "incredible_output_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "incredible_window_windows",
@@ -751,7 +749,7 @@ dependencies = [
 [[package]]
 name = "incredible_window_macos"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "core-foundation",
  "core-graphics",
@@ -769,7 +767,7 @@ dependencies = [
 [[package]]
 name = "incredible_window_windows"
 version = "0.1.0"
-source = "git+https://github.com/ronilan/incredible-alpha#0d6a2720f7c16528a0ea7fa096d2d85e5603e56f"
+source = "git+https://github.com/ronilan/incredible-alpha#f2b56fa57733a68bf65e5e0165acd89be1159f33"
 dependencies = [
  "incredible",
  "windows",
@@ -783,9 +781,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "js-sys"
-version = "0.3.106"
+version = "0.3.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7883d941dae510fb2d978fc3fe018c71c9e2892fd38854de3e8b92c2e5ad9cc5"
+checksum = "8dc09d2154098bbf4ef54eab6b117a3c24cbbffe94046b16ee6d6d4510584d3a"
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -805,9 +803,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.189"
+version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
 name = "libm"
@@ -826,9 +824,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.34"
+version = "0.4.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
+checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "malloc_buf"
@@ -847,9 +845,9 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "memmap2"
-version = "0.9.11"
+version = "0.9.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
+checksum = "6b0ca1155a9ecc25aa12e8313a119f32edf0255fea2f44839c4ac0a12b2ac157"
 dependencies = [
  "libc",
 ]
@@ -919,9 +917,9 @@ dependencies = [
 
 [[package]]
 name = "objc2"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f"
+checksum = "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8"
 dependencies = [
  "objc2-encode",
 ]
@@ -1086,12 +1084,6 @@ dependencies = [
  "objc2",
  "objc2-foundation",
 ]
-
-[[package]]
-name = "once_cell"
-version = "1.21.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "option-ext"
@@ -1309,14 +1301,14 @@ checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.6",
+ "syn 3.0.9",
 ]
 
 [[package]]
 name = "serde_json"
-version = "1.0.151"
+version = "1.0.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
 dependencies = [
  "itoa",
  "memchr",
@@ -1363,9 +1355,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.16.2"
+version = "1.16.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9395f0f0eee849a9b707b2f06bb92a6a422090e2123bb2ef8e87a0e61892a8e"
+checksum = "149309498a5f7334b12ddae0cad8aba81ce785fe91755068867e017cf98fee46"
 
 [[package]]
 name = "strict-num"
@@ -1399,9 +1391,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "3.0.6"
+version = "3.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8593e8e72159ed2257d083c7a454a85cbf854f37a0966d8d483aff8c8a3ebcee"
+checksum = "d78c8dee4c7bf0e14673097256fed6142ce9d3b85a408189d07482442145823b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1425,7 +1417,7 @@ checksum = "fe5197923287db20a58125f0bc85c062f7f2c892de97b18c356f9efb14b28524"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.6",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -1462,9 +1454,9 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 
 [[package]]
 name = "tokio"
-version = "1.53.1"
+version = "1.54.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+checksum = "b52fd3255258d26fac7264ab5a76b53c13367136dc011d3d6ad4f8ed070396a3"
 dependencies = [
  "pin-project-lite",
 ]
@@ -1498,30 +1490,30 @@ checksum = "260bc6647b3893a9a90668360803a15f96b85a5257b1c3a0c3daf6ae2496de42"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.26"
+version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954"
+checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
 name = "unicode-normalization"
-version = "0.1.25"
+version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+checksum = "75cd3fb03d5288b3ba9a1ee103ac7e9cbb59f0b03d64f8ddfcc04dd42758a85d"
 dependencies = [
  "tinyvec",
 ]
 
 [[package]]
 name = "unicode-properties"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7df058c713841ad818f1dc5d3fd88063241cc61f49f5fbea4b951e8cf5a8d71d"
+checksum = "993ad287eb20e8ba755312801cfe1413e0f25d604075863acaddca10b04c1833"
 
 [[package]]
 name = "unicode-script"
-version = "0.5.8"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "383ad40bb927465ec0ce7720e033cb4ca06912855fc35db31b5755d0de75b1ee"
+checksum = "aa04c955db05429d464c74d495c1ee677e1866e783a4c3747f9c0cef7756cabf"
 
 [[package]]
 name = "unicode-segmentation"
@@ -1537,9 +1529,9 @@ checksum = "b1d386ff53b415b7fe27b50bb44679e2cc4660272694b7b6f3326d8480823a94"
 
 [[package]]
 name = "unicode-width"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
 
 [[package]]
 name = "usvg"
@@ -1585,12 +1577,11 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.129"
+version = "0.2.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bb54f33acc68fd454578d9820b0bde1a1a3d17aa17bb7b6595806d02886d409"
+checksum = "a0181c14ddd6c7b8b0b0132a5f1ea2f32be0d893cd3ea97b6e3b28886b8a3d1c"
 dependencies = [
  "cfg-if",
- "once_cell",
  "rustversion",
  "wasm-bindgen-macro",
  "wasm-bindgen-shared",
@@ -1598,9 +1589,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.79"
+version = "0.4.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cbab34de2d982e9b48e18d216d04c4a6f641066ff19ffb699980f591ee3610e"
+checksum = "5e14e0327cb5368ad60ccb22d04a9827a693c95a926d8d125e9fa39e0baec501"
 dependencies = [
  "js-sys",
  "tokio",
@@ -1609,9 +1600,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.129"
+version = "0.2.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e29d0c35b16e224a7eeb5cd2d25e3e1968fbd65604117b44d3b789d00ee8535"
+checksum = "6e931a02a39abdbf66966fc35902b5ed58344750a70885bed4ebb3d8eaf28ed9"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -1619,31 +1610,31 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.129"
+version = "0.2.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f501a8bc3719dba86ef8ae4728879c08001bea749eb1333ac5b91e040e2a6b7"
+checksum = "2ca4b54280e455bd831e33a6b8e734baf432fe63fbc35c42ac14ce67a043a53a"
 dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn 3.0.6",
+ "syn 3.0.9",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.129"
+version = "0.2.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23f0c9c52aa7cd7d77769a4cfe2a9adb1b331f489a41d912ce14513d5ab995c6"
+checksum = "3b1f9c3798725016c6ee5f2f57869ec0831e8bbc0ab0310a86e787e97f41389e"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "web-sys"
-version = "0.3.106"
+version = "0.3.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88261b9deccee56594c11a3460c462c41f58d148598fe70ad77070126a68aba4"
+checksum = "d7d179596ff5ec0f6de4db64d54011bde6289cc49603d3a6e4ce3f329207ab88"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -1870,18 +1861,18 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "zerocopy"
-version = "0.8.59"
+version = "0.8.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df92bf3d9227be3d53173901ddbffac2babc27ae50f397776ffd6dc33f800cb"
+checksum = "e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.59"
+version = "0.8.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac4f328cf2f05d084e496c3e9c3f33ed0a183656a16e1fcec4d464d8373aec82"
+checksum = "863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f"
 dependencies = [
  "proc-macro2",
  "quote",

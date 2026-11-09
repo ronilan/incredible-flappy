@@ -38,8 +38,7 @@ pub(crate) fn build_kitty_hint() -> Label<State> {
     label
         .text("K is for kitty")
         .color(Some(Color::Ansi(theme::KITTY_HINT_TEXT)))
-        .handle("kitty_hint")
-        .interactive(true);
+        .handle("kitty_hint");
     label.on_mouse(|_el, state, event| {
         if matches!(event.mouse, Mouse::Click) && Platform::output_provider().images() {
             state.kitty = !state.kitty;

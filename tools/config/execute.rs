@@ -5,8 +5,7 @@ fn replace_field_value(line: &str, key: &str, value: &str) -> String {
     let leading_len = line.len() - line.trim_start().len();
     let leading = &line[..leading_len];
     let trimmed = line.trim_start();
-    if trimmed.starts_with(key) {
-        let after_key = &trimmed[key.len()..];
+    if let Some(after_key) = trimmed.strip_prefix(key) {
         if after_key.trim_start().starts_with('=') {
             if let Some(eq_pos) = after_key.find('=') {
                 let before_eq = &after_key[..eq_pos];
@@ -257,13 +256,7 @@ fn transform_html(
     r
 }
 
-pub fn apply_changes(
-    name: &str,
-    app_name: &str,
-    tagline: &str,
-    keywords: &str,
-    description: &str,
-) {
+pub fn apply_changes(name: &str, app_name: &str, tagline: &str, keywords: &str, description: &str) {
     let display_title = if !tagline.is_empty() {
         format!("{} :: {}", app_name, tagline)
     } else {

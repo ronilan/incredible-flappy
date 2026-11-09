@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{FillKind, Rectangle};
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
@@ -40,7 +40,7 @@ impl<S: Clone + PartialEq> Bushing<S> {
             let seg = Rectangle::<S>::new();
             seg.width(1)
                 .height(1)
-                .fill(Some(' '))
+                .fill(Some(FillKind::Custom(' ')))
                 .background(Some(Color::Ansi(*bg)))
                 .x(i as isize)
                 .y(0);

@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{FillKind, Rectangle};
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
@@ -9,15 +9,11 @@ pub const FLYING_BIRD_WIDTH: usize = 5;
 pub const FLYING_BIRD_HEIGHT: usize = 2;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct FlyingBirdOptions {
     pub background: Option<u8>,
 }
 
-impl Default for FlyingBirdOptions {
-    fn default() -> Self {
-        Self { background: None }
-    }
-}
 
 element! {
   pub struct FlyingBird<S> {
@@ -40,7 +36,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         let eye = Rectangle::<S>::new();
         eye.width(1)
             .height(1)
-            .fill(Some('.'))
+            .fill(Some(FillKind::Custom('.')))
             .color(Some(Color::Ansi(theme::BIRD_DARK)))
             .background(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .x(3)
@@ -51,7 +47,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         let wing = Rectangle::<S>::new();
         wing.width(2)
             .height(1)
-            .fill(Some('─'))
+            .fill(Some(FillKind::Custom('─')))
             .color(Some(Color::Ansi(theme::BIRD_DARK)))
             .background(Some(Color::Ansi(theme::BIRD_WING_BACKGROUND)))
             .x(3)
@@ -62,7 +58,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         let body = Rectangle::<S>::new();
         body.width(3)
             .height(1)
-            .fill(Some(' '))
+            .fill(Some(FillKind::Custom(' ')))
             .background(Some(Color::Ansi(theme::BIRD_BODY_BACKGROUND)))
             .x(0)
             .y(0);
@@ -73,7 +69,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         belly
             .width(1)
             .height(1)
-            .fill(Some(' '))
+            .fill(Some(FillKind::Custom(' ')))
             .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(2)
             .y(1);
@@ -83,7 +79,7 @@ impl<S: Clone + PartialEq> FlyingBird<S> {
         let beak = Rectangle::<S>::new();
         beak.width(2)
             .height(1)
-            .fill(Some('>'))
+            .fill(Some(FillKind::Custom('>')))
             .color(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(0)

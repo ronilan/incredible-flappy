@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{FillKind, Rectangle};
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 use rand::rng;
@@ -72,7 +72,7 @@ impl<S: Clone + PartialEq> FlowerBud<S> {
             let col = Rectangle::<S>::new();
             col.width(1)
                 .height(col_h)
-                .fill(Some(fill))
+                .fill(Some(FillKind::Custom(fill)))
                 .color(Some(Color::Ansi(theme::FLOWER_BUD_FG)))
                 .background(Some(Color::Ansi(bg)))
                 .x(el.get_x() + index as isize)

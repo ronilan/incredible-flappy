@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{FillKind, Rectangle};
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
@@ -9,15 +9,11 @@ pub const DEAD_BIRD_WIDTH: usize = 2;
 pub const DEAD_BIRD_HEIGHT: usize = 5;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct DeadBirdOptions {
     pub background: Option<u8>,
 }
 
-impl Default for DeadBirdOptions {
-    fn default() -> Self {
-        Self { background: None }
-    }
-}
 
 element! {
   pub struct DeadBird<S> {
@@ -46,7 +42,7 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         let eye = Rectangle::<S>::new();
         eye.width(1)
             .height(1)
-            .fill(Some('x'))
+            .fill(Some(FillKind::Custom('x')))
             .color(Some(Color::Ansi(theme::BIRD_DARK)))
             .background(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .x(1)
@@ -57,7 +53,7 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         let tail = Rectangle::<S>::new();
         tail.width(1)
             .height(2)
-            .fill(Some('|'))
+            .fill(Some(FillKind::Custom('|')))
             .color(Some(Color::Ansi(theme::BIRD_DARK)))
             .background(Some(Color::Ansi(theme::BIRD_WING_BACKGROUND)))
             .x(0)
@@ -68,7 +64,7 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         let body = Rectangle::<S>::new();
         body.width(1)
             .height(2)
-            .fill(Some(' '))
+            .fill(Some(FillKind::Custom(' ')))
             .color(Some(Color::Ansi(theme::BIRD_DARK)))
             .background(Some(Color::Ansi(theme::BIRD_BODY_BACKGROUND)))
             .x(1)
@@ -79,7 +75,7 @@ impl<S: Clone + PartialEq> DeadBird<S> {
         let head = Rectangle::<S>::new();
         head.width(1)
             .height(2)
-            .fill(Some('v'))
+            .fill(Some(FillKind::Custom('v')))
             .color(Some(Color::Ansi(theme::BIRD_LIGHT)))
             .background(Some(Color::Ansi(theme::BIRD_BELLY_BACKGROUND)))
             .x(0)

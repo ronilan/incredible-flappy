@@ -735,9 +735,7 @@ impl<S: Clone + PartialEq + 'static> Game<S> {
     /// Bud top crossed falling from prev_bottom to new_bottom, if any.
     /// Touching down = land, not kill.
     fn perch_top_under(&self, prev_bottom: f32, new_bottom: f32) -> Option<f32> {
-        let Some(flier) = self.active_flier() else {
-            return None;
-        };
+        let flier = self.active_flier()?;
         let fx0 = flier.get_x();
         let fx1 = fx0 + flier.visual().look.width() as isize;
         for bud in self.elements.cot::<FlowerBud<S>>() {

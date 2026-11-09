@@ -11,6 +11,7 @@ const DATA_FILE: &str = ".incredible-flappy";
 /// Persisted settings and best scores. Bests are top-3 tuples,
 /// highest first.
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct Persisted {
     pub kitty: bool,
     pub best_classic: [u32; 3],
@@ -18,16 +19,6 @@ pub struct Persisted {
     pub best_invaders: [u32; 3],
 }
 
-impl Default for Persisted {
-    fn default() -> Self {
-        Self {
-            kitty: false,
-            best_classic: [0; 3],
-            best_busy: [0; 3],
-            best_invaders: [0; 3],
-        }
-    }
-}
 
 impl Persisted {
     fn parse_content(content: &str) -> Self {

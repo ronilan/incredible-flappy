@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::Rectangle;
+use incredible_elements::{FillKind, Rectangle};
 use incredible_helpers_styling::*;
 use incredible_macros_decl::element;
 
@@ -47,7 +47,7 @@ impl<S: Clone + PartialEq> FlowerStem<S> {
         middle
             .width(1)
             .height(el.options.height)
-            .fill(Some(' '))
+            .fill(Some(FillKind::Custom(' ')))
             .background(Some(Color::Ansi(theme::FLOWER_STEM)))
             .x(el.get_x() + 1)
             .y(el.get_y());
@@ -60,7 +60,7 @@ impl<S: Clone + PartialEq> FlowerStem<S> {
             let leaf = Rectangle::<S>::new();
             leaf.width(1)
                 .height(rng().random_range(2..=3))
-                .fill(Some(' '))
+                .fill(Some(FillKind::Custom(' ')))
                 .background(Some(Color::Ansi(theme::FLOWER_LEAF)))
                 .x(el.get_x() + dx)
                 .y(mid_y + rng().random_range(-1i32..=1i32) as isize);

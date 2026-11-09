@@ -571,10 +571,9 @@ pub fn build() -> App<State> {
             state.phase = Phase::Flying;
             el.draw();
             return;
-        } else if state.phase == Phase::Score && matches!(event.key, Key::Tab) {
-            cycle_game_focus(el, state);
-            el.draw();
-        } else if state.phase == Phase::Score && matches!(event.key, Key::BackTab) {
+        } else if state.phase == Phase::Score
+            && matches!(event.key, Key::Tab | Key::BackTab)
+        {
             cycle_game_focus(el, state);
             el.draw();
         } else if let Some(next) = transition(&state.phase, &event.key) {

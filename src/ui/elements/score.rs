@@ -6,15 +6,11 @@ use incredible_macros_decl::element;
 use crate::ui::elements::BoxedTextFont;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct ScoreOptions {
     pub value: u32,
 }
 
-impl Default for ScoreOptions {
-    fn default() -> Self {
-        Self { value: 0 }
-    }
-}
 
 element! {
   pub struct Score<S> {

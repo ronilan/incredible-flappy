@@ -13,6 +13,7 @@ pub fn build_select_options() -> Select<State> {
         .y(1)
         .width(32)
         .height(6)
+        .label("Options")
         .add_item("Clean before build", "clean")
         .add_item("Bundle app package", "bundle")
         .add_item("Publish package", "publish")
@@ -53,7 +54,7 @@ pub fn build_select_options() -> Select<State> {
                     if items.len() >= 4 {
                         let target = state.selected_target.as_ref();
 
-                        let no_target = matches!(target, None);
+                        let no_target = target.is_none();
                         let is_wasm = matches!(target, Some(PackageTarget::Wasm));
                         let is_terminal = matches!(target, Some(PackageTarget::Terminal));
 

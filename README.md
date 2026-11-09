@@ -16,17 +16,6 @@ No install needed: https://ronilan.github.io/incredible-flappy/
 
 Prebuilt binaries are provided for each [release](https://github.com/ronilan/incredible-flappy/releases).
 
-## Linux via Docker
-
-To try the Linux terminal version, build and run:
-
-```
-docker build -t incredible_flappy .
-docker run --rm -it incredible_flappy
-```
-
-Type `incredible_flappy` in the container shell to launch.
-
 ## TUI Install / Uninstall
 
 Installs the latest release binary — `/usr/local/bin` (macOS/Linux) or `C:\Program Files\incredible-flappy` (Windows).
@@ -41,6 +30,20 @@ irm https://raw.githubusercontent.com/ronilan/incredible-flappy/main/install.ps1
 
 Uninstall the same way with `uninstall.sh` / `uninstall.ps1`. 
 
+## Linux via Docker
+
+To try the Linux terminal version, fetch the repository's `Dockerfile` and build the image (it downloads the latest Linux release, so no source checkout is needed):
+
+```bash
+mkdir docker-build && cd docker-build
+curl -fsSL https://raw.githubusercontent.com/ronilan/incredible-flappy/main/Dockerfile -o Dockerfile
+docker build -t incredible_flappy .
+docker run --rm -it incredible_flappy
+```
+
+Run the commands in an **empty folder** (not your home directory) so Docker's build context doesn't include large/system folders like `~/.Trash`.
+
+Type `incredible_flappy` in the container shell to launch.
 # Play
 
 Pick a game on the splash screen with Tab, then Enter to start. Clicking a game starts it directly. The ← button (top left) goes back to splash.

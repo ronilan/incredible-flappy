@@ -171,7 +171,7 @@ pub const SPARKLE_COLOR: u8 = 231;
 /// Panel box color: exact RGB when set, otherwise the ANSI cream.
 pub fn score_panel_background() -> Color {
     match SCORE_PANEL_BACKGROUND_RGB {
-        Some((r, g, b)) => Color::Rgba(Rgba::new(r, g, b, 255)),
+        Some((r, g, b)) => Color::rgb(r, g, b),
         None => Color::Ansi(SCORE_PANEL_BACKGROUND),
     }
 }

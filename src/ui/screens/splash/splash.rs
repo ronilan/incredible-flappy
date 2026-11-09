@@ -1,5 +1,5 @@
 use incredible::*;
-use incredible_elements::{Label, Rectangle};
+use incredible_elements::{FillKind, Label, Rectangle};
 use incredible_helpers_layout::*;
 use incredible_helpers_styling::*;
 
@@ -21,7 +21,7 @@ pub(crate) fn build() -> Rectangle<State> {
     splash
         .width(SCREEN_WIDTH)
         .height(SCREEN_HEIGHT)
-        .fill(Some(' '))
+        .fill(Some(FillKind::Custom(' ')))
         .background(Some(Color::Ansi(theme::SKY_BACKGROUND)))
         .handle("splash")
         .draw_override(Some(DrawOverride::default()));

@@ -9,9 +9,9 @@ use crate::ui::theme;
 /// Fill character for a bush by column index:
 /// `(index % 3) ? '.' : ((index % 4) ? '`' : '^')`.
 pub fn bush_fill(index: usize) -> char {
-    if index % 3 != 0 {
+    if !index.is_multiple_of(3) {
         '.'
-    } else if index % 4 != 0 {
+    } else if !index.is_multiple_of(4) {
         '`'
     } else {
         '^'

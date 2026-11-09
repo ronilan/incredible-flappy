@@ -20,10 +20,10 @@ fn extract_section(text: &str, header: &str) -> String {
 fn get_field(section: &str, key: &str) -> String {
     for line in section.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with(key) {
-            let rest = &trimmed[key.len()..].trim_start();
-            if rest.starts_with('=') {
-                let val = rest[1..].trim();
+        if let Some(rest) = trimmed.strip_prefix(key) {
+            let rest = rest.trim_start();
+            if let Some(val) = rest.strip_prefix('=') {
+                let val = val.trim();
                 if val.starts_with('"') && val.ends_with('"') && val.len() >= 2 {
                     return val[1..val.len() - 1].to_string();
                 }
@@ -91,11 +91,7 @@ pub fn package_version() -> String {
     let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
     let pkg_section = extract_section(&cargo_toml, "package");
     let v = get_field(&pkg_section, "version");
-    if v.is_empty() {
-        "0.1.0".to_string()
-    } else {
-        v
-    }
+    if v.is_empty() { "0.1.0".to_string() } else { v }
 }
 
 pub fn html_metadata() -> HtmlMetadata {
